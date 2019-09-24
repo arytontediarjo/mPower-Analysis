@@ -77,6 +77,12 @@ def getSynapseData(syn,healthcodes):
     return data
 
 def processAcceleration(filepath):
+    
+    
+    ## if empty filepaths return it back
+    if filepath == "EMPTY FILEPATHS":
+        return filepath
+    
     ## open filepath ##
     with open(filepath) as f:
         json_data = f.read()
@@ -84,7 +90,7 @@ def processAcceleration(filepath):
         
     ## return accelerometer data back if empty ##
     if df.shape[0] == 0:
-        return df
+        return "NO ACCELEROMETER DATA"
     
     ## extra preprocessing condition for deviceMotion user Acceleration
     elif "userAcceleration" in df.columns:

@@ -11,18 +11,16 @@ import ast
 
 def pdkitFeaturize(data, var):
     
+    ### Process data to be usable by pdkit ###
+    data = processAcceleration(data)
+    
     ### if filepath is empty ###
     if data == "EMPTY FILEPATHS":
         return data
     
-    ### Process data to be usable by pdkit ###
-    data = processAcceleration(data)
-    
-    
-    
     ### if filepaths are not empty but accelerometer data is empty ###
-    if data.shape[0] == 0:
-        return "NO ACCELEROMETER DATA"
+    elif data == "NO ACCELEROMETER DATA":
+        return data
     
     ### parse through gait processor to retrieve resampled signal
     gp = pdkit.GaitProcessor(duration=data.td[-1])

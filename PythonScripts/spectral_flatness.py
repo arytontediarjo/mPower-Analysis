@@ -44,7 +44,23 @@ def run_sfm_pipeline(data, hz_start = 1, hz_end = 4, gamma_range = np.arange(0.2
     return sfm_data
 
 def sfm_auc(params, var):
-    accel_data = processAcceleration(params).reset_index(drop = True)
-    data = run_sfm_pipeline(accel_data[var])
+    
+    
+    ## process acceleration
+    data = processAcceleration(params)
+    
+    ### if filepath is empty ###
+    if data == "EMPTY FILEPATHS":
+        return data
+    
+    ### if filepaths are not empty but accelerometer data is empty ###
+    elif data == "NO ACCELEROMETER DATA":
+        return data
+    
+    ## run spectral flatness pipeline
+    data = run_sfm_pipeline(data[var])
+    
+    ## retrieve AUC
     area = auc(data.gamma, data.sfm)
+    
     return area
