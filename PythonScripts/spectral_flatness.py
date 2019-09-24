@@ -49,12 +49,8 @@ def sfm_auc(params, var):
     ## process acceleration
     data = processAcceleration(params)
     
-    ### if filepath is empty ###
-    if data == "EMPTY FILEPATHS":
-        return data
-    
-    ### if filepaths are not empty but accelerometer data is empty ###
-    elif data == "NO ACCELEROMETER DATA":
+    ### if filepath is empty or have no accelerometer data ###
+    if isinstance(data, str):
         return data
     
     ## run spectral flatness pipeline
