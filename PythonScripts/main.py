@@ -19,7 +19,7 @@ def read_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--filename", default= "data.csv",
                         help = "Path for output results")
-    parser.add_argument("--num-cores", default= mp.cpu_count(),
+    parser.add_argument("--num-cores", default= 16,
                         help = "Number of Cores, negative number not allowed")
     parser.add_argument("--num-chunks", default= 10,
                         help = "Number of sample per partition, no negative number")
