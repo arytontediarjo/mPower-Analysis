@@ -9,6 +9,7 @@ import warnings
 from utils import getSynapseData
 from pdkit_features import pdkitFeaturize
 from spectral_flatness import sfm_auc
+from pandarallel import pandarallel
 warnings.simplefilter("ignore")
 
 
@@ -39,7 +40,7 @@ def featurize(data):
         # data["userAccel_outbound_features_{}".format(coord)] = data["deviceMotion_outbound_pathfile"].apply(pdkitFeaturize, var = coord)
         # data["userAccel_return_features_{}".format(coord)] = data["deviceMotion_return_pathfile"].apply(pdkitFeaturize, var = coord)
         # data["userAccel_resting_features_{}".format(coord)] = data["deviceMotion_rest_pathfile"].apply(pdkitFeaturize, var = coord)
-        data["sfm_auc_{}".format(coord)] =  data["deviceMotion_rest_pathfile"].apply(sfm_auc, var = coord)
+        data["sfm_auc_{}".format(coord)] =  data["deviceMotion_rest_pathfile"].parallel_apply(sfm_auc, var = coord)
     return data
 
 def getHealthCodeInfo(syn, synid):
@@ -53,6 +54,7 @@ def main():
     
     ## login
     syn = sc.login()
+    pandarallel.initialize()
     
     ## get demographic information
     healthcode_subset, filtered_healthcode_df = getHealthCodeInfo(syn, "syn8381056")
