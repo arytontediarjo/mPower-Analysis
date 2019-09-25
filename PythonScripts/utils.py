@@ -80,7 +80,7 @@ def processAcceleration(filepath):
     
     
     ## if empty filepaths return it back
-    if filepath == "EMPTY FILEPATHS":
+    if filepath == "#ERROR":
         return filepath
     
     ## open filepath ##
@@ -90,7 +90,7 @@ def processAcceleration(filepath):
         
     ## return accelerometer data back if empty ##
     if df.shape[0] == 0:
-        return "NO ACCELEROMETER DATA"
+        return "#ERROR"
     
     ## extra preprocessing condition for deviceMotion user Acceleration
     elif "userAcceleration" in df.columns:

@@ -65,8 +65,8 @@ def main():
     
     
     ## save data to synapse ##
-    data.to_csv("~/spectral_flatness.csv")
-    new_file = File(path = "~/spectral_flatness.csv", parentId = "syn20816722")
+    data.to_csv("~/spectral_flatness_v2.csv")
+    new_file = File(path = "~/spectral_flatness_v2.csv", parentId = "syn20816722")
     new_file = syn.store(new_file)
     
 if __name__ == "__main__":

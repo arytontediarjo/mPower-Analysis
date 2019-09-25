@@ -38,7 +38,7 @@ def sfm(data, start, end, gm_range):
         arr.append(spectral_flatness)
     return pd.DataFrame({"gamma": gm_range, "sfm":arr})
 
-def run_sfm_pipeline(data, hz_start = 1, hz_end = 4, gamma_range = np.arange(0.2, 5, 0.01)):
+def run_sfm_pipeline(data, hz_start = 0, hz_end = 10, gamma_range = np.arange(0.2, 2, 0.01)):
     spec_data = get_spectrum(data)
     sfm_data = sfm(spec_data, hz_start, hz_end, gamma_range)
     return sfm_data
