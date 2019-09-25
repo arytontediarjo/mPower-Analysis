@@ -55,7 +55,7 @@ def main():
     args = read_args()
     filename = args.filename
     cores = args.num_cores
-    features = args.feature_choice
+    features = args.featurize
     
     ## login
     syn = sc.login()
