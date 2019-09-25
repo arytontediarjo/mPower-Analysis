@@ -45,8 +45,6 @@ def run_sfm_pipeline(data, hz_start = 0, hz_end = 10, gamma_range = np.arange(0.
 
 def sfm_auc(params, var):
     
-    print(params)
-    
     ## process acceleration
     data = processAcceleration(params)
     

@@ -3,13 +3,13 @@ import pandas as pd
 import numpy as np
 import synapseclient as sc
 from synapseclient import Entity, Project, Folder, File, Link
+import multiprocessing as mp
 from multiprocessing import Pool
 import time
 import warnings
 from utils import getSynapseData
 from pdkit_features import pdkitFeaturize
 from spectral_flatness import sfm_auc
-from pandarallel import pandarallel
 warnings.simplefilter("ignore")
 
 
@@ -18,7 +18,9 @@ def parallelize_dataframe(df, func):
     ### split dataframe into 250 partitions ###
     df_split = np.array_split(df, 250)
     ### instantiate 16 processors as EC2 instance has 8 cores ###
-    pool = Pool(16)
+    no_of_processors = mp.cpu_count()*2
+    print("Number of processors: {}".format(no_of_processors))
+    pool = Pool(no_of_processors)
     ### map function into each pools ###
     map_values = pool.map(func, df_split)
     ### concatenate dataframe into one ###
@@ -40,7 +42,7 @@ def featurize(data):
         # data["userAccel_outbound_features_{}".format(coord)] = data["deviceMotion_outbound_pathfile"].apply(pdkitFeaturize, var = coord)
         # data["userAccel_return_features_{}".format(coord)] = data["deviceMotion_return_pathfile"].apply(pdkitFeaturize, var = coord)
         # data["userAccel_resting_features_{}".format(coord)] = data["deviceMotion_rest_pathfile"].apply(pdkitFeaturize, var = coord)
-        data["sfm_auc_{}".format(coord)] =  data["deviceMotion_rest_pathfile"].parallel_apply(sfm_auc, var = coord)
+        data["sfm_auc_{}".format(coord)] =  data["deviceMotion_rest_pathfile"].apply(sfm_auc, var = coord)
     return data
 
 def getHealthCodeInfo(syn, synid):
@@ -52,13 +54,11 @@ def getHealthCodeInfo(syn, synid):
 
 def main():
     
+    
     ## login
     syn = sc.login()
-    pandarallel.initialize()
-    
     ## get demographic information
     healthcode_subset, filtered_healthcode_df = getHealthCodeInfo(syn, "syn8381056")
-    
     ## process data ##
     data = getSynapseData(syn, healthcode_subset)
     data = parallelize_dataframe(data, featurize)
