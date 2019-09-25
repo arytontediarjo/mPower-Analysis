@@ -70,7 +70,7 @@ def main():
     if features == "spectral-flatness":
         data = parallelize_dataframe(data, sfm_featurize, cores)
     elif features == "pdkit":
-        data = parallelize_dataframe(data, pdkit_featurize, features)
+        data = parallelize_dataframe(data, pdkit_featurize, cores)
     
     data = pd.merge(data, filtered_healthcode_df, how = "left", on = "healthCode")
     data = data[[feat for feat in data.columns if "path" not in feat]]
