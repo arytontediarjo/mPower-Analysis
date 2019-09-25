@@ -73,7 +73,7 @@ def getSynapseData(syn,healthcodes):
                           "file_path": "deviceMotion_rest_pathfile" }).drop(["file_handle_id"], axis = 1)
     
     data["createdOn"] = pd.to_datetime(data["createdOn"], unit = "ms")
-    data = data.fillna("EMPTY FILEPATHS")
+    data = data.fillna("#ERROR") ## Empty Filepaths
     return data
 
 def processAcceleration(filepath):

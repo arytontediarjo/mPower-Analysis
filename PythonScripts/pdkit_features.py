@@ -14,12 +14,8 @@ def pdkitFeaturize(data, var):
     ### Process data to be usable by pdkit ###
     data = processAcceleration(data)
     
-    ### if filepath is empty ###
-    if data == "EMPTY FILEPATHS":
-        return data
-    
-    ### if filepaths are not empty but accelerometer data is empty ###
-    elif data == "NO ACCELEROMETER DATA":
+    ### if filepath is empty or have no accelerometer data ###
+    if isinstance(data, str):
         return data
     
     ### parse through gait processor to retrieve resampled signal
