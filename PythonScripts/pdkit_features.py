@@ -63,3 +63,13 @@ def pdkitFeaturize(data, var):
             feature_dict[k] = 0
         
     return feature_dict
+
+def pdkit_featurize(data):
+    for coord in ["x", "y", "z", "AA"]:
+        data["accel_outbound_features_{}".format(coord)] = data["accel_outbound_pathfile"].apply(pdkitFeaturize, var = coord)
+        data["accel_return_features_{}".format(coord)] = data["accel_return_pathfile"].apply(pdkitFeaturize,  var = coord)
+        data["accel_resting_features_{}".format(coord)] = data["accel_rest_pathfile"].apply(pdkitFeaturize,  var = coord)
+        data["userAccel_outbound_features_{}".format(coord)] = data["deviceMotion_outbound_pathfile"].apply(pdkitFeaturize, var = coord)
+        data["userAccel_return_features_{}".format(coord)] = data["deviceMotion_return_pathfile"].apply(pdkitFeaturize, var = coord)
+        data["userAccel_resting_features_{}".format(coord)] = data["deviceMotion_rest_pathfile"].apply(pdkitFeaturize, var = coord)
+    return data

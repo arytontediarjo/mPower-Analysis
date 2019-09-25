@@ -59,3 +59,8 @@ def sfm_auc(params, var):
     area = auc(data.gamma, data.sfm)
     
     return area
+
+def sfm_featurize(data):
+    for coord in ["x", "y", "z", "AA"]:
+        data["sfm_auc_{}".format(coord)] =  data["deviceMotion_rest_pathfile"].apply(sfm_auc, var = coord)
+    return data
