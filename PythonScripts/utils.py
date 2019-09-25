@@ -7,7 +7,7 @@ import os
 def getSynapseData(syn,healthcodes):
     
     ### query from synapse and download to synapsecache ### 
-    query = syn.tableQuery("select * from {} WHERE healthCode in {} LIMIT 5".
+    query = syn.tableQuery("select * from {} WHERE healthCode in {}".
                        format("syn7222425", healthcodes))
     file_map = syn.downloadTableColumns(query, ["accel_walking_outbound.json.items", "accel_walking_return.json.items", "accel_walking_rest.json.items", 
                                                 "deviceMotion_walking_outbound.json.items", "deviceMotion_walking_return.json.items", "deviceMotion_walking_rest.json.items"])
