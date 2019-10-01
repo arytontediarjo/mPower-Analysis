@@ -8,7 +8,7 @@ from multiprocessing import Pool
 import time
 import warnings
 from myutils import get_synapse_table
-from pdkit_features import pdkit_featurize
+from pdkit_features import pdkit_featurize, pdkit_normalize
 from spectral_flatness import sfm_featurize
 import argparse
 warnings.simplefilter("ignore")
@@ -74,6 +74,7 @@ def main():
         data = _parallelize_dataframe(data, sfm_featurize, cores, chunksize)
     elif features == "pdkit":
         data = _parallelize_dataframe(data, pdkit_featurize, cores, chunksize)
+        # data = pdkit_normalize(data)
     data = data[[feat for feat in data.columns if "path" not in feat]]
     
     ## save data to local directory then to synapse ##

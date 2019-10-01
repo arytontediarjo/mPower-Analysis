@@ -76,8 +76,40 @@ def pdkit_pipeline(filepath, var):
 
 def pdkit_featurize(data):
     for coord in ["x", "y", "z", "AA"]:
-        for pathfile in [_ for _ in data.columns if ("pathfile" in _) \
-                         and ("pedometer" not in _) \
-                         and ("rest" or "balance" not in _)]:
+        for pathfile in [_ for _ in data.columns if ("pathfile" in _) 
+                                                    and ("pedometer" not in _)
+                                                    and ("balance" not in _)
+                                                    and ("rest" not in _)]:
             data[pathfile[:-8] + "_features_{}".format(coord)] = data[pathfile].apply(pdkit_pipeline, var = coord)
     return data
+
+def pdkit_normalize(data):
+    for i in [feat for feat in data.columns if "features" in feat]:
+        data["no_of_steps {}".format(i)] = data[i].apply(normalize_dict, 
+                                                         key = "no_of_steps_")
+        data["median_freeze_index {}".format(i)] = data[i].apply(normalize_dict, 
+                                                                 key = "median_freeze_index_")
+        data["count_freeze_index {}".format(i)] = data[i].apply(normalize_dict, 
+                                                                key = "count_freeze_index_")
+        data["speed_of_gait {}".format(i)] = data[i].apply(normalize_dict, 
+                                                           key = "speed_of_gait_")
+        data["gait_step_regularity {}".format(i)] = data[i].apply(normalize_dict, 
+                                                                  key = "gait_step_regularity_")
+        data["gait_stride_regularity {}".format(i)] = data[i].apply(normalize_dict, 
+                                                                    key = "gait_stride_regularity_")
+        data["gait_symmetry {}".format(i)] = data[i].apply(normalize_dict, 
+                                                           key = "gait_symmetry_")
+        data["frequency_of_peaks {}".format(i)] = data[i].apply(normalize_dict, 
+                                                                key = "frequency_of_peaks_")
+        data = data.drop([i], axis = 1)
+    return data
+
+"""
+Function to normalize dictionary on each column of PDKIT features
+"""
+def normalize_dict(params, key):
+    try:
+        dict_ = ast.literal_eval(params)
+    except:
+        return np.NaN
+    return dict_[key]
