@@ -5,14 +5,16 @@ import numpy as np
 import pdkit
 from pdkit.gait_time_series import GaitTimeSeries
 from pdkit.gait_processor import GaitProcessor
-from utils import processAcceleration
+from myutils import gait_time_series
 import ast
 
-
-def pdkitFeaturize(data, var):
-    
+"""
+Applicable to walking motions
+note: Dont implement to mpowerv2 yet
+"""
+def pdkit_pipeline(filepath, var):
     ### Process data to be usable by pdkit ###
-    data = processAcceleration(data)
+    data = gait_time_series(filepath)
     
     ### if filepath is empty or have no accelerometer data ###
     if isinstance(data, str):
@@ -26,23 +28,31 @@ def pdkitFeaturize(data, var):
     feature_dict = {}
     try:  
         no_of_steps = gp.gait(data[var])[0]
-        gait_step_regularity, gait_stride_regularity, gait_symmetry = gp.gait_regularity_symmetry(data[var])
-        frequency_of_peaks = gp.frequency_of_peaks(data[var])
-        freeze_time, freeze_index, locomotor_freeze_index = gp.freeze_of_gait(data[var])
-        freeze_count = sum(i > 2.0 for i in freeze_index)
-        speed_of_gait = gp.speed_of_gait(data[var], wavelet_level = 6)
-    
-    ### except function, happens when there is no movement, resting features
     except:
         no_of_steps = 0
+    try:
+        gait_step_regularity, gait_stride_regularity, gait_symmetry = gp.gait_regularity_symmetry(data[var])
+    except:
         gait_step_regularity = 0
         gait_stride_regularity = 0
         gait_symmetry = 0
+    try:
+        frequency_of_peaks = gp.frequency_of_peaks(data[var])
+    except:
         frequency_of_peaks = 0
+    try:
+        freeze_time, freeze_index, locomotor_freeze_index = gp.freeze_of_gait(data[var])
+    except:
         freeze_time = 0
         freeze_index = 0
         locomotor_freeze_index = 0
+    try:
+        freeze_count = sum(i > 2.0 for i in freeze_index)
+    except:
         freeze_count = 0
+    try:
+        speed_of_gait = gp.speed_of_gait(data[var], wavelet_level = 6)
+    except:
         speed_of_gait = 0
         
     ### fill in values to each keys
@@ -66,10 +76,8 @@ def pdkitFeaturize(data, var):
 
 def pdkit_featurize(data):
     for coord in ["x", "y", "z", "AA"]:
-        data["accel_outbound_features_{}".format(coord)] = data["accel_outbound_pathfile"].apply(pdkitFeaturize, var = coord)
-        data["accel_return_features_{}".format(coord)] = data["accel_return_pathfile"].apply(pdkitFeaturize,  var = coord)
-        data["accel_resting_features_{}".format(coord)] = data["accel_rest_pathfile"].apply(pdkitFeaturize,  var = coord)
-        data["userAccel_outbound_features_{}".format(coord)] = data["deviceMotion_outbound_pathfile"].apply(pdkitFeaturize, var = coord)
-        data["userAccel_return_features_{}".format(coord)] = data["deviceMotion_return_pathfile"].apply(pdkitFeaturize, var = coord)
-        data["userAccel_resting_features_{}".format(coord)] = data["deviceMotion_rest_pathfile"].apply(pdkitFeaturize, var = coord)
+        for pathfile in [_ for _ in data.columns if ("pathfile" in _) \
+                         and ("pedometer" not in _) \
+                         and ("rest" or "balance" not in _)]:
+            data[pathfile[:-8] + "_features_{}".format(coord)] = data[pathfile].apply(pdkit_pipeline, var = coord)
     return data

@@ -5,7 +5,7 @@ import scipy.fftpack
 import json
 import statsmodels as stats
 from sklearn.metrics import auc
-from utils import processAcceleration
+from myutils import gait_time_series
 
 def get_spectrum(signal):
     ## Number of samplepoints
@@ -38,29 +38,29 @@ def sfm(data, start, end, gm_range):
         arr.append(spectral_flatness)
     return pd.DataFrame({"gamma": gm_range, "sfm":arr})
 
-def run_sfm_pipeline(data, hz_start = 0, hz_end = 10, gamma_range = np.arange(0.2, 2, 0.01)):
+def sfm_preprocessing(data, hz_start = 0, hz_end = 10, gamma_range = np.arange(0.2, 2, 0.01)):
     spec_data = get_spectrum(data)
     sfm_data = sfm(spec_data, hz_start, hz_end, gamma_range)
     return sfm_data
 
-def sfm_auc(params, var):
-    
+def sfm_auc_pipeline(params, var):
     ## process acceleration
-    data = processAcceleration(params)
-    
+    try:
+        data = gait_time_series(params)
+    except:
+        return "#ERROR"
     ### if filepath is empty or have no accelerometer data ###
     if isinstance(data, str):
         return data
-    
     ## run spectral flatness pipeline
-    data = run_sfm_pipeline(data[var])
-    
+    data = sfm_preprocessing(data[var])
     ## retrieve AUC
     area = auc(data.gamma, data.sfm)
-    
     return area
 
 def sfm_featurize(data):
     for coord in ["x", "y", "z", "AA"]:
-        data["sfm_auc_{}".format(coord)] =  data["deviceMotion_rest_pathfile"].apply(sfm_auc, var = coord)
+        for pathfile in [_ for _ in data.columns if ("deviceMotion" in _) \
+                         and ("rest" or "balance" in _)]:
+            data["sfm_auc_{}".format(coord)] = data[pathfile].apply(sfm_auc_pipeline, var = coord)
     return data
