@@ -41,11 +41,9 @@ def pdkit_pipeline(filepath, var):
     except:
         frequency_of_peaks = 0
     try:
-        freeze_time, freeze_index, locomotor_freeze_index = gp.freeze_of_gait(data[var])
+        freeze_index = gp.freeze_of_gait(data[var])[1]
     except:
-        freeze_time = 0
         freeze_index = 0
-        locomotor_freeze_index = 0
     try:
         freeze_count = sum(i > 2.0 for i in freeze_index)
     except:
