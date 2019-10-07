@@ -15,6 +15,8 @@ import numpy as np
 import warnings
 from sklearn.feature_selection import RFECV
 from xgboost import XGBClassifier
+from synapseclient import Entity, Project, Folder, File, Link
+import synapseclient as sc
 import time
 
 warnings.simplefilter("ignore")
@@ -109,7 +111,7 @@ def savePerformances(models, X_test, y_test):
         pred_result_dict["PRECISION"].append(metrics.precision_score(y_true, y_pred))
         pred_result_dict["RECALL"].append(metrics.recall_score(y_true, y_pred))
         pred_result_dict["F1_SCORE"].append(metrics.f1_score(y_true, y_pred))
-    pd.DataFrame.from_dict(pred_result_dict).to_csv("../Data/prediction_results.csv")
+    return pred_result_dict
     
 def main():
     
@@ -128,7 +130,14 @@ def main():
               (rf_walking_model, "RANDOM FOREST"),
               (gb_walking_model, "SKLEARN GRADIENT BOOSTING"),
               (xgb_walking_model, "XTREME GRADIENT BOOSTING")]
-    savePerformances(models, walking_X_test, walking_y_test)
+    predictions = savePerformances(models, walking_X_test, walking_y_test)
+    
+    ## save to synapse file ##
+    syn = sc.login()
+    file_path = "../Data/prediction_results.csv"
+    data = pd.DataFrame.from_dict(predictions).to_csv(file_path)
+    data = File(path = file_path, parentId = "syn20816722")
+    data = syn.store(data)
     
 if __name__ == "__main__":
     start_time = time.time()
