@@ -1,2 +1,5 @@
 ,MODEL,BEST_PARAMS,CV_ROC_AUC,TEST_ROC_AUC,LOG_LOSS,PRECISION,RECALL,F1_SCORE
-0,RANDOM FOREST,"{'classifier__criterion': 'gini', 'classifier__max_depth': 3, 'classifier__max_features': 'auto', 'classifier__n_estimators': 100}",0.7049486461251168,0.7341269841269842,8.856158019010191,0.7857142857142857,0.6111111111111112,0.6875000000000001
+0,LOGISTIC REGRESSION,"{'classifier__penalty': 'l1', 'classifier__solver': 'liblinear'}",0.6458916900093371,0.7103174603174603,9.741788172659957,0.7333333333333333,0.6111111111111112,0.6666666666666666
+1,RANDOM FOREST,"{'classifier__criterion': 'gini', 'classifier__max_depth': 3, 'classifier__max_features': 'auto', 'classifier__n_estimators': 100}",0.7049486461251168,0.7341269841269842,8.856158019010191,0.7857142857142857,0.6111111111111112,0.6875000000000001
+2,SKLEARN GRADIENT BOOSTING,"{'classifier__learning_rate': 0.1, 'classifier__loss': 'deviance', 'classifier__max_depth': 6, 'classifier__n_estimators': 100}",0.6852240896358543,0.7619047619047619,7.970548367858634,0.8,0.6666666666666666,0.7272727272727272
+3,XTREME GRADIENT BOOSTING,"{'classifier__gamma': 1, 'classifier__learning_rate': 0.1, 'classifier__max_depth': 8, 'classifier__n_estimators': 100, 'classifier__subsample': 0.8, 'classifier__tree_method': 'hist'}",0.6935107376283847,0.6547619047619049,11.51300747496307,0.6923076923076923,0.5,0.5806451612903226

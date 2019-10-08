@@ -26,7 +26,7 @@ np.random.seed(100)
 def logreg_fit(X_train, y_train):
     pipe = Pipeline(steps=[
         ('scaler', StandardScaler()),
-        ('classifier', LogisticRegression(random_state = 100, n_jobs = -1))
+        ('classifier', LogisticRegression(random_state = 100))
         ])
     param = [{'classifier__penalty': ['l2'], 
               'classifier__solver': [ 'newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga']}, 
@@ -34,7 +34,7 @@ def logreg_fit(X_train, y_train):
               'classifier__solver': [ 'liblinear', 'saga']}  
             ]
 
-    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = -1, cv = 10)
+    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = -1, cv = 10, verbose = 10)
     CV.fit(X_train, y_train)
     return CV
 
@@ -43,17 +43,17 @@ def logreg_fit(X_train, y_train):
 def xgb_fit(X_train, y_train):
     pipe = Pipeline(steps=[
         ('scaler', StandardScaler()),
-        ('classifier', XGBClassifier(seed = 100, nthread = -1))
+        ('classifier', XGBClassifier(seed = 100))
         ])
     param = {
         "classifier__learning_rate" : [0.01, 0.05, 0.1],
         "classifier__tree_method"   : ["hist", "auto"],
-        "classifier__max_depth"     : [3, 6, 8],
-        "classifier__gamma"         : [1],
-        "classifier__subsample"     : [0.8],
-        "classifier__n_estimators"  : [100]
+        "classifier__max_depth"     : [3, 4, 5, 6, 7, 8, 9, 10],
+        "classifier__gamma"         : [0, 1, 5],
+        "classifier__subsample"     : [0.8, 0.9, 1],
+        "classifier__n_estimators"  : [100,1000]
     }
-    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = -1, cv = 10)
+    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = -1, cv = 10, verbose = 10)
     CV.fit(X_train, y_train)
     return CV
     
@@ -62,30 +62,35 @@ def gradientboost_fit(X_train, y_train):
     # pca = decomposition.PCA()
     pipe = Pipeline(steps=[
         ('scaler', StandardScaler()),
-        ('classifier', GradientBoostingClassifier(random_state = 100, n_jobs = -1))
+        ('classifier', GradientBoostingClassifier(random_state = 100))
         ])
     param = {
         'classifier__learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1],
-        'classifier__max_depth':[1, 2, 3, 4, 5, 6],
+        'classifier__max_depth':[3, 4, 5, 6,7,8,9,10],
         'classifier__loss': ["deviance", "exponential"], ## exponential will result in adaBoost
-        "classifier__n_estimators"  : [100]
+        "classifier__n_estimators"  : [100,1000],
+        "classifier__min_samples_split" : np.linspace(0.1, 0.5, 12),
+        "classifier__min_samples_leaf" : np.linspace(0.1, 0.5,12)
     }
-    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = -1, cv = 10)
+    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = -1, cv = 10, verbose = 10)
     CV.fit(X_train, y_train)
     return CV
 
 def randomforest_fit(X_train, y_train):
     pipe = Pipeline(steps=[
         ('scaler', StandardScaler()),
-        ('classifier', RandomForestClassifier(random_state = 100, n_jobs = -1))
+        ('classifier', RandomForestClassifier(random_state = 100))
         ])
     param = {
         'classifier__max_depth':[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
         'classifier__criterion': ["gini", "entropy"],## exponential will result in adaBoost
         'classifier__max_features': ["auto", "sqrt", "log2", None], 
-        'classifier__n_estimators'  : [100, 200]
+        'classifier__n_estimators'  : [100, 500, 1000],
+        'classifier__min_samples_leaf': [1,2,4],
+        'classifier__min_samples_split':[2,5,10]
+        
     }
-    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = -1, cv = 10)
+    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = -1, cv = 10, verbose = 10)
     CV.fit(X_train, y_train)
     return CV
 
