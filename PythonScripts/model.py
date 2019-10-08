@@ -119,7 +119,7 @@ def savePerformances(models, X_test, y_test):
         pred_result_dict["F1_SCORE"].append(metrics.f1_score(y_true, y_pred))
         
         # persist models #
-        pkl_filename = "/models/{}.pkl".format(model_name)
+        pkl_filename = "{}.pkl".format(model_name)
         joblib.dump(model, pkl_filename)
         print("persisted {} model on cd directory".format(model_name)) 
     return pred_result_dict
