@@ -17,6 +17,7 @@ from sklearn.feature_selection import RFECV
 from xgboost import XGBClassifier
 from synapseclient import Entity, Project, Folder, File, Link
 import synapseclient as sc
+import pickle
 import time
 
 warnings.simplefilter("ignore")
@@ -28,10 +29,10 @@ def logreg_fit(X_train, y_train):
         ('scaler', StandardScaler()),
         ('classifier', LogisticRegression(random_state = 100))
         ])
-    param = [{'classifier__penalty': ['l2'], 
-              'classifier__solver': [ 'newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga']}, 
-             {'classifier__penalty': ['l1'], 
-              'classifier__solver': [ 'liblinear', 'saga']}  
+    param = [{'classifier__penalty' : ['l2'], 
+              'classifier__solver'  : [ 'newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga']}, 
+             {'classifier__penalty' : ['l1'], 
+              'classifier__solver'  : [ 'liblinear', 'saga']}  
             ]
 
     CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = -1, cv = 10, verbose = 10)
@@ -46,12 +47,13 @@ def xgb_fit(X_train, y_train):
         ('classifier', XGBClassifier(seed = 100))
         ])
     param = {
-        "classifier__learning_rate" : [0.01, 0.05, 0.1],
-        "classifier__tree_method"   : ["hist", "auto"],
-        "classifier__max_depth"     : [3, 4, 5, 6, 7, 8, 9, 10],
-        "classifier__gamma"         : [0, 1, 5],
-        "classifier__subsample"     : [0.8, 0.9, 1],
-        "classifier__n_estimators"  : [100,1000]
+        "classifier__learning_rate"        : [0.001, 0.01, 0.05, 0.1],
+        "classifier__tree_method"          : ["hist", "auto"],
+        "classifier__max_depth"            : [2, 6, 8],
+        "classifier__gamma"                : [0, 1],
+        "classifier__subsample"            : [0.8, 1],
+        "classifier__colsample_bytree"     : [0.8, 1],
+        "classifier__n_estimators"         : [1000]
     }
     CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", cv = 10)
     CV.fit(X_train, y_train)
@@ -65,12 +67,10 @@ def gradientboost_fit(X_train, y_train):
         ('classifier', GradientBoostingClassifier(random_state = 100))
         ])
     param = {
-        'classifier__learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1],
-        'classifier__max_depth':[3, 4, 5, 6,7,8,9,10],
-        'classifier__loss': ["deviance", "exponential"], ## exponential will result in adaBoost
-        "classifier__n_estimators"  : [100,1000],
-        "classifier__min_samples_split" : np.linspace(0.1, 0.5, 12),
-        "classifier__min_samples_leaf" : np.linspace(0.1, 0.5,12)
+        'classifier__learning_rate'         : [0.001, 0.01, 0.05, 0.1],
+        'classifier__max_depth'             : [3, 4, 5, 6,7,8,9,10],
+        'classifier__loss'                  : ["deviance", "exponential"], ## exponential will result in adaBoost
+        "classifier__n_estimators"          : [1000],
     }
     CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = -1, cv = 10, verbose = 10)
     CV.fit(X_train, y_train)
@@ -82,10 +82,10 @@ def randomforest_fit(X_train, y_train):
         ('classifier', RandomForestClassifier(random_state = 100))
         ])
     param = {
-        'classifier__max_depth':[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        'classifier__max_depth':[2, 3, 6, 8],
         'classifier__criterion': ["gini", "entropy"],## exponential will result in adaBoost
         'classifier__max_features': ["auto", "sqrt", "log2", None], 
-        'classifier__n_estimators'  : [100, 500, 1000],
+        'classifier__n_estimators'  : [1000],
         'classifier__min_samples_leaf': [1,2,4],
         'classifier__min_samples_split':[2,5,10]
         
@@ -116,6 +116,12 @@ def savePerformances(models, X_test, y_test):
         pred_result_dict["PRECISION"].append(metrics.precision_score(y_true, y_pred))
         pred_result_dict["RECALL"].append(metrics.recall_score(y_true, y_pred))
         pred_result_dict["F1_SCORE"].append(metrics.f1_score(y_true, y_pred))
+        
+        # persist models #
+        pkl_filename = "~/local_data/{}.pkl".format(model_name)
+        with open(pkl_filename, 'wb') as file:
+            pickle.dump(model, file)
+            print("persisted {} model on cd directory".format(model_name)) 
     return pred_result_dict
     
 def main():
