@@ -18,6 +18,7 @@ from xgboost import XGBClassifier
 from synapseclient import Entity, Project, Folder, File, Link
 import synapseclient as sc
 import pickle
+from joblib import dump, load
 import time
 
 warnings.simplefilter("ignore")
@@ -119,9 +120,8 @@ def savePerformances(models, X_test, y_test):
         
         # persist models #
         pkl_filename = "~/local_data/{}.pkl".format(model_name)
-        with open(pkl_filename, 'wb') as file:
-            pickle.dump(model, file)
-            print("persisted {} model on cd directory".format(model_name)) 
+        joblib.dump(pipe, pkl_filename)
+        print("persisted {} model on cd directory".format(model_name)) 
     return pred_result_dict
     
 def main():
