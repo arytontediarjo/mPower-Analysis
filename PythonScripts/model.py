@@ -120,7 +120,7 @@ def savePerformances(models, X_test, y_test):
         
         # persist models #
         pkl_filename = "~/local_data/{}.pkl".format(model_name)
-        joblib.dump(pipe, pkl_filename)
+        joblib.dump(model, pkl_filename)
         print("persisted {} model on cd directory".format(model_name)) 
     return pred_result_dict
     
