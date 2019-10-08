@@ -53,11 +53,7 @@ def xgb_fit(X_train, y_train):
         "classifier__subsample"     : [0.8, 0.9, 1],
         "classifier__n_estimators"  : [100,1000]
     }
-<<<<<<< HEAD
-    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = -1, cv = 10, verbose = 10)
-=======
     CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", cv = 10)
->>>>>>> aaff364e062e2fe2af091b36a2e9bde63fa7b9f6
     CV.fit(X_train, y_train)
     return CV
     
