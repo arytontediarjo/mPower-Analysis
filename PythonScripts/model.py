@@ -119,7 +119,7 @@ def savePerformances(models, X_test, y_test):
         pred_result_dict["F1_SCORE"].append(metrics.f1_score(y_true, y_pred))
         
         # persist models #
-        pkl_filename = "~/local_data/{}.pkl".format(model_name)
+        pkl_filename = "/models/{}.pkl".format(model_name)
         joblib.dump(model, pkl_filename)
         print("persisted {} model on cd directory".format(model_name)) 
     return pred_result_dict
@@ -137,10 +137,10 @@ def main():
     rf_walking_model = randomforest_fit(walking_X_train, walking_y_train)
     gb_walking_model = gradientboost_fit(walking_X_train, walking_y_train)
     xgb_walking_model = xgb_fit(walking_X_train, walking_y_train)
-    models = [(lr_walking_model, "LOGISTIC REGRESSION"),
-              (rf_walking_model, "RANDOM FOREST"),
-              (gb_walking_model, "SKLEARN GRADIENT BOOSTING"),
-              (xgb_walking_model, "XTREME GRADIENT BOOSTING")]
+    models = [(lr_walking_model, "LOGISTIC_REGRESSION"),
+              (rf_walking_model, "RANDOM_FOREST"),
+              (gb_walking_model, "SKLEARN_GRADIENT BOOSTING"),
+              (xgb_walking_model, "XTREME_GRADIENT BOOSTING")]
     predictions = savePerformances(models, walking_X_test, walking_y_test)
     
     ## save to synapse file ##
