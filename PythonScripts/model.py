@@ -53,7 +53,7 @@ def xgb_fit(X_train, y_train):
         "classifier__subsample"     : [0.8],
         "classifier__n_estimators"  : [100]
     }
-    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = -1, cv = 10)
+    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", cv = 10)
     CV.fit(X_train, y_train)
     return CV
     
@@ -62,7 +62,7 @@ def gradientboost_fit(X_train, y_train):
     # pca = decomposition.PCA()
     pipe = Pipeline(steps=[
         ('scaler', StandardScaler()),
-        ('classifier', GradientBoostingClassifier(random_state = 100, n_jobs = -1))
+        ('classifier', GradientBoostingClassifier(random_state = 100))
         ])
     param = {
         'classifier__learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1],
