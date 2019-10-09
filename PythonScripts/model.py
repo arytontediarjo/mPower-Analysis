@@ -13,7 +13,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 import pandas as pd
 import numpy as np
 import warnings
-from sklearn.feature_selection import RFECV
+from sklearn.feature_selection import RFECV, SelectKBest, chi2
 from xgboost import XGBClassifier
 from synapseclient import Entity, Project, Folder, File, Link
 import synapseclient as sc
@@ -28,12 +28,16 @@ np.random.seed(100)
 def logreg_fit(X_train, y_train):
     pipe = Pipeline(steps=[
         ('scaler', StandardScaler()),
+        ('kbest', SelectKBest(chi2)),
         ('classifier', LogisticRegression(random_state = 100))
         ])
-    param = [{'classifier__penalty' : ['l2'], 
-              'classifier__solver'  : [ 'newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga']}, 
-             {'classifier__penalty' : ['l1'], 
-              'classifier__solver'  : [ 'liblinear', 'saga']}  
+    param = [{
+            "kbest__k"                    : [10, 16, 32],
+            'classifier__penalty'         : ['l2'], 
+            'classifier__solver'          : ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga']}, 
+            {
+            'classifier__penalty'         : ['l1'], 
+            'classifier__solver'          : ['liblinear', 'saga']}  
             ]
 
     CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = -1, cv = 10, verbose = 10)
@@ -45,16 +49,18 @@ def logreg_fit(X_train, y_train):
 def xgb_fit(X_train, y_train):
     pipe = Pipeline(steps=[
         ('scaler', StandardScaler()),
+        ('kbest', SelectKBest(chi2)),
         ('classifier', XGBClassifier(seed = 100))
         ])
     param = {
+        "kbest__k"                         : [10, 16, 32],
         "classifier__learning_rate"        : [0.001, 0.01, 0.05, 0.1],
         "classifier__tree_method"          : ["hist", "auto"],
         "classifier__max_depth"            : [2, 6, 8],
         "classifier__gamma"                : [0, 1],
         "classifier__subsample"            : [0.8, 1],
         "classifier__colsample_bytree"     : [0.8, 1],
-        "classifier__n_estimators"         : [1000]
+        "classifier__n_estimators"         : [100, 200]
     }
     CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", cv = 10)
     CV.fit(X_train, y_train)
@@ -64,14 +70,15 @@ def xgb_fit(X_train, y_train):
 def gradientboost_fit(X_train, y_train):
     # pca = decomposition.PCA()
     pipe = Pipeline(steps=[
-        ('scaler', StandardScaler()),
+        ('kbest', SelectKBest(chi2)),
         ('classifier', GradientBoostingClassifier(random_state = 100))
         ])
     param = {
+        "kbest__k"                          : [10, 16, 32],
         'classifier__learning_rate'         : [0.001, 0.01, 0.05, 0.1],
         'classifier__max_depth'             : [3, 4, 5, 6,7,8,9,10],
         'classifier__loss'                  : ["deviance", "exponential"], ## exponential will result in adaBoost
-        "classifier__n_estimators"          : [1000],
+        "classifier__n_estimators"          : [100, 200],
     }
     CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = -1, cv = 10, verbose = 10)
     CV.fit(X_train, y_train)
@@ -83,12 +90,13 @@ def randomforest_fit(X_train, y_train):
         ('classifier', RandomForestClassifier(random_state = 100))
         ])
     param = {
-        'classifier__max_depth':[2, 3, 6, 8],
-        'classifier__criterion': ["gini", "entropy"],## exponential will result in adaBoost
-        'classifier__max_features': ["auto", "sqrt", "log2", None], 
-        'classifier__n_estimators'  : [1000],
-        'classifier__min_samples_leaf': [1,2,4],
-        'classifier__min_samples_split':[2,5,10]
+        "kbest__k"                          : [10, 16, 32],
+        'classifier__max_depth'             : [2, 3, 6, 8],
+        'classifier__criterion'             : ["gini", "entropy"],## exponential will result in adaBoost
+        'classifier__max_features'          : ["auto", "sqrt", "log2", None], 
+        'classifier__n_estimators'          : [100, 200],
+        'classifier__min_samples_leaf'      : [1,2,4],
+        'classifier__min_samples_split'     : [2,5,10]
         
     }
     CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = -1, cv = 10, verbose = 10)
@@ -120,7 +128,7 @@ def savePerformances(models, X_test, y_test):
         
         # persist models #
         pkl_filename = "{}.pkl".format(model_name)
-        joblib.dump(model, pkl_filename)
+        joblib.dump(model.best_estimator_, pkl_filename)
         print("persisted {} model on cd directory".format(model_name)) 
     return pred_result_dict
     
