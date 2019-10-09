@@ -27,8 +27,8 @@ np.random.seed(100)
 
 def logreg_fit(X_train, y_train):
     pipe = Pipeline(steps=[
-        ('scaler', StandardScaler()),
         ('kbest', SelectKBest(chi2)),
+        ('scaler', StandardScaler()),
         ('classifier', LogisticRegression(random_state = 100))
         ])
     param = [{
@@ -48,7 +48,6 @@ def logreg_fit(X_train, y_train):
 
 def xgb_fit(X_train, y_train):
     pipe = Pipeline(steps=[
-        ('scaler', StandardScaler()),
         ('kbest', SelectKBest(chi2)),
         ('classifier', XGBClassifier(seed = 100))
         ])
@@ -86,13 +85,13 @@ def gradientboost_fit(X_train, y_train):
 
 def randomforest_fit(X_train, y_train):
     pipe = Pipeline(steps=[
-        ('scaler', StandardScaler()),
+        ('kbest', SelectKBest(chi2)),
         ('classifier', RandomForestClassifier(random_state = 100))
         ])
     param = {
         "kbest__k"                          : [10, 16, 32],
         'classifier__max_depth'             : [2, 3, 6, 8],
-        'classifier__criterion'             : ["gini", "entropy"],## exponential will result in adaBoost
+        'classifier__criterion'             : ["gini", "entropy"],
         'classifier__max_features'          : ["auto", "sqrt", "log2", None], 
         'classifier__n_estimators'          : [100, 200],
         'classifier__min_samples_leaf'      : [1,2,4],
