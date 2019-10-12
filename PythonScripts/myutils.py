@@ -10,13 +10,19 @@ Query for synapse table entity (can be used for tremors and walking V1 and V2)
 parameter: syn: synapse object, healthcodes: list of objects, synId: table entity that you want
 returns: a dataframe of healthCodes and their respective filepaths 
 """
-def get_synapse_table(syn, healthcodes, synId):
+def get_synapse_table(syn, healthcodes, synId, is_filtered):
+    if is_filtered == "yes":
     ### get healthcode subset from case-matched tsv, or any other subset of healthcodes
-    healthcode_subset = "({})".format([i for i in healthcodes]).replace("[", "").replace("]", "")
-    
-    ### query from synapse and download to synapsecache ### 
-    query = syn.tableQuery("select * from {} WHERE healthCode in {}".
-                       format(synId, healthcode_subset))
+        healthcode_subset = "({})".format([i for i in healthcodes]).replace("[", "").replace("]", "")
+        
+        ### query from synapse and download to synapsecache ### 
+        query = syn.tableQuery("select * from {} WHERE healthCode in {}".
+                        format(synId, healthcode_subset))
+    else:
+        ### query from synapse and download to synapsecache ### 
+        query = syn.tableQuery("select * from {}".
+                        format(synId))
+        
     data = query.asDataFrame()
     json_list = [_ for _ in data.columns if "json" in _]
     data[json_list] = data[json_list].applymap(lambda x: str(x))
@@ -62,13 +68,14 @@ def gait_time_series(filepath):
         data = pd.DataFrame(json.loads(json_data))
     
     ## return accelerometer data back if empty ##
-    if data.shape[0] == 0:
+    if data.shape[0] == 0 or data.empty: 
         return "#ERROR"
     
-    ## mpowerV2 daata
-    if "sensorType" in data.columns:
-        data = clean_accelerometer_data(data)
-        return data[["td","sensorType","x", "y", "z", "AA"]]
+    # ## mpowerV2 daata
+    # if "sensorType" in data.columns:
+    #     data = clean_accelerometer_data(data)
+    #     data = data[data["sensorType"].str.contains('accel')]
+    #     return data[["td","sensorType","x", "y", "z", "AA"]]
         
     ## userAcceleration from mpowerV1
     elif "userAcceleration" in data.columns:
@@ -78,8 +85,8 @@ def gait_time_series(filepath):
         data["z"] = data["userAcceleration"].apply(lambda x: x["z"])
         data = data.drop(["userAcceleration"], axis = 1)
     ## index time series ##
-    data = clean_accelerometer_data(data)
-    return data[["td","x", "y", "z", "AA"]]
+        data = clean_accelerometer_data(data)
+        return data[["td","x", "y", "z", "AA"]]
     
 """
 Generalized function to clean accelerometer data 

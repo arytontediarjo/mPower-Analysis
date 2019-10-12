@@ -25,8 +25,10 @@ def read_args():
                         help = "Number of sample per partition, no negative number")
     parser.add_argument("--featurize", default= "spectral-flatness",
                         help = "Features choices: 'pdkit' or 'spectral-flatness' ")
-    parser.add_argument("--mpower-version", default= "mpowerV1",
-                        help = "Which version of mpower")
+    parser.add_argument("--table-id", default= "syn7222425", ## mpower V1
+                        help = "mpower gait table to query from")
+    parser.add_argument("--filtered", default= "yes", 
+                        help = "filter healthcodes")
     args = parser.parse_args()
     return args
 
@@ -45,6 +47,14 @@ def _parallelize_dataframe(df, func, no_of_processors, chunksize):
     pool.join()
     return df
 
+def filter_healthcodes(syn):
+    ## get demographic information
+    filtered_entity = syn.get("syn8381056")
+    filtered_healthcode_data = pd.read_csv(filtered_entity["path"], sep = "\t")
+    filtered_healthcode_list = list(filtered_healthcode_data["healthCode"])
+    return filtered_healthcode_list
+
+
 """
 Main function to query mpower V1 Data 
 Will be updated with mpower V2 Data
@@ -56,17 +66,18 @@ def main():
     cores = int(args.num_cores) ## number of cores
     chunksize = int(args.num_chunks) ## number of chunks
     features = args.featurize ## which features to query
+    synId = args.table_id
+    is_filtered = args.filtered
     
     ## login
     syn = sc.login()
     
-    ## get demographic information
-    filtered_entity = syn.get("syn8381056")
-    filtered_healthcode_data = pd.read_csv(filtered_entity["path"], sep = "\t")
-    filtered_healthcode_list = list(filtered_healthcode_data["healthCode"])
-    
     ## process data ##
-    data = get_synapse_table(syn, ["1e0888df-7059-4fab-9dd7-b0b6616442e6"], "syn7222425")
+    if is_filtered == "yes":
+        data = get_synapse_table(syn, ["639e8a78-3631-4231-bda1-c911c1b169e5"], synId, is_filtered)
+    else:
+        data = get_synapse_table(syn, [], synId, is_filtered)
+        
     
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))
@@ -74,8 +85,7 @@ def main():
         data = _parallelize_dataframe(data, sfm_featurize, cores, chunksize)
     elif features == "pdkit":
         data = _parallelize_dataframe(data, pdkit_featurize, cores, chunksize)
-        # data = pdkit_normalize(data)
-    data = data[[feat for feat in data.columns if "path" not in feat]]
+    data = data[[feat for feat in data.columns if "path" not in feat]].dropna(axis='columns')
     
     ## save data to local directory then to synapse ##
     file_path = "~/{}".format(filename)

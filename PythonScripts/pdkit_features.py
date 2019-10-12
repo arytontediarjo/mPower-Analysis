@@ -15,15 +15,16 @@ note: Dont implement to mpowerv2 yet
 def pdkit_pipeline(filepath, var):
     ### Process data to be usable by pdkit ###
     data = gait_time_series(filepath)
-    
-    ### if filepath is empty or have no accelerometer data ###
-    if isinstance(data, str):
+    ### parse through gait processor to retrieve resampled signal
+    try:
+        ### if filepath is empty or have no accelerometer data ###
+        if isinstance(data, (str, type(None))):
+            return data
+        gp = pdkit.GaitProcessor(duration=data.td[-1])
+    except IndexError:
         return data
     
-    ### parse through gait processor to retrieve resampled signal
-    gp = pdkit.GaitProcessor(duration=data.td[-1])
     data = gp.resample_signal(data)
-    
     ### instantiate empty dictionary ###
     feature_dict = {}
     try:  
