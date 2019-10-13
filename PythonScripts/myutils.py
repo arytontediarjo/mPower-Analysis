@@ -11,7 +11,7 @@ parameter: syn: synapse object, healthcodes: list of objects, synId: table entit
 returns: a dataframe of healthCodes and their respective filepaths 
 """
 def get_synapse_table(syn, healthcodes, synId, is_filtered):
-    if is_filtered == "yes":
+    if is_filtered:
     ### get healthcode subset from case-matched tsv, or any other subset of healthcodes
         healthcode_subset = "({})".format([i for i in healthcodes]).replace("[", "").replace("]", "")
         
@@ -71,11 +71,11 @@ def gait_time_series(filepath):
     if data.shape[0] == 0 or data.empty: 
         return "#ERROR"
     
-    # ## mpowerV2 daata
-    # if "sensorType" in data.columns:
-    #     data = clean_accelerometer_data(data)
-    #     data = data[data["sensorType"].str.contains('accel')]
-    #     return data[["td","sensorType","x", "y", "z", "AA"]]
+    ## mpowerV2 daata
+    if "sensorType" in data.columns:
+        data = clean_accelerometer_data(data)
+        data = data[data["sensorType"].str.contains('accel')]
+        return data[["td","x", "y", "z", "AA"]]
         
     ## userAcceleration from mpowerV1
     elif "userAcceleration" in data.columns:

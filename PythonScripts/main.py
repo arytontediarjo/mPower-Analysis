@@ -27,7 +27,7 @@ def read_args():
                         help = "Features choices: 'pdkit' or 'spectral-flatness' ")
     parser.add_argument("--table-id", default= "syn7222425", ## mpower V1
                         help = "mpower gait table to query from")
-    parser.add_argument("--filtered", default= "yes", 
+    parser.add_argument("--filtered", action='store_true', 
                         help = "filter healthcodes")
     args = parser.parse_args()
     return args
@@ -73,12 +73,12 @@ def main():
     syn = sc.login()
     
     ## process data ##
-    if is_filtered == "yes":
-        data = get_synapse_table(syn, ["639e8a78-3631-4231-bda1-c911c1b169e5"], synId, is_filtered)
+    if is_filtered:
+        data = get_synapse_table(syn, ["8908507b-e8dc-4b8f-baa1-909460d7cc8f",
+                                       "fb0b63dd-f86c-4a4b-a12a-4eea145e5580"], synId, is_filtered)
     else:
         data = get_synapse_table(syn, [], synId, is_filtered)
         
-    
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))
     if features == "spectral-flatness":
