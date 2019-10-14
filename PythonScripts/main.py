@@ -68,6 +68,7 @@ def main():
     features = args.featurize ## which features to query
     synId = args.table_id
     is_filtered = args.filtered
+    print(is_filtered)
     
     ## login
     syn = sc.login()
