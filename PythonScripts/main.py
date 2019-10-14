@@ -74,8 +74,8 @@ def main():
     
     ## process data ##
     if is_filtered:
-        data = get_synapse_table(syn, ["8908507b-e8dc-4b8f-baa1-909460d7cc8f",
-                                       "fb0b63dd-f86c-4a4b-a12a-4eea145e5580"], synId, is_filtered)
+        data = get_synapse_table(syn, ["2044b0a3-3435-4e47-81a7-e57732078315",
+                                       "054ba88e-71f2-4365-b5be-d0df4e6dd6f2"], synId, is_filtered)
     else:
         data = get_synapse_table(syn, [], synId, is_filtered)
         
