@@ -5,7 +5,7 @@ import numpy as np
 import pdkit
 from pdkit.gait_time_series import GaitTimeSeries
 from pdkit.gait_processor import GaitProcessor
-from myutils import gait_time_series
+from myutils import get_acceleration_ts
 import ast
 
 """
@@ -13,7 +13,7 @@ Applicable to walking motions
 """
 def pdkit_pipeline(filepath, var):
     ### Process data to be usable by pdkit ###
-    data = gait_time_series(filepath)
+    data = gait_acceleration_ts(filepath)
     ### parse through gait processor to retrieve resampled signal
     try:
         ### if filepath is empty or have no accelerometer data ###
@@ -79,7 +79,7 @@ def pdkit_featurize(data):
                                                     and ("balance" not in _)
                                                     and ("rest" not in _)]:
             data[pathfile[:-8] + "_features_{}".format(coord)] = data[pathfile].apply(pdkit_pipeline, var = coord)
-    return data
+    return data.fillna("#ERROR")
 
 def pdkit_normalize(data):
     for i in [feat for feat in data.columns if "features" in feat]:

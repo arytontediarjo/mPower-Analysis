@@ -7,12 +7,11 @@ import multiprocessing as mp
 from multiprocessing import Pool
 import time
 import warnings
-from myutils import get_synapse_table
+from myutils import get_synapse_table, get_healthcodes
 from pdkit_features import pdkit_featurize, pdkit_normalize
 from spectral_flatness import sfm_featurize
 import argparse
 warnings.simplefilter("ignore")
-
 
 ## Read Arguments
 def read_args():
@@ -47,23 +46,6 @@ def _parallelize_dataframe(df, func, no_of_processors, chunksize):
     pool.join()
     return df
 
-def filter_healthcodes(syn, synId, is_filtered):
-    ## get demographic information
-    
-    if is_filtered:
-        filtered_entity = syn.get("syn8381056")
-        filtered_healthcode_data = pd.read_csv(filtered_entity["path"], sep = "\t")
-        filtered_healthcode_list = list(filtered_healthcode_data["healthCode"])
-        return filtered_healthcode_list
-    else:
-        
-        all_healthcode_list = list(syn.tableQuery("select distinct(healthCode) as healthCode from {}".format(synId))
-                                   .asDataFrame()["healthCode"])
-        return all_healthcode_list
-        
-        
-
-
 """
 Main function to query mpower V1 Data 
 Will be updated with mpower V2 Data
@@ -83,11 +65,10 @@ def main():
     syn = sc.login()
     
     ## process data ##
-    data = get_synapse_table(syn, filter_healthcodes(syn, synId, is_filtered), synId)
+    data = get_synapse_table(syn, get_healthcodes(syn, synId, is_filtered), synId)
         
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))
-    
     
     if features == "spectral-flatness":
         data = _parallelize_dataframe(data, sfm_featurize, cores, chunksize)

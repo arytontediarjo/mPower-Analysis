@@ -5,9 +5,10 @@ import os
 import ast
 
 """
-Prototype:
 Query for synapse table entity (can be used for tremors and walking V1 and V2)
-parameter: syn: synapse object, healthcodes: list of objects, synId: table entity that you want
+parameter:  syn: synapse object, 
+            healthcodes: list of objects, 
+            synId: table that you want to query from
 returns: a dataframe of healthCodes and their respective filepaths 
 """
 def get_synapse_table(syn, healthcodes, synId):
@@ -18,7 +19,6 @@ def get_synapse_table(syn, healthcodes, synId):
     data = query.asDataFrame()
     json_list = [_ for _ in data.columns if "json" in _]
     file_map = syn.downloadTableColumns(query, json_list)
-    
     ### Loop through the dictionary ### 
     dict_ = {}
     dict_["file_handle_id"] = []
@@ -39,30 +39,30 @@ def get_synapse_table(syn, healthcodes, synId):
                         how = "left")
         data = data.rename(columns = {feat: "{}_path_id".format(feat), 
                             "file_path": "{}_pathfile".format(feat)}).drop(["file_handle_id"], axis = 1)
-        print(data)
     data["createdOn"] = pd.to_datetime(data["createdOn"], unit = "ms")
     data = data.fillna("#ERROR") ## Empty Filepaths
     return data
 
 
 """
-Takes in both filepaths and gait of any mpower versions
+Function to produce accelerometer data
+parameter: filepath: filepaths of given data
+returns:    a tidied version of the dataframe that contains a time-index dataframe, time differences,
+            (x, y, z, AA) acceleration
 """
-def gait_time_series(filepath): 
+def get_acceleration_ts(filepath): 
     ## if empty filepaths return it back
     if filepath == "#ERROR":
         return filepath
     
-    ## open filepath ##
-    with open(filepath) as f:
-        json_data = f.read()
-        data = pd.DataFrame(json.loads(json_data))
+    ## open filepath
+    data = open_filepath(filepath)
     
     ## return accelerometer data back if empty ##
     if data.shape[0] == 0 or data.empty: 
         return "#ERROR"
     
-    ## mpowerV2 daata
+    ## get data from mpowerV2, annotated by the availability of sensorType
     if "sensorType" in data.columns:
         data = clean_accelerometer_data(data)
         data = data[data["sensorType"].str.contains('accel')]
@@ -75,7 +75,6 @@ def gait_time_series(filepath):
         data["y"] = data["userAcceleration"].apply(lambda x: x["y"])
         data["z"] = data["userAcceleration"].apply(lambda x: x["z"])
         data = data.drop(["userAcceleration"], axis = 1)
-    ## index time series ##
         data = clean_accelerometer_data(data)
         return data[["td","x", "y", "z", "AA"]]
     
@@ -93,3 +92,35 @@ def clean_accelerometer_data(data):
     data.index = pd.to_datetime(data.index, unit = "s")
     data["AA"] = np.sqrt(data["x"]**2 + data["y"]**2 + data["z"]**2)
     return data
+
+"""
+General Function to open a filepath 
+and returns a dataframe 
+"""
+def open_filepath(filepath):
+    with open(filepath) as f:
+        json_data = f.read()
+        data = pd.DataFrame(json.loads(json_data))
+    return data
+
+
+"""
+General Function get filtered healthcodes or all the healthcodes
+parameter:  syn: syn object,
+            filter: file of the filtered healthcodes,
+            synId: table that user want to query from,
+            is_filtered: boolean values of whether user wants to have filtered healthcode queries
+returns list of healthcodes
+"""
+def get_healthcodes(syn, synId, is_filtered):
+    ## get demographic information
+    
+    if is_filtered:
+        filtered_entity = syn.get("syn8381056")
+        healthcode_list = list(pd.read_csv(filtered_entity["path"], sep = "\t")["healthCode"])
+        return healthcode_list
+    else:
+        
+        healthcode_list = list(syn.tableQuery("select distinct(healthCode) as healthCode from {}".format(synId))
+                                   .asDataFrame()["healthCode"])
+        return healthcode_list
