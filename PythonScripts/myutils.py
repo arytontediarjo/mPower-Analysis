@@ -14,7 +14,7 @@ def get_synapse_table(syn, healthcodes, synId):
     ### get healthcode subset from case-matched tsv, or any other subset of healthcodes
     healthcode_subset = "({})".format([i for i in healthcodes]).replace("[", "").replace("]", "")   
     ### query from synapse and download to synapsecache ### 
-    query = syn.tableQuery("select * from {} WHERE healthCode in {} LIMIT 100".format(synId, healthcode_subset))
+    query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(synId, healthcode_subset))
     data = query.asDataFrame()
     json_list = [_ for _ in data.columns if "json" in _]
     data[json_list] = data[json_list].applymap(lambda x: str(x))
@@ -25,8 +25,6 @@ def get_synapse_table(syn, healthcodes, synId):
     dict_["file_handle_id"] = []
     dict_["file_path"] = []
     for k, v in file_map.items():
-        print(k)
-        print(v)
         dict_["file_handle_id"].append(k)
         dict_["file_path"].append(v)
     filepath_data = pd.DataFrame(dict_)
