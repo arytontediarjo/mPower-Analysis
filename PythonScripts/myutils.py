@@ -14,7 +14,7 @@ def get_synapse_table(syn, healthcodes, synId):
     ### get healthcode subset from case-matched tsv, or any other subset of healthcodes
     healthcode_subset = "({})".format([i for i in healthcodes]).replace("[", "").replace("]", "")   
     ### query from synapse and download to synapsecache ### 
-    query = syn.tableQuery("select * from {} WHERE healthCode in {} LIMIT 100".format(synId, healthcode_subset))
+    query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(synId, healthcode_subset))
     data = query.asDataFrame()
     json_list = [_ for _ in data.columns if "json" in _]
     data[json_list] = data[json_list].applymap(lambda x: str(x))
@@ -31,8 +31,10 @@ def get_synapse_table(syn, healthcodes, synId):
         dict_["file_path"].append(v)
     filepath_data = pd.DataFrame(dict_)
     data = data[["recordId","phoneInfo", "createdOn", "healthCode"] + json_list]
-    
     filepath_data["file_handle_id"] = filepath_data["file_handle_id"].astype(str)
+    
+    filepath_data.to_csv("test_filepaths.csv")
+    data.to_csv("test_data.csv")
     
     ### Join the filehandles with each acceleration files ###
     for feat in json_list:
@@ -43,6 +45,7 @@ def get_synapse_table(syn, healthcodes, synId):
                         how = "left")
         data = data.rename(columns = {feat: "{}_path_id".format(feat), 
                             "file_path": "{}_pathfile".format(feat)}).drop(["file_handle_id"], axis = 1)
+        print(data)
     data["createdOn"] = pd.to_datetime(data["createdOn"], unit = "ms")
     data = data.fillna("#ERROR") ## Empty Filepaths
     return data
