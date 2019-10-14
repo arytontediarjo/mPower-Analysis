@@ -5,7 +5,7 @@ import scipy.fftpack
 import json
 import statsmodels as stats
 from sklearn.metrics import auc
-from myutils import gait_time_series
+from myutils import get_acceleration_ts
 
 def get_spectrum(signal):
     ## Number of samplepoints
