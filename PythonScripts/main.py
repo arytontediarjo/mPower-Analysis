@@ -82,13 +82,11 @@ def main():
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))
     
-    try:
-        if features == "spectral-flatness":
-            data = _parallelize_dataframe(data, sfm_featurize, cores, chunksize)
-        elif features == "pdkit":
-            data = _parallelize_dataframe(data, pdkit_featurize, cores, chunksize)
-    except:
-        print(data)
+    
+    if features == "spectral-flatness":
+        data = _parallelize_dataframe(data, sfm_featurize, cores, chunksize)
+    elif features == "pdkit":
+        data = _parallelize_dataframe(data, pdkit_featurize, cores, chunksize)
     print("parallelization process finished")
     data = data[[feat for feat in data.columns if "path" not in feat]].dropna(axis='columns')
     
