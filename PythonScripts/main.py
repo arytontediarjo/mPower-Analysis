@@ -59,7 +59,6 @@ def filter_healthcodes(syn, synId, is_filtered):
         
         all_healthcode_list = list(syn.tableQuery("select distinct(healthCode) as healthCode from {}".format(synId))
                                    .asDataFrame()["healthCode"])
-        print(all_healthcode_list)
         return all_healthcode_list
         
         
@@ -85,7 +84,6 @@ def main():
     
     ## process data ##
     data = get_synapse_table(syn, filter_healthcodes(syn, synId, is_filtered), synId)
-    print(data["walk_motion.json_pathfile"])
         
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))

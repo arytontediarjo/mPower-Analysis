@@ -17,7 +17,6 @@ def get_synapse_table(syn, healthcodes, synId):
     query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(synId, healthcode_subset))
     data = query.asDataFrame()
     json_list = [_ for _ in data.columns if "json" in _]
-    data[json_list] = data[json_list].applymap(lambda x: str(x))
     file_map = syn.downloadTableColumns(query, json_list)
     
     ### Loop through the dictionary ### 
@@ -25,20 +24,15 @@ def get_synapse_table(syn, healthcodes, synId):
     dict_["file_handle_id"] = []
     dict_["file_path"] = []
     for k, v in file_map.items():
-        print(k)
-        print(v)
         dict_["file_handle_id"].append(k)
         dict_["file_path"].append(v)
     filepath_data = pd.DataFrame(dict_)
     data = data[["recordId","phoneInfo", "createdOn", "healthCode"] + json_list]
-    filepath_data["file_handle_id"] = filepath_data["file_handle_id"].astype(str)
-    
-    filepath_data.to_csv("test_filepaths.csv")
-    data.to_csv("test_data.csv")
+    filepath_data["file_handle_id"] = filepath_data["file_handle_id"].astype(float)
     
     ### Join the filehandles with each acceleration files ###
     for feat in json_list:
-        data[feat] = data[feat].astype(str)
+        data[feat] = data[feat].astype(float)
         data = pd.merge(data, filepath_data, 
                         left_on = feat, 
                         right_on = "file_handle_id", 
