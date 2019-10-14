@@ -25,6 +25,8 @@ def get_synapse_table(syn, healthcodes, synId):
     dict_["file_handle_id"] = []
     dict_["file_path"] = []
     for k, v in file_map.items():
+        print(k)
+        print(v)
         dict_["file_handle_id"].append(k)
         dict_["file_path"].append(v)
     filepath_data = pd.DataFrame(dict_)

@@ -78,12 +78,14 @@ def main():
     features = args.featurize ## which features to query
     synId = args.table_id
     is_filtered = args.filtered
+    print(is_filtered)
     
     ## login
     syn = sc.login()
     
     ## process data ##
     data = get_synapse_table(syn, filter_healthcodes(syn, synId, is_filtered), synId)
+    print(data["walk_motion.json_pathfile"])
         
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))
