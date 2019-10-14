@@ -20,7 +20,7 @@ def get_synapse_table(syn, healthcodes, synId, is_filtered):
                         format(synId, healthcode_subset))
     else:
         ### query from synapse and download to synapsecache ### 
-        query = syn.tableQuery("select * from {} LIMIT 100".
+        query = syn.tableQuery("select * from {}".
                         format(synId))
         
     data = query.asDataFrame()
