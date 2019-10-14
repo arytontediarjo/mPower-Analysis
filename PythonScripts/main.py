@@ -85,7 +85,7 @@ def main():
     
     ## process data ##
     data = get_synapse_table(syn, filter_healthcodes(syn, synId, is_filtered), synId)
-    print(data)
+    print(data["walk_motion.json_pathfile"])
         
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))
