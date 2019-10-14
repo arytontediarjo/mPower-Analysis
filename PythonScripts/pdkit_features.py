@@ -10,7 +10,6 @@ import ast
 
 """
 Applicable to walking motions
-note: Dont implement to mpowerv2 yet
 """
 def pdkit_pipeline(filepath, var):
     ### Process data to be usable by pdkit ###

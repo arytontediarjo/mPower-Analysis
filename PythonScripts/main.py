@@ -81,10 +81,15 @@ def main():
         
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))
-    if features == "spectral-flatness":
-        data = _parallelize_dataframe(data, sfm_featurize, cores, chunksize)
-    elif features == "pdkit":
-        data = _parallelize_dataframe(data, pdkit_featurize, cores, chunksize)
+    
+    try:
+        if features == "spectral-flatness":
+            data = _parallelize_dataframe(data, sfm_featurize, cores, chunksize)
+        elif features == "pdkit":
+            data = _parallelize_dataframe(data, pdkit_featurize, cores, chunksize)
+    except:
+        print(data)
+    print("parallelization process finished")
     data = data[[feat for feat in data.columns if "path" not in feat]].dropna(axis='columns')
     
     ## save data to local directory then to synapse ##
