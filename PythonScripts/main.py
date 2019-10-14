@@ -47,12 +47,20 @@ def _parallelize_dataframe(df, func, no_of_processors, chunksize):
     pool.join()
     return df
 
-def filter_healthcodes(syn):
+def filter_healthcodes(syn, synId, is_filtered):
     ## get demographic information
-    filtered_entity = syn.get("syn8381056")
-    filtered_healthcode_data = pd.read_csv(filtered_entity["path"], sep = "\t")
-    filtered_healthcode_list = list(filtered_healthcode_data["healthCode"])
-    return filtered_healthcode_list
+    
+    if is_filtered:
+        filtered_entity = syn.get("syn8381056")
+        filtered_healthcode_data = pd.read_csv(filtered_entity["path"], sep = "\t")
+        filtered_healthcode_list = list(filtered_healthcode_data["healthCode"])
+        return filtered_healthcode_list
+    else:
+        all_healthcode_list = list(syn.tableQuery("select distinct(healthCode) as healthCode from {}".format(synId))
+                                   .asDataFrame()["healthCode"])
+        return all_healthcode_list
+        
+        
 
 
 """
@@ -74,11 +82,7 @@ def main():
     syn = sc.login()
     
     ## process data ##
-    if is_filtered:
-        data = get_synapse_table(syn, ["2044b0a3-3435-4e47-81a7-e57732078315",
-                                       "054ba88e-71f2-4365-b5be-d0df4e6dd6f2"], synId, is_filtered)
-    else:
-        data = get_synapse_table(syn, [], synId, is_filtered)
+    data = get_synapse_table(syn, filter_healthcodes(syn, synId, is_filtered), synId)
         
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))

@@ -10,19 +10,11 @@ Query for synapse table entity (can be used for tremors and walking V1 and V2)
 parameter: syn: synapse object, healthcodes: list of objects, synId: table entity that you want
 returns: a dataframe of healthCodes and their respective filepaths 
 """
-def get_synapse_table(syn, healthcodes, synId, is_filtered):
-    if is_filtered:
+def get_synapse_table(syn, healthcodes, synId):
     ### get healthcode subset from case-matched tsv, or any other subset of healthcodes
-        healthcode_subset = "({})".format([i for i in healthcodes]).replace("[", "").replace("]", "")
-        
-        ### query from synapse and download to synapsecache ### 
-        query = syn.tableQuery("select * from {} WHERE healthCode in {}".
-                        format(synId, healthcode_subset))
-    else:
-        ### query from synapse and download to synapsecache ### 
-        query = syn.tableQuery("select * from {}".
-                        format(synId))
-        
+    healthcode_subset = "({})".format([i for i in healthcodes]).replace("[", "").replace("]", "")   
+    ### query from synapse and download to synapsecache ### 
+    query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(synId, healthcode_subset))
     data = query.asDataFrame()
     json_list = [_ for _ in data.columns if "json" in _]
     data[json_list] = data[json_list].applymap(lambda x: str(x))
