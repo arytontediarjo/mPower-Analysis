@@ -88,7 +88,7 @@ def main():
     elif features == "pdkit":
         data = _parallelize_dataframe(data, pdkit_featurize, cores, chunksize)
     print("parallelization process finished")
-    data = data[[feat for feat in data.columns if "path" not in feat]].dropna(axis='columns')
+    data = data[[feat for feat in data.columns if "path" not in feat]]
     
     ## save data to local directory then to synapse ##
     file_path = "~/{}".format(filename)
