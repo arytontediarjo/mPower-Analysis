@@ -56,8 +56,10 @@ def filter_healthcodes(syn, synId, is_filtered):
         filtered_healthcode_list = list(filtered_healthcode_data["healthCode"])
         return filtered_healthcode_list
     else:
+        
         all_healthcode_list = list(syn.tableQuery("select distinct(healthCode) as healthCode from {}".format(synId))
                                    .asDataFrame()["healthCode"])
+        print(all_healthcode_list)
         return all_healthcode_list
         
         
