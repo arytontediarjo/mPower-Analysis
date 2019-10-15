@@ -13,6 +13,7 @@ Applicable to walking motions
 """
 def pdkit_pipeline(filepath, var):
     ### Process data to be usable by pdkit ###
+    print(filepath)
     data = get_acceleration_ts(filepath)
     ### parse through gait processor to retrieve resampled signal
     try:
