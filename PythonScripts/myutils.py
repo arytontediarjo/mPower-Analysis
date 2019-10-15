@@ -16,7 +16,7 @@ def get_synapse_table(syn, healthcodes, synId):
     healthcode_subset = "({})".format([i for i in healthcodes]).replace("[", "").replace("]", "")   
     ### query from synapse and download to synapsecache ### 
     query = syn.tableQuery("select * from {} WHERE healthCode in {} \
-                           WHERE phoneInfo LIKE '%iPhone%'".format(synId, healthcode_subset))
+                           AND phoneInfo LIKE '%iPhone%'".format(synId, healthcode_subset))
     data = query.asDataFrame()
     json_list = [_ for _ in data.columns if "json" in _]
     file_map = syn.downloadTableColumns(query, json_list)
