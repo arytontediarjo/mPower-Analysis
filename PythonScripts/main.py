@@ -1,3 +1,11 @@
+"""
+Errors that will be catched:
+Empty filepaths, Empty Features, Empty Files
+Will be annotated as #ERROR universally
+#ERROR will be removed on feature engineering
+"""
+
+
 import os
 import pandas as pd
 import numpy as np
@@ -13,7 +21,10 @@ from spectral_flatness import sfm_featurize
 import argparse
 warnings.simplefilter("ignore")
 
-## Read Arguments
+
+"""
+Function for parsing in argument given by client
+"""
 def read_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--filename", default= "data.csv",
@@ -31,6 +42,11 @@ def read_args():
     args = parser.parse_args()
     return args
 
+
+"""
+Function for parallelization
+returns featurized dataframes
+"""
 def _parallelize_dataframe(df, func, no_of_processors, chunksize):
     ### split dataframe into 250 partitions ###
     df_split = np.array_split(df, chunksize)
@@ -57,26 +73,20 @@ def main():
     cores = int(args.num_cores) ## number of cores
     chunksize = int(args.num_chunks) ## number of chunks
     features = args.featurize ## which features to query
-    synId = args.table_id
-    is_filtered = args.filtered
-    print(is_filtered)
-    
+    synId = args.table_id ## which table to query from
+    is_filtered = args.filtered ## filter the dataset?
     ## login
     syn = sc.login()
-    
     ## process data ##
     data = get_synapse_table(syn, get_healthcodes(syn, synId, is_filtered), synId)
-        
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))
-    
     if features == "spectral-flatness":
         data = _parallelize_dataframe(data, sfm_featurize, cores, chunksize)
     elif features == "pdkit":
         data = _parallelize_dataframe(data, pdkit_featurize, cores, chunksize)
     print("parallelization process finished")
     data = data[[feat for feat in data.columns if "path" not in feat]]
-    
     ## save data to local directory then to synapse ##
     file_path = "~/{}".format(filename)
     data.to_csv(file_path)

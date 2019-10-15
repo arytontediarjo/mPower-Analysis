@@ -22,7 +22,6 @@ def pdkit_pipeline(filepath, var):
         gp = pdkit.GaitProcessor(duration=data.td[-1])
     except IndexError:
         return data
-    
     data = gp.resample_signal(data)
     ### instantiate empty dictionary ###
     feature_dict = {}
