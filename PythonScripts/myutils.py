@@ -133,7 +133,7 @@ function to retrieve sensors
 """
 def get_sensor_types(filepath):
     print(filepath)
-    if isinstance(filepath, (str, type(None))):
+    if filepath == "#ERROR":
         return filepath
     data = open_filepath(filepath)
     if "sensorType" in data.columns:
@@ -145,7 +145,7 @@ def get_sensor_types(filepath):
 function to retrieve unit of measurements 
 """
 def get_units(filepath):
-    if isinstance(filepath, (str, type(None))):
+    if filepath == "#ERROR":
         return filepath
     data = open_filepath(filepath)
     if "unit" in data.columns:
