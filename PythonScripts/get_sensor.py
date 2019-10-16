@@ -7,6 +7,8 @@ import synapseclient as sc
 import time
 from myutils import get_sensor_types, get_units, get_synapse_table, store_to_synapse, get_script_id, get_healthcodes
 import argparse
+import multiprocessing as mp
+from multiprocessing import Pool
 warnings.simplefilter("ignore")
 
 
