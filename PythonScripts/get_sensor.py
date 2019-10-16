@@ -1,30 +1,15 @@
-"""
-Errors that will be catched:
-Empty filepaths, Empty Features, Empty Files
-Will be annotated as #ERROR universally
-#ERROR will be removed on feature engineering
-"""
-
-
+import sys
 import os
+import warnings
 import pandas as pd
 import numpy as np
 import synapseclient as sc
-from synapseclient import Entity, Project, Folder, File, Link
-import multiprocessing as mp
-from multiprocessing import Pool
 import time
-import warnings
-from myutils import get_synapse_table, get_healthcodes
-from pdkit_features import pdkit_featurize, pdkit_normalize
-from spectral_flatness import sfm_featurize
+from myutils import get_sensor_types, get_units, get_synapse_table, store_to_synapse, get_script_id
 import argparse
 warnings.simplefilter("ignore")
 
 
-"""
-Function for parsing in argument given by client
-"""
 def read_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--filename", default= "data.csv",
@@ -33,8 +18,6 @@ def read_args():
                         help = "Number of Cores, negative number not allowed")
     parser.add_argument("--num-chunks", default= 10,
                         help = "Number of sample per partition, no negative number")
-    parser.add_argument("--featurize", default= "spectral-flatness",
-                        help = "Features choices: 'pdkit' or 'spectral-flatness' ")
     parser.add_argument("--table-id", default= "syn7222425", ## mpower V1
                         help = "mpower gait table to query from")
     parser.add_argument("--filtered", action='store_true', 
@@ -62,41 +45,44 @@ def _parallelize_dataframe(df, func, no_of_processors, chunksize):
     pool.join()
     return df
 
-"""
-Main function to query mpower V1 Data 
-Will be updated with mpower V2 Data
-""" 
-def main():
-    ## Retrieve Arguments
+def main(): 
     args = read_args()
     filename = args.filename ## name of the file
     cores = int(args.num_cores) ## number of cores
     chunksize = int(args.num_chunks) ## number of chunks
-    features = args.featurize ## which features to query
     synId = args.table_id ## which table to query from
     is_filtered = args.filtered ## filter the dataset?
-    ## login
+    
     syn = sc.login()
-    ## process data ##
-    data = get_synapse_table(syn, get_healthcodes(syn, synId, is_filtered), synId)
-    ## condition on choosing which features
-    print("Retrieving {} Features".format(features))
-    if features == "spectral-flatness":
-        data = _parallelize_dataframe(data, sfm_featurize, cores, chunksize)
-    elif features == "pdkit":
-        data = _parallelize_dataframe(data, pdkit_featurize, cores, chunksize)
-        # data = pdkit_featurize(data)
-    print("parallelization process finished")
-    data = data[[feat for feat in data.columns if "path" not in feat]]
-    ## save data to local directory then to synapse ##
-    file_path = "~/{}".format(filename)
-    data.to_csv(file_path)
-    new_file = File(path = file_path, parentId = "syn20816722")
-    new_file = syn.store(new_file)
+    data = get_synapse_table(syn, ["ae8fe177-8e0f-4cd7-a9eb-bd5a82ac02d3", 
+                               "4b1faed8-9f46-457d-b3cc-e158c2af4f65",
+                              "86aaa92b-e31e-44ac-b1bc-3c68bd118652"], "syn12514611")
+    data["sensors_used_walking"] = data["walk_motion.json_pathfile"].apply(get_sensor_types)
+    data["sensors_used_balance"] = data["balance_motion.json_pathfile"].apply(get_sensor_types)
+    data["walking_units"] = data["walk_motion.json_pathfile"].apply(get_units)
+    data["balance_units"] = data["balance_motion.json_pathfile"].apply(get_units)
     
     
-## Run Main Function ##
+    path_to_script = os.path.join(os.getcwd(), __file__)
+    output_filename = os.path.join(os.getcwd(), filename)
+    store_script = store_to_synapse(syn      = syn, 
+                                    filename = path_to_script,
+                                    data     = np.NaN,
+                                    parentId = "syn20987850"
+                                    )
+    script_id = get_script_id(syn, filename, "syn20987850")
+    store_data = store_to_synapse(syn       = syn, 
+                                  filename  = output_filename,
+                                  data      = data,
+                                  parentId    = "syn20988708",
+                                  source_id     = "syn12514611",
+                                  name = "sensor preprocessing",
+                                  script_id = script_id
+                                  )
+    
+    
 if __name__ == "__main__":
     start_time = time.time()
     main()
     print("--- %s seconds ---" % (time.time() - start_time))
+    

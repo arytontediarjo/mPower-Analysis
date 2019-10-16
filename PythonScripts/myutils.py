@@ -3,6 +3,8 @@ import numpy as np
 import json 
 import os
 import ast
+from synapseclient import Entity, Project, Folder, File, Link, Activity
+
 
 """
 Query for synapse table entity (can be used for tremors and walking V1 and V2)
@@ -15,8 +17,7 @@ def get_synapse_table(syn, healthcodes, synId):
     ### get healthcode subset from case-matched tsv, or any other subset of healthcodes
     healthcode_subset = "({})".format([i for i in healthcodes]).replace("[", "").replace("]", "")   
     ### query from synapse and download to synapsecache ### 
-    query = syn.tableQuery("select * from {} WHERE healthCode in {} \
-                           AND phoneInfo LIKE '%iPhone%'".format(synId, healthcode_subset))
+    query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(synId, healthcode_subset))
     data = query.asDataFrame()
     json_list = [_ for _ in data.columns if "json" in _]
     file_map = syn.downloadTableColumns(query, json_list)
@@ -41,7 +42,9 @@ def get_synapse_table(syn, healthcodes, synId):
         data = data.rename(columns = {feat: "{}_path_id".format(feat), 
                             "file_path": "{}_pathfile".format(feat)}).drop(["file_handle_id"], axis = 1)
     data["createdOn"] = pd.to_datetime(data["createdOn"], unit = "ms")
-    data = data.fillna("#ERROR") ## Empty Filepaths
+    
+    ## Empty Filepaths ##
+    data = data.fillna("#ERROR") 
     return data
 
 
@@ -121,7 +124,63 @@ def get_healthcodes(syn, synId, is_filtered):
         healthcode_list = list(pd.read_csv(filtered_entity["path"], sep = "\t")["healthCode"])
         return healthcode_list
     else:
-        
         healthcode_list = list(syn.tableQuery("select distinct(healthCode) as healthCode from {}".format(synId))
                                    .asDataFrame()["healthCode"])
         return healthcode_list
+    
+    
+""" 
+function to retrieve sensors 
+"""
+def get_sensor_types(filepath):
+    data = open_filepath(filepath)
+    if "sensorType" in data.columns:
+        return data["sensorType"].dropna().unique()
+    else:
+        return "#ERROR"
+
+"""
+function to retrieve unit of measurements 
+"""
+def get_units(filepath):
+    data = open_filepath(filepath)
+    if "sensorType" in data.columns:
+        return data["unit"].dropna().unique()
+    else:
+        return "#ERROR"
+
+"""
+ function to store to synapse with provenance 
+"""
+def store_to_synapse(syn, 
+                     filename, 
+                     data,
+                     parentId,
+                     **activities):
+    file_path = filename
+    activity = Activity(
+        name     = activities.get("name"),
+        executed = activities.get("script_id"))
+        # used     = activities.get("source_id"))
+    if ("py" in file_path.split(".")) or ("R" in file_path.split(".")):
+        new_file = File(path = file_path, parentId = parentId)
+    else:
+        data = data.to_csv(file_path)
+        new_file = File(path = file_path, parentId = parentId)
+    new_file = syn.store(new_file, activity = activity)
+    os.remove(file_path)
+    
+def get_script_id(syn, filename, parentId):
+    #   get list of files
+    file_list = list(syn.getChildren(parent = parentId, includeTypes = ['file']))
+    #   iterate through children
+    for dict_ in file_list:
+        if dict_["name"] == filename:
+            return dict_["id"]
+    #   file not available
+    return np.NaN 
+    
+    
+    
+
+    
