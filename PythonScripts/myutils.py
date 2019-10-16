@@ -156,20 +156,29 @@ def store_to_synapse(syn,
                      data,
                      parentId,
                      **activities):
+    
+    ## name of the output file ##
     file_path = filename
+    
+    ## set activity entity for provenance ##
     activity = Activity(
         name     = activities.get("name"),
         executed = activities.get("script_id"),
         used     = activities.get("source_id"))
+    
+    ## condition for storing scripts ##
     if ("py" in file_path.split(".")) or ("R" in file_path.split(".")):
         new_file = File(path = file_path, parentId = parentId)
         new_file = syn.store(new_file, activity = activity)
+    
+    ## condition for storing csv data *will be improved with other formats* ##
     else:
         data = data.to_csv(file_path)
         new_file = File(path = file_path, parentId = parentId)
         new_file = syn.store(new_file, activity = activity)
         os.remove(file_path)
-    
+
+## function to retrieve synId of a scripts ##
 def get_script_id(syn, filename, parentId):
     #   get list of files
     file_list = list(syn.getChildren(parent = parentId, includeTypes = ['file']))

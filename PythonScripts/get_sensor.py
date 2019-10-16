@@ -73,7 +73,8 @@ def main():
                                   data = data, parentId = "syn20988708",
                                   source_id = "syn12514611", name = "sensor preprocessing",
                                   script_id = get_script_id(syn, __file__, "syn20987850"))
-    
+
+## run main function ##
 if __name__ == "__main__":
     start_time = time.time()
     main()
