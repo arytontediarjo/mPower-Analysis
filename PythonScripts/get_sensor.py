@@ -5,8 +5,7 @@ import pandas as pd
 import numpy as np
 import synapseclient as sc
 import time
-from myutils import get_sensor_types, get_units, get_synapse_table, 
-                    store_to_synapse, get_script_id, get_healthcodes
+from myutils import get_sensor_types, get_units, get_synapse_table, store_to_synapse, get_script_id, get_healthcodes
 import argparse
 warnings.simplefilter("ignore")
 
