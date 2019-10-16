@@ -160,15 +160,16 @@ def store_to_synapse(syn,
     file_path = filename
     activity = Activity(
         name     = activities.get("name"),
-        executed = activities.get("script_id"))
-        # used     = activities.get("source_id"))
+        executed = activities.get("script_id"),
+        used     = activities.get("source_id"))
     if ("py" in file_path.split(".")) or ("R" in file_path.split(".")):
         new_file = File(path = file_path, parentId = parentId)
+        new_file = syn.store(new_file, activity = activity)
     else:
         data = data.to_csv(file_path)
         new_file = File(path = file_path, parentId = parentId)
-    new_file = syn.store(new_file, activity = activity)
-    os.remove(file_path)
+        new_file = syn.store(new_file, activity = activity)
+        os.remove(file_path)
     
 def get_script_id(syn, filename, parentId):
     #   get list of files

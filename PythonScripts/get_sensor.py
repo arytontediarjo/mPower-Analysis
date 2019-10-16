@@ -65,19 +65,19 @@ def main():
     
     path_to_script = os.path.join(os.getcwd(), __file__)
     output_filename = os.path.join(os.getcwd(), filename)
-    store_script = store_to_synapse(syn      = syn, 
-                                    filename = path_to_script,
-                                    data     = np.NaN,
-                                    parentId = "syn20987850"
+    store_script = store_to_synapse(syn         = syn, 
+                                    filename    = path_to_script,
+                                    data        = np.NaN,
+                                    parentId    = "syn20987850"
                                     )
-    script_id = get_script_id(syn, filename, "syn20987850")
-    store_data = store_to_synapse(syn       = syn, 
-                                  filename  = output_filename,
-                                  data      = data,
-                                  parentId    = "syn20988708",
+    script_id = get_script_id(syn, __file__, "syn20987850")
+    store_data = store_to_synapse(syn           = syn, 
+                                  filename      = output_filename,
+                                  data          = data,
+                                  parentId      = "syn20988708",
                                   source_id     = "syn12514611",
-                                  name = "sensor preprocessing",
-                                  script_id = script_id
+                                  name          = "sensor preprocessing",
+                                  script_id     = script_id
                                   )
     
     
