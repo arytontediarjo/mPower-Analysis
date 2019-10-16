@@ -118,7 +118,6 @@ returns list of healthcodes
 """
 def get_healthcodes(syn, synId, is_filtered):
     ## get demographic information
-    
     if is_filtered:
         filtered_entity = syn.get("syn8381056")
         healthcode_list = list(pd.read_csv(filtered_entity["path"], sep = "\t")["healthCode"])

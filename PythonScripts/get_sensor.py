@@ -16,7 +16,7 @@ def read_args():
                         help = "Path for output results")
     parser.add_argument("--num-cores", default= 16,
                         help = "Number of Cores, negative number not allowed")
-    parser.add_argument("--num-chunks", default= 10,
+    parser.add_argument("--num-chunks", default= 250,
                         help = "Number of sample per partition, no negative number")
     parser.add_argument("--table-id", default= "syn7222425", ## mpower V1
                         help = "mpower gait table to query from")
@@ -45,41 +45,32 @@ def _parallelize_dataframe(df, func, no_of_processors, chunksize):
     pool.join()
     return df
 
-def main(): 
-    args = read_args()
-    filename = args.filename ## name of the file
-    cores = int(args.num_cores) ## number of cores
-    chunksize = int(args.num_chunks) ## number of chunks
-    synId = args.table_id ## which table to query from
-    is_filtered = args.filtered ## filter the dataset?
-    
-    syn = sc.login()
-    data = get_synapse_table(syn, ["ae8fe177-8e0f-4cd7-a9eb-bd5a82ac02d3", 
-                               "4b1faed8-9f46-457d-b3cc-e158c2af4f65",
-                              "86aaa92b-e31e-44ac-b1bc-3c68bd118652"], "syn12514611")
+def _featurize(data):
     data["sensors_used_walking"] = data["walk_motion.json_pathfile"].apply(get_sensor_types)
     data["sensors_used_balance"] = data["balance_motion.json_pathfile"].apply(get_sensor_types)
     data["walking_units"] = data["walk_motion.json_pathfile"].apply(get_units)
     data["balance_units"] = data["balance_motion.json_pathfile"].apply(get_units)
+    return data
+
+def main(): 
+    args = read_args()
+    filename = args.filename ## name of the file
+    synId = args.table_id ## which table to query from
+    is_filtered = args.filtered ## filter the dataset?
     
+    syn = sc.login()
+    data = get_synapse_table(syn, get_healthcodes(syn, synId, is_filtered), synId)
+    data = _parallelize_dataframe(data, _featurize, 16, 250)
     
+    ## store data and script ##
     path_to_script = os.path.join(os.getcwd(), __file__)
     output_filename = os.path.join(os.getcwd(), filename)
-    store_script = store_to_synapse(syn         = syn, 
-                                    filename    = path_to_script,
-                                    data        = np.NaN,
-                                    parentId    = "syn20987850"
-                                    )
-    script_id = get_script_id(syn, __file__, "syn20987850")
-    store_data = store_to_synapse(syn           = syn, 
-                                  filename      = output_filename,
-                                  data          = data,
-                                  parentId      = "syn20988708",
-                                  source_id     = "syn12514611",
-                                  name          = "sensor preprocessing",
-                                  script_id     = script_id
-                                  )
-    
+    store_script = store_to_synapse(syn  = syn,    filename = path_to_script,
+                                    data = np.NaN, parentId = "syn20987850")
+    store_data = store_to_synapse(syn  = syn, filename  = output_filename,
+                                  data = data, parentId = "syn20988708",
+                                  source_id = "syn12514611", name = "sensor preprocessing",
+                                  script_id = get_script_id(syn, __file__, "syn20987850"))
     
 if __name__ == "__main__":
     start_time = time.time()
