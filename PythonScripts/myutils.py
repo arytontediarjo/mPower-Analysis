@@ -143,7 +143,7 @@ function to retrieve unit of measurements
 """
 def get_units(filepath):
     data = open_filepath(filepath)
-    if "sensorType" in data.columns:
+    if "unit" in data.columns:
         return data["unit"].dropna().unique()
     else:
         return "#ERROR"
