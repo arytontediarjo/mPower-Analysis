@@ -132,6 +132,9 @@ def get_healthcodes(syn, synId, is_filtered):
 function to retrieve sensors 
 """
 def get_sensor_types(filepath):
+    print(filepath)
+    if isinstance(filepath, (str, type(None))):
+        return filepath
     data = open_filepath(filepath)
     if "sensorType" in data.columns:
         return data["sensorType"].dropna().unique()
@@ -142,6 +145,8 @@ def get_sensor_types(filepath):
 function to retrieve unit of measurements 
 """
 def get_units(filepath):
+    if isinstance(filepath, (str, type(None))):
+        return filepath
     data = open_filepath(filepath)
     if "unit" in data.columns:
         return data["unit"].dropna().unique()
