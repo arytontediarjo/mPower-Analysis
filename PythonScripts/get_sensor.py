@@ -65,12 +65,12 @@ def _featurize(data):
     return data
 
 def main(): 
-    args              = read_args()
-    filename          = args.filename ## name of the file
-    synId             = args.table_id ## which table to query from
-    is_filtered       = args.filtered ## filter the dataset?
-    data_parent_id    = args.data_parent_id
-    script_parent_id  = args.script_parent_id
+    args              = read_args()            ## read arguments
+    filename          = args.filename          ## name of the file
+    synId             = args.table_id          ## which table to query from
+    is_filtered       = args.filtered          ## filter the dataset
+    data_parent_id    = args.data_parent_id    ## parent id of data
+    script_parent_id  = args.script_parent_id  ## parent id of python scripts
     
     syn = sc.login()
     data = get_synapse_table(syn, get_healthcodes(syn, synId, is_filtered), synId)
