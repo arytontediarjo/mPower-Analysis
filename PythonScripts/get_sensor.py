@@ -4,6 +4,7 @@ import warnings
 import pandas as pd
 import numpy as np
 import synapseclient as sc
+from synapseclient import Entity, Project, Folder, File, Link, Activity
 import time
 from myutils import get_sensor_types, \
                     get_units, get_synapse_table,  \
