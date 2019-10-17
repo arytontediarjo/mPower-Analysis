@@ -180,6 +180,7 @@ def store_to_synapse(syn,
     
     ## name of the output file ##
     file_path = filename
+    print(activities.get("source_id"))
     
     ## set activity entity for provenance ##
     activity = Activity(
