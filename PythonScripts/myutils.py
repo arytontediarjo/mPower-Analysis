@@ -184,7 +184,7 @@ def store_to_synapse(syn,
     ## set activity entity for provenance ##
     if isinstance(activities.get("source_id"), str):
         print(activities.get("source_id"))
-        activity = Activity(name = activities.get("name"),
+        activity = Activity(name = activities.get("name"))
         activity.used(activities.get("source_id"))
         activity.executed(activities.get("script_id"))
     
