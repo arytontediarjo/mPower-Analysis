@@ -15,7 +15,7 @@ import multiprocessing as mp
 from multiprocessing import Pool
 import time
 import warnings
-from myutils import get_synapse_table, get_healthcodes, generate_provenance, get_script_id
+from myutils import get_synapse_table, get_healthcodes, get_script_id
 from pdkit_features import pdkit_featurize, pdkit_normalize
 from spectral_flatness import sfm_featurize
 import argparse
