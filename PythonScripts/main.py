@@ -86,7 +86,7 @@ def main():
         data = _parallelize_dataframe(data, sfm_featurize, cores, chunksize)
     elif features == "pdkit":
         data = _parallelize_dataframe(data, pdkit_featurize, cores, chunksize)
-        # data = pdkit_featurize(data)
+        data = pdkit_normalize(data)
     print("parallelization process finished")
     data = data[[feat for feat in data.columns if "path" not in feat]]
     
