@@ -182,7 +182,7 @@ def store_to_synapse(syn,
     file_path = filename
     
     ## set activity entity for provenance ##
-    if not isinstance(file_path, type(None)):
+    if isinstance(activities.get("source_id"), str):
         activity = Activity(
             name     = activities.get("name"),
             executed = activities.get("script_id"),
