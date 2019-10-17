@@ -71,9 +71,9 @@ def get_acceleration_ts(filepath):
     if ("sensorType" in data.columns):
         try:
             data = data[data["sensorType"] == "userAcceleration"]
+            data = clean_accelerometer_data(data)
         except:
             return "#ERROR"
-        data = clean_accelerometer_data(data)
         return data[["td","x", "y", "z", "AA"]]
         
     ## userAcceleration from mpowerV1
@@ -93,10 +93,7 @@ format: time index, time difference from point zero, (x, y, z, AA) vector coordi
 def clean_accelerometer_data(data):
     data = data.dropna(subset = ["x", "y", "z"])
     date_series = pd.to_datetime(data["timestamp"], unit = "s")
-    try:
-        data["td"] = date_series - date_series.iloc[0]
-    except IndexError:
-        return "#ERROR"
+    data["td"] = date_series - date_series.iloc[0]
     data["td"] = data["td"].apply(lambda x: x.total_seconds())
     data["time"] = data["td"]
     data = data.set_index("time")
