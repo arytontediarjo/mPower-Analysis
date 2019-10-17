@@ -209,6 +209,20 @@ def get_script_id(syn, filename, parentId):
             return dict_["id"]
     #   file not available
     return np.NaN 
+
+def map_to_json(params):
+    if isinstance(params, dict):
+        return params
+    else:
+        return np.NaN
+    
+def normalize_feature(data, feature):
+    normalized_data = data[feature].map(map_to_json) \
+                                .apply(pd.Series) \
+                                .fillna("#ERROR").add_prefix('{}.'.format(feature))
+    data = pd.concat([data, normalized_data], axis = 1).drop(feature, axis = 1)
+    return data
+    
     
     
     

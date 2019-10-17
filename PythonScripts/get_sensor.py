@@ -7,7 +7,8 @@ import synapseclient as sc
 import time
 from myutils import get_sensor_types, \
                     get_units, get_synapse_table, store_to_synapse, \
-                    get_script_id, get_healthcodes, get_sensor_specs
+                    get_script_id, get_healthcodes, get_sensor_specs, \
+                    normalize_feature
 import argparse
 import multiprocessing as mp
 from multiprocessing import Pool
@@ -67,6 +68,8 @@ def main():
     syn = sc.login()
     data = get_synapse_table(syn, get_healthcodes(syn, synId, is_filtered), synId)
     data = _parallelize_dataframe(data, _featurize, 16, 250)
+    
+    data = normalize_feature(data, "sensor")
     
     ## store data and script ##
     path_to_script = os.path.join(os.getcwd(), __file__)
