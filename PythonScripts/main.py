@@ -15,7 +15,7 @@ import multiprocessing as mp
 from multiprocessing import Pool
 import time
 import warnings
-from myutils import get_synapse_table, get_healthcodes
+from myutils import get_synapse_table, get_healthcodes, generate_provenance
 from pdkit_features import pdkit_featurize, pdkit_normalize
 from spectral_flatness import sfm_featurize
 import argparse
@@ -45,17 +45,6 @@ def read_args():
                         help = "data folders parent ids")
     args = parser.parse_args()
     return args
-
-def generate_provenance(syn, filename, pyfile, synId, **parentId):
-    ## store data and script ##
-        path_to_script = os.path.join(os.getcwd(), __file__)
-        output_filename = os.path.join(os.getcwd(), filename)
-        store_script = store_to_synapse(syn  = syn, filename = path_to_script,
-                                    data = np.NaN, parentId = parentId.get("script"))
-        store_data = store_to_synapse(syn  = syn, filename  = output_filename,
-                                  data = data, parentId = parentId.get("data"),
-                                  source_id = synId, name = "feature preprocessing",
-                                  script_id = get_script_id(syn, __file__, parentId.get("script")))
 
 
 """
@@ -111,10 +100,6 @@ def main():
     generate_provenance(syn, filename, __file__, synId,
                         script = script_parent_id, 
                         data = data_parent_id)
-    
-    
-    
-    
     
 ## Run Main Function ##
 if __name__ == "__main__":

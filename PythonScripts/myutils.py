@@ -222,6 +222,18 @@ def normalize_feature(data, feature):
                                 .fillna("#ERROR").add_prefix('{}.'.format(feature))
     data = pd.concat([data, normalized_data], axis = 1).drop(feature, axis = 1)
     return data
+
+
+def generate_provenance(syn, filename, pyfile, synId, **parentId):
+    ## store data and script ##
+        path_to_script = os.path.join(os.getcwd(), pyfile)
+        output_filename = os.path.join(os.getcwd(), filename)
+        store_script = store_to_synapse(syn  = syn, filename = path_to_script,
+                                    data = np.NaN, parentId = parentId.get("script"))
+        store_data = store_to_synapse(syn  = syn, filename  = output_filename,
+                                  data = data, parentId = parentId.get("data"),
+                                  source_id = synId, name = "feature preprocessing",
+                                  script_id = get_script_id(syn, __file__, parentId.get("script")))
     
     
     
