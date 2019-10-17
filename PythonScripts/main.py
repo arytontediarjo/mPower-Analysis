@@ -39,8 +39,23 @@ def read_args():
                         help = "mpower gait table to query from")
     parser.add_argument("--filtered", action='store_true', 
                         help = "filter healthcodes")
+    parser.add_argument("--script-parent-id", default= "syn20987850", 
+                        help = "script folders parent ids")
+    parser.add_argument("--data-parent-id", default = "syn20988708", 
+                        help = "data folders parent ids")
     args = parser.parse_args()
     return args
+
+def generate_provenance(syn, filename, pyfile, synId, **parentId):
+    ## store data and script ##
+        path_to_script = os.path.join(os.getcwd(), __file__)
+        output_filename = os.path.join(os.getcwd(), filename)
+        store_script = store_to_synapse(syn  = syn, filename = path_to_script,
+                                    data = np.NaN, parentId = parentId.get("script"))
+        store_data = store_to_synapse(syn  = syn, filename  = output_filename,
+                                  data = data, parentId = parentId.get("data"),
+                                  source_id = synId, name = "feature preprocessing",
+                                  script_id = get_script_id(syn, __file__, parentId.get("script"))
 
 
 """
@@ -74,7 +89,10 @@ def main():
     chunksize = int(args.num_chunks) ## number of chunks
     features = args.featurize ## which features to query
     synId = args.table_id ## which table to query from
-    is_filtered = args.filtered ## filter the dataset?
+    is_filtered = args.filtered ## filter the dataset
+    script_parent_id = args.script_parent_id
+    data_parent_id = args.data_parent_id
+    
     ## login
     syn = sc.login()
     ## process data ##
@@ -90,11 +108,13 @@ def main():
     print("parallelization process finished")
     data = data[[feat for feat in data.columns if "path" not in feat]]
     
-    ## save data to local directory then to synapse ##
-    file_path = "~/{}".format(filename)
-    data.to_csv(file_path)
-    new_file = File(path = file_path, parentId = "syn20816722")
-    new_file = syn.store(new_file)
+    generate_provenance(syn, filename, __file__, 
+                        script = script_parent_id, 
+                        data = data_parent_id,
+                        source = synId)
+    
+    
+    
     
     
 ## Run Main Function ##
