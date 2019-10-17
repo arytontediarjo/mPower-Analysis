@@ -68,8 +68,8 @@ def main():
     syn = sc.login()
     data = get_synapse_table(syn, get_healthcodes(syn, synId, is_filtered), synId)
     data = _parallelize_dataframe(data, _featurize, 16, 250)
-    
-    data = normalize_feature(data, "sensor")
+    data = normalize_feature(data, "walking_specs")
+    data = normalize_feature(data, "balance_specs")
     
     ## store data and script ##
     path_to_script = os.path.join(os.getcwd(), __file__)
