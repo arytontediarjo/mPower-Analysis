@@ -55,7 +55,7 @@ def generate_provenance(syn, filename, pyfile, synId, **parentId):
         store_data = store_to_synapse(syn  = syn, filename  = output_filename,
                                   data = data, parentId = parentId.get("data"),
                                   source_id = synId, name = "feature preprocessing",
-                                  script_id = get_script_id(syn, __file__, parentId.get("script"))
+                                  script_id = get_script_id(syn, __file__, parentId.get("script")))
 
 
 """
