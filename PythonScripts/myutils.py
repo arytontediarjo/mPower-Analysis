@@ -187,7 +187,7 @@ def store_to_synapse(syn,
         activity = Activity(
             name     = activities.get("name"),
             executed = activities.get("script_id"),
-            used     = activities.get("source_id"))
+            used     = "syn12514611"
     
     ## condition for storing scripts ##
     if ("py" in file_path.split(".")) or ("R" in file_path.split(".")):
