@@ -64,7 +64,7 @@ def sfm_featurize(data):
     for coord in ["x", "y", "z", "AA"]:
         for pathfile in [_ for _ in data.columns if ("pathfile" in _) 
                                                 and ("balance" in _ or "rest" in _ )]:
-            # print(pathfile)
+            print(pathfile)
             data["sfm_auc_{}".format(coord)] = data[pathfile].apply(sfm_auc_pipeline, var = coord)
             # print(data)
     return data
