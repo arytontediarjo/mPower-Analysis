@@ -47,6 +47,7 @@ def sfm_auc_pipeline(params, var):
     ## process acceleration
     try:
         data = get_acceleration_ts(params)
+        # print(data)
     except:
         return "#ERROR"
     ### if filepath is empty or have no accelerometer data ###
@@ -54,6 +55,7 @@ def sfm_auc_pipeline(params, var):
         return data
     ## run spectral flatness pipeline
     data = sfm_preprocessing(data[var])
+    # print(data)
     ## retrieve AUC
     area = auc(data.gamma, data.sfm)
     return area
@@ -62,5 +64,7 @@ def sfm_featurize(data):
     for coord in ["x", "y", "z", "AA"]:
         for pathfile in [_ for _ in data.columns if ("pathfile" in _) 
                                                 and ("balance" in _ or "rest" in _ )]:
+            # print(pathfile)
             data["sfm_auc_{}".format(coord)] = data[pathfile].apply(sfm_auc_pipeline, var = coord)
+            # print(data)
     return data
