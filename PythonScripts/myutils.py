@@ -67,9 +67,12 @@ def get_acceleration_ts(filepath):
         return "#ERROR"
     
     ## get data from mpowerV2, annotated by the availability of sensorType
-    if "sensorType" in data.columns:
+    if ("sensorType" in data.columns):
+        try:
+            data = data[data["sensorType"] == "userAcceleration"]
+        except:
+            return "#ERROR"
         data = clean_accelerometer_data(data)
-        data = data[data["sensorType"].str.contains('accel')]
         return data[["td","x", "y", "z", "AA"]]
         
     ## userAcceleration from mpowerV1
@@ -152,9 +155,22 @@ def get_units(filepath):
         return data["unit"].dropna().unique()
     else:
         return "#ERROR"
+    
+"""
+function for retrieving specs (if available)
+"""
+def get_sensor_specs(filepath):
+    if filepath == "#ERROR":
+        return filepath
+    data = open_filepath(filepath)
+    if "sensor" in data.columns:
+        return data["sensor"].iloc[0]
+    else:
+        return "#ERROR"
+    
 
 """
- function to store to synapse with provenance 
+function to store to synapse with provenance 
 """
 def store_to_synapse(syn, 
                      filename, 

@@ -5,7 +5,9 @@ import pandas as pd
 import numpy as np
 import synapseclient as sc
 import time
-from myutils import get_sensor_types, get_units, get_synapse_table, store_to_synapse, get_script_id, get_healthcodes
+from myutils import get_sensor_types, \
+                    get_units, get_synapse_table, store_to_synapse, \
+                    get_script_id, get_healthcodes, get_sensor_specs
 import argparse
 import multiprocessing as mp
 from multiprocessing import Pool
@@ -52,6 +54,8 @@ def _featurize(data):
     data["sensors_used_balance"] = data["balance_motion.json_pathfile"].apply(get_sensor_types)
     data["walking_units"] = data["walk_motion.json_pathfile"].apply(get_units)
     data["balance_units"] = data["balance_motion.json_pathfile"].apply(get_units)
+    data["walking_specs"] = data["walk_motion.json_pathfile"].apply(get_sensor_specs)
+    data["balance_specs"] = data["balance_motion.json_pathfile"].apply(get_sensor_specs)
     return data
 
 def main(): 
