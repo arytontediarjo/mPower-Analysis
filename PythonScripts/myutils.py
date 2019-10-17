@@ -124,6 +124,7 @@ def get_healthcodes(syn, synId, is_filtered):
     if is_filtered:
         filtered_entity = syn.get("syn8381056")
         healthcode_list = list(pd.read_csv(filtered_entity["path"], sep = "\t")["healthCode"])
+        print(healthcode_list)
         return healthcode_list
     else:
         healthcode_list = list(syn.tableQuery("select distinct(healthCode) as healthCode from {}".format(synId))
