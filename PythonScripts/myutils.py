@@ -191,7 +191,7 @@ def store_to_synapse(syn,
     ## condition for storing scripts ##
     if ("py" in file_path.split(".")) or ("R" in file_path.split(".")):
         new_file = File(path = file_path, parentId = parentId)
-        new_file = syn.store(new_file, activity = activity)
+        new_file = syn.store(new_file)
     
     ## condition for storing csv data *will be improved with other formats* ##
     else:
