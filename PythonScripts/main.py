@@ -108,10 +108,9 @@ def main():
     print("parallelization process finished")
     data = data[[feat for feat in data.columns if "path" not in feat]]
     
-    generate_provenance(syn, filename, __file__, 
+    generate_provenance(syn, filename, __file__, synId
                         script = script_parent_id, 
-                        data = data_parent_id,
-                        source = synId)
+                        data = data_parent_id)
     
     
     
