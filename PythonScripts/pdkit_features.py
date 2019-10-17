@@ -75,7 +75,6 @@ def pdkit_pipeline(filepath, var):
 def pdkit_featurize(data):
     for coord in ["x", "y", "z", "AA"]:
         for pathfile in [_ for _ in data.columns if ("pathfile" in _) 
-                                                    and ("pedometer" not in _)
                                                     and ("balance" not in _)
                                                     and ("rest" not in _)]:
             print(pathfile)

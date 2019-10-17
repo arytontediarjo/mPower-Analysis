@@ -46,7 +46,7 @@ def sfm_preprocessing(data, hz_start = 0, hz_end = 10, gamma_range = np.arange(0
 def sfm_auc_pipeline(params, var):
     ## process acceleration
     try:
-        data = gait_time_series(params)
+        data = get_acceleration_ts(params)
     except:
         return "#ERROR"
     ### if filepath is empty or have no accelerometer data ###
@@ -60,7 +60,7 @@ def sfm_auc_pipeline(params, var):
 
 def sfm_featurize(data):
     for coord in ["x", "y", "z", "AA"]:
-        for pathfile in [_ for _ in data.columns if ("deviceMotion" in _) \
-                         and ("rest" or "balance" in _)]:
+        for pathfile in [_ for _ in data.columns if ("pathfile" in _) 
+                                                and ("balance" in _ or "rest" in _ )]:
             data["sfm_auc_{}".format(coord)] = data[pathfile].apply(sfm_auc_pipeline, var = coord)
     return data
