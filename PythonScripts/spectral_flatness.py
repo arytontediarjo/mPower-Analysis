@@ -51,8 +51,8 @@ def sfm_auc_pipeline(params, var):
     except:
         return "#ERROR"
     ### if filepath is empty or have no accelerometer data ###
-    if isinstance(data, str):
-        return data
+    if isinstance(data, (str, type(None))):
+        return "#ERROR"
     ## run spectral flatness pipeline
     data = sfm_preprocessing(data[var])
     # print(data)
