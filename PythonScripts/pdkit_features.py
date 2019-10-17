@@ -54,16 +54,16 @@ def pdkit_pipeline(filepath, var):
         speed_of_gait = 0
         
     ### fill in values to each keys
-    feature_dict["no_of_steps_".format(var)] = no_of_steps
-    feature_dict["mean_freeze_index_".format(var)] = np.mean(freeze_index)
-    feature_dict["median_freeze_index_".format(var)] = np.median(freeze_index)
-    feature_dict["max_freeze_index_".format(var)] = np.max(freeze_index)
-    feature_dict["count_freeze_index_".format(var)] = freeze_count
-    feature_dict["speed_of_gait_".format(var)] = speed_of_gait
-    feature_dict["gait_step_regularity_".format(var)] = gait_step_regularity
-    feature_dict["gait_stride_regularity_".format(var)] = gait_stride_regularity
-    feature_dict["gait_symmetry_".format(var)] = gait_symmetry
-    feature_dict["frequency_of_peaks_".format(var)] = frequency_of_peaks
+    feature_dict["no_of_steps"] = no_of_steps
+    feature_dict["mean_freeze_index"] = np.mean(freeze_index)
+    feature_dict["median_freeze_index"] = np.median(freeze_index)
+    feature_dict["max_freeze_index"] = np.max(freeze_index)
+    feature_dict["count_freeze_index"] = freeze_count
+    feature_dict["speed_of_gait"] = speed_of_gait
+    feature_dict["gait_step_regularity"] = gait_step_regularity
+    feature_dict["gait_stride_regularity"] = gait_stride_regularity
+    feature_dict["gait_symmetry"] = gait_symmetry
+    feature_dict["frequency_of_peaks"] = frequency_of_peaks
         
     ## Final Check to clear nan values to zero ##
     for k, v in feature_dict.items():
@@ -78,19 +78,9 @@ def pdkit_featurize(data):
                                                     and ("pedometer" not in _)
                                                     and ("balance" not in _)
                                                     and ("rest" not in _)]:
-            data[pathfile[:-8] + "_features_{}".format(coord)] = data[pathfile].apply(pdkit_pipeline, var = coord)
+            data[pathfile[:-8] + "features_{}".format(coord)] = data[pathfile].apply(pdkit_pipeline, var = coord)
     return data
 def pdkit_normalize(data):
     for feature in [feat for feat in data.columns if "features" in feat]:
         data = normalize_feature(data, feature)
     return data
-
-"""
-Function to normalize dictionary on each column of PDKIT features
-"""
-def normalize_dict(params, key):
-    try:
-        dict_ = ast.literal_eval(params)
-    except:
-        return np.NaN
-    return dict_[key]
