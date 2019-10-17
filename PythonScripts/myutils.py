@@ -224,16 +224,18 @@ def normalize_feature(data, feature):
     return data
 
 
-def generate_provenance(syn, filename, pyfile, synId, **parentId):
+def generate_provenance(syn, filename, 
+                        data, pyfile, 
+                        synId, **parentId):
     ## store data and script ##
         path_to_script = os.path.join(os.getcwd(), pyfile)
         output_filename = os.path.join(os.getcwd(), filename)
         store_script = store_to_synapse(syn  = syn, filename = path_to_script,
-                                    data = np.NaN, parentId = parentId.get("script"))
+                                    data = np.NaN, parentId = parentId.get("script_id"))
         store_data = store_to_synapse(syn  = syn, filename  = output_filename,
-                                  data = data, parentId = parentId.get("data"),
+                                  data = data, parentId = parentId.get("data_id"),
                                   source_id = synId, name = "feature preprocessing",
-                                  script_id = get_script_id(syn, __file__, parentId.get("script")))
+                                  script_id = get_script_id(syn, __file__, parentId.get("script_id")))
     
     
     

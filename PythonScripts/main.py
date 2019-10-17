@@ -97,9 +97,9 @@ def main():
     print("parallelization process finished")
     data = data[[feat for feat in data.columns if "path" not in feat]]
     
-    generate_provenance(syn, filename, __file__, synId,
-                        script = script_parent_id, 
-                        data = data_parent_id)
+    generate_provenance(syn, filename, data, __file__, synId,
+                        script_id = script_parent_id, 
+                        data_id = data_parent_id)
     
 ## Run Main Function ##
 if __name__ == "__main__":
