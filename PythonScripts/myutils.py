@@ -17,7 +17,8 @@ def get_synapse_table(syn, healthcodes, synId):
     ### get healthcode subset from case-matched tsv, or any other subset of healthcodes
     healthcode_subset = "({})".format([i for i in healthcodes]).replace("[", "").replace("]", "")   
     ### query from synapse and download to synapsecache ### 
-    query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(synId, healthcode_subset))
+    query = syn.tableQuery("select * from {} WHERE healthCode in {} \
+                           and phoneInfo LIKE '%iPhone%'".format(synId, healthcode_subset))
     data = query.asDataFrame()
     json_list = [_ for _ in data.columns if "json" in _]
     file_map = syn.downloadTableColumns(query, json_list)
