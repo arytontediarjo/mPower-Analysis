@@ -66,5 +66,4 @@ def sfm_featurize(data):
                                                 and ("balance" in _ or "rest" in _ )]:
             print(pathfile)
             data["sfm_auc_{}".format(coord)] = data[pathfile].apply(sfm_auc_pipeline, var = coord)
-            # print(data)
     return data
