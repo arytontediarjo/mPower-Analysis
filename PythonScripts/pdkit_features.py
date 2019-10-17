@@ -78,9 +78,11 @@ def pdkit_featurize(data):
                                                     and ("pedometer" not in _)
                                                     and ("balance" not in _)
                                                     and ("rest" not in _)]:
+            print(pathfile)
             data[pathfile[:-8] + "features_{}".format(coord)] = data[pathfile].apply(pdkit_pipeline, var = coord)
     return data
 def pdkit_normalize(data):
     for feature in [feat for feat in data.columns if "features" in feat]:
+        print(feature)
         data = normalize_feature(data, feature)
     return data

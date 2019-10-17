@@ -18,7 +18,7 @@ def get_synapse_table(syn, healthcodes, synId):
     healthcode_subset = "({})".format([i for i in healthcodes]).replace("[", "").replace("]", "")   
     ### query from synapse and download to synapsecache ### 
     query = syn.tableQuery("select * from {} WHERE healthCode in {} \
-                           and phoneInfo LIKE '%iPhone%' LIMIT 10".format(synId, healthcode_subset))
+                           and phoneInfo LIKE '%iPhone%'".format(synId, healthcode_subset))
     data = query.asDataFrame()
     json_list = [_ for _ in data.columns if "json" in _]
     file_map = syn.downloadTableColumns(query, json_list)
@@ -195,8 +195,7 @@ def normalize_feature(data, feature):
                                 .apply(pd.Series) \
                                 .fillna("#ERROR").add_prefix('{}.'.format(feature))
     data = pd.concat([data, normalized_data], 
-                     axis = 1, 
-                     ignore_index = True).drop(feature, axis = 1)
+                     axis = 1).drop(feature, axis = 1)
     return data
 
 
