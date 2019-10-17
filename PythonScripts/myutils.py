@@ -17,7 +17,7 @@ def get_synapse_table(syn, healthcodes, synId):
     ### get healthcode subset from case-matched tsv, or any other subset of healthcodes
     healthcode_subset = "({})".format([i for i in healthcodes]).replace("[", "").replace("]", "")   
     ### query from synapse and download to synapsecache ### 
-    query = syn.tableQuery("select * from {} WHERE healthCode in {} LIMIT 10".format(synId, healthcode_subset))
+    query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(synId, healthcode_subset))
     data = query.asDataFrame()
     json_list = [_ for _ in data.columns if "json" in _]
     file_map = syn.downloadTableColumns(query, json_list)
@@ -168,39 +168,11 @@ def get_sensor_specs(filepath):
     else:
         return "#ERROR"
     
+    
 
 """
-function to store to synapse with provenance 
+ function to retrieve synId of a scripts 
 """
-def store_to_synapse(syn, 
-                     filename, 
-                     data,
-                     parentId,
-                     **activities):
-    
-    ## name of the output file ##
-    file_path = filename
-    
-    ## set activity entity for provenance ##
-    if isinstance(activities.get("source_id"), str):
-        print(activities.get("source_id"))
-        activity = Activity(name = activities.get("name"))
-        activity.used([activities.get("source_id")])
-        activity.executed(activities.get("script_id"))
-    
-    ## condition for storing scripts ##
-    if ("py" in file_path.split(".")) or ("R" in file_path.split(".")):
-        new_file = File(path = file_path, parentId = parentId)
-        new_file = syn.store(new_file)
-    
-    ## condition for storing csv data *will be improved with other formats* ##
-    else:
-        data = data.to_csv(file_path)
-        new_file = File(path = file_path, parentId = parentId)
-        new_file = syn.store(new_file, activity = activity)
-        os.remove(file_path)
-
-## function to retrieve synId of a scripts ##
 def get_script_id(syn, filename, parentId):
     #   get list of files
     file_list = list(syn.getChildren(parent = parentId, includeTypes = ['file']))
@@ -225,18 +197,18 @@ def normalize_feature(data, feature):
     return data
 
 
-def generate_provenance(syn, filename, 
-                        data, pyfile, 
-                        synId, **parentId):
-    ## store data and script ##
-        path_to_script = os.path.join(os.getcwd(), pyfile)
-        output_filename = os.path.join(os.getcwd(), filename)
-        store_script = store_to_synapse(syn  = syn, filename = path_to_script,
-                                    data = np.NaN, parentId = parentId.get("script_id"))
-        store_data = store_to_synapse(syn  = syn, filename  = output_filename,
-                                  data = data, parentId = parentId.get("data_id"),
-                                  source_id = synId, name = "feature preprocessing",
-                                  script_id = get_script_id(syn, __file__, parentId.get("script_id")))
+# def generate_provenance(syn, filename, 
+#                         data, pyfile, 
+#                         synId, **parentId):
+#     ## store data and script ##
+#         path_to_script = os.path.join(os.getcwd(), pyfile)
+#         output_filename = os.path.join(os.getcwd(), filename)
+#         store_script = store_to_synapse(syn  = syn, filename = path_to_script,
+#                                     data = np.NaN, parentId = parentId.get("script_id"))
+#         store_data = store_to_synapse(syn  = syn, filename  = output_filename,
+#                                   data = data, parentId = parentId.get("data_id"),
+#                                   source_id = synId, name = "feature preprocessing",
+#                                   script_id = get_script_id(syn, __file__, parentId.get("script_id")))
     
     
     

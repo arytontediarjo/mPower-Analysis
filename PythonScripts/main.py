@@ -10,12 +10,12 @@ import os
 import pandas as pd
 import numpy as np
 import synapseclient as sc
-from synapseclient import Entity, Project, Folder, File, Link
+from synapseclient import Entity, Project, Folder, File, Link, Activity
 import multiprocessing as mp
 from multiprocessing import Pool
 import time
 import warnings
-from myutils import get_synapse_table, get_healthcodes, generate_provenance
+from myutils import get_synapse_table, get_healthcodes, generate_provenance, get_script_id
 from pdkit_features import pdkit_featurize, pdkit_normalize
 from spectral_flatness import sfm_featurize
 import argparse
@@ -29,7 +29,7 @@ def read_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--filename", default= "data.csv",
                         help = "Path for output results")
-    parser.add_argument("--num-cores", default= 16,
+    parser.add_argument("--num-cores", default= 8,
                         help = "Number of Cores, negative number not allowed")
     parser.add_argument("--num-chunks", default= 10,
                         help = "Number of sample per partition, no negative number")
@@ -97,9 +97,17 @@ def main():
     print("parallelization process finished")
     data = data[[feat for feat in data.columns if "path" not in feat]]
     
-    generate_provenance(syn, filename, data, __file__, synId,
-                        script_id = script_parent_id, 
-                        data_id = data_parent_id)
+    
+    path_to_script = os.path.join(os.getcwd(), __file__)
+    output_filename = os.path.join(os.getcwd(), filename)
+    data = data.to_csv(output_filename)
+    new_file = File(path = output_filename, parentId = data_parent_id)
+    new_file = syn.store(new_file)
+    os.remove(output_filename)
+    
+    syn.setProvenance(new_file, 
+                      activity = Activity(used = synId, 
+                                          executed = get_script_id(syn, __file__, "syn20987850")))
     
 ## Run Main Function ##
 if __name__ == "__main__":
