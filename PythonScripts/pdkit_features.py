@@ -5,7 +5,7 @@ import numpy as np
 import pdkit
 from pdkit.gait_time_series import GaitTimeSeries
 from pdkit.gait_processor import GaitProcessor
-from myutils import get_acceleration_ts
+from myutils import get_acceleration_ts, normalize_feature
 import ast
 
 """
@@ -80,27 +80,11 @@ def pdkit_featurize(data):
                                                     and ("rest" not in _)]:
             data[pathfile[:-8] + "_features_{}".format(coord)] = data[pathfile].apply(pdkit_pipeline, var = coord)
             
-    return data.fillna("#ERROR")
+    return data
 
 def pdkit_normalize(data):
-    for i in [feat for feat in data.columns if "features" in feat]:
-        data["no_of_steps {}".format(i)] = data[i].apply(normalize_dict, 
-                                                         key = "no_of_steps_")
-        data["median_freeze_index {}".format(i)] = data[i].apply(normalize_dict, 
-                                                                 key = "median_freeze_index_")
-        data["count_freeze_index {}".format(i)] = data[i].apply(normalize_dict, 
-                                                                key = "count_freeze_index_")
-        data["speed_of_gait {}".format(i)] = data[i].apply(normalize_dict, 
-                                                           key = "speed_of_gait_")
-        data["gait_step_regularity {}".format(i)] = data[i].apply(normalize_dict, 
-                                                                  key = "gait_step_regularity_")
-        data["gait_stride_regularity {}".format(i)] = data[i].apply(normalize_dict, 
-                                                                    key = "gait_stride_regularity_")
-        data["gait_symmetry {}".format(i)] = data[i].apply(normalize_dict, 
-                                                           key = "gait_symmetry_")
-        data["frequency_of_peaks {}".format(i)] = data[i].apply(normalize_dict, 
-                                                                key = "frequency_of_peaks_")
-        data = data.drop([i], axis = 1)
+    for feature in [feat for feat in data.columns if "features" in feat]:
+        data = normalize_feature(data, feature)
     return data
 
 """

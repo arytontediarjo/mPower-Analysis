@@ -79,6 +79,7 @@ def main():
     syn = sc.login()
     ## process data ##
     data = get_synapse_table(syn, get_healthcodes(syn, synId, is_filtered), synId)
+    
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))
     if features == "spectral-flatness":
@@ -88,6 +89,7 @@ def main():
         # data = pdkit_featurize(data)
     print("parallelization process finished")
     data = data[[feat for feat in data.columns if "path" not in feat]]
+    
     ## save data to local directory then to synapse ##
     file_path = "~/{}".format(filename)
     data.to_csv(file_path)
