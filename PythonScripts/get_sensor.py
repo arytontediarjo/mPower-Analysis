@@ -74,12 +74,14 @@ def main():
     ## store data and script ##
     path_to_script = os.path.join(os.getcwd(), __file__)
     output_filename = os.path.join(os.getcwd(), filename)
-    store_script = store_to_synapse(syn  = syn,    filename = path_to_script,
-                                    data = np.NaN, parentId = "syn20987850")
-    store_data = store_to_synapse(syn  = syn, filename  = output_filename,
-                                  data = data, parentId = "syn20988708",
-                                  source_id = "syn12514611", name = "sensor preprocessing",
-                                  script_id = get_script_id(syn, __file__, "syn20987850"))
+    data = data.to_csv(output_filename)
+    new_file = File(path = output_filename, parentId = data_parent_id)
+    new_file = syn.store(new_file)
+    os.remove(output_filename)
+    
+    syn.setProvenance(new_file, 
+                      activity = Activity(used = synId, 
+                                          executed = get_script_id(syn, __file__, "syn20987850")))
 
 ## run main function ##
 if __name__ == "__main__":
