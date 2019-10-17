@@ -95,7 +95,8 @@ def main():
         data = _parallelize_dataframe(data, pdkit_featurize, cores, chunksize)
         data = pdkit_normalize(data)
     print("parallelization process finished")
-    data = data[[feat for feat in data.columns if "path" not in feat]]
+    data = data[[feat for feat in data.columns if ("path" not in feat) 
+                 and ("0" not in feat)]]
     
     
     path_to_script = os.path.join(os.getcwd(), __file__)
