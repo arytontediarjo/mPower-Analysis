@@ -28,6 +28,10 @@ def read_args():
                         help = "mpower gait table to query from")
     parser.add_argument("--filtered", action='store_true', 
                         help = "filter healthcodes")
+    parser.add_argument("--script-parent-id", default= "syn20987850", 
+                        help = "script folders parent ids")
+    parser.add_argument("--data-parent-id", default = "syn20988708", 
+                        help = "data folders parent ids")
     args = parser.parse_args()
     return args
 
@@ -61,10 +65,12 @@ def _featurize(data):
     return data
 
 def main(): 
-    args = read_args()
-    filename = args.filename ## name of the file
-    synId = args.table_id ## which table to query from
-    is_filtered = args.filtered ## filter the dataset?
+    args              = read_args()
+    filename          = args.filename ## name of the file
+    synId             = args.table_id ## which table to query from
+    is_filtered       = args.filtered ## filter the dataset?
+    data_parent_id    = args.data_parent_id
+    script_parent_id  = args.script_parent_id
     
     syn = sc.login()
     data = get_synapse_table(syn, get_healthcodes(syn, synId, is_filtered), synId)
@@ -82,7 +88,7 @@ def main():
     
     syn.setProvenance(new_file, 
                       activity = Activity(used = synId, 
-                                          executed = get_script_id(syn, __file__, "syn20987850")))
+                                          executed = get_script_id(syn, __file__, script_parent_id)))
 
 ## run main function ##
 if __name__ == "__main__":
