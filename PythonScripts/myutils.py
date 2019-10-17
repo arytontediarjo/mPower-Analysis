@@ -93,7 +93,10 @@ format: time index, time difference from point zero, (x, y, z, AA) vector coordi
 def clean_accelerometer_data(data):
     data = data.dropna(subset = ["x", "y", "z"])
     date_series = pd.to_datetime(data["timestamp"], unit = "s")
-    data["td"] = date_series - date_series.iloc[0]
+    try:
+        data["td"] = date_series - date_series.iloc[0]
+    except IndexError:
+        return "#ERROR"
     data["td"] = data["td"].apply(lambda x: x.total_seconds())
     data["time"] = data["td"]
     data = data.set_index("time")
