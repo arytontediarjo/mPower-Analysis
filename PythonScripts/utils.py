@@ -20,7 +20,7 @@ def get_synapse_table(syn, healthcodes, table_id, version):
         query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthcode_subset))
         data = query.asDataFrame()
         json_list = [_ for _ in data.columns if ("deviceMotion" in _)]
-    else version == "V2":
+    elif version == "V2":
         print("Querying V2 Data")
         query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthcode_subset))
         data = query.asDataFrame()
