@@ -83,7 +83,7 @@ def get_acceleration_ts(filepath):
         return data[["td","x", "y", "z", "AA"]]
         
     ## userAcceleration from mpowerV1
-    elif "userAcceleration" in data.columns:
+    elif ("userAcceleration" in data.columns):
         data = data[["timestamp", "userAcceleration"]]
         data["x"] = data["userAcceleration"].apply(lambda x: x["x"])
         data["y"] = data["userAcceleration"].apply(lambda x: x["y"])
