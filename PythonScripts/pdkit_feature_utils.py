@@ -88,7 +88,7 @@ def pdkit_featurize(data):
                                                     and ("rest" not in _)
                                                     and ("coord" not in _)]:
             print(feature)
-            data["{}_features_{}".format(feature, coord)] = data[feature].apply(pdkit_pipeline, var = coord)
+            data["{}_features_{}".format(feature[:-8], coord)] = data[feature].apply(pdkit_pipeline, var = coord)
     return data
 
 def pdkit_normalize(data):
