@@ -27,6 +27,8 @@ Function for parsing in argument given by client
 """
 def read_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--version", default= "V1",
+                        help = "mpower version number")
     parser.add_argument("--filename", default= "data.csv",
                         help = "Path for output results")
     parser.add_argument("--num-cores", default= 8,
@@ -73,19 +75,20 @@ Will be updated with mpower V2 Data
 def main():
     ## Retrieve Arguments
     args = read_args()
-    filename = args.filename ## name of the file
-    cores = int(args.num_cores) ## number of cores
-    chunksize = int(args.num_chunks) ## number of chunks
-    features = args.featurize ## which features to query
-    synId = args.table_id ## which table to query from
-    is_filtered = args.filtered ## filter the dataset
-    script_parent_id = args.script_parent_id
-    data_parent_id = args.data_parent_id
+    version = args.version
+    filename = args.filename                        ## name of the file
+    cores = int(args.num_cores)                     ## number of cores
+    chunksize = int(args.num_chunks)                ## number of chunks
+    features = args.featurize                       ## which features to query
+    synId = args.table_id                           ## which table to query from
+    is_filtered = args.filtered                     ## filter the dataset
+    script_parent_id = args.script_parent_id        ## parent id where script will be stored
+    data_parent_id = args.data_parent_id            ## parent id where data will be stored
     
     ## login
     syn = sc.login()
     ## process data ##
-    data = get_synapse_table(syn, get_healthcodes(syn, "syn8381056", is_filtered), synId)
+    data = get_synapse_table(syn, get_healthcodes(syn, "syn8381056", is_filtered), synId, version)
     
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))

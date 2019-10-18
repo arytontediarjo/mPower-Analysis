@@ -13,13 +13,20 @@ parameter:  syn: synapse object,
             synId: table that you want to query from
 returns: a dataframe of healthCodes and their respective filepaths 
 """
-def get_synapse_table(syn, healthcodes, synId):
+def get_synapse_table(syn, healthcodes, synId, version):
     ### get healthcode subset from case-matched tsv, or any other subset of healthcodes
     healthcode_subset = "({})".format([i for i in healthcodes]).replace("[", "").replace("]", "")   
     ### query from synapse and download to synapsecache ### 
     query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(synId, healthcode_subset))
     data = query.asDataFrame()
-    json_list = [_ for _ in data.columns if "json" in _]
+    
+    if version == "V1":
+        print("Querying V1 Data")
+        json_list = [_ for _ in data.columns if ("deviceMotion" in _)]
+    else:
+        print("Querying V2 Data")
+        json_list = [_ for _ in data.columns if ("json" in _)]
+        
     file_map = syn.downloadTableColumns(query, json_list)
     ### Loop through the dictionary ### 
     dict_ = {}
