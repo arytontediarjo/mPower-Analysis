@@ -5,7 +5,7 @@ import numpy as np
 import pdkit
 from pdkit.gait_time_series import GaitTimeSeries
 from pdkit.gait_processor import GaitProcessor
-from myutils import get_acceleration_ts, normalize_feature
+from utils import get_acceleration_ts, normalize_feature
 import ast
 
 """

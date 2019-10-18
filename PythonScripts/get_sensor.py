@@ -6,7 +6,7 @@ import numpy as np
 import synapseclient as sc
 from synapseclient import Entity, Project, Folder, File, Link, Activity
 import time
-from myutils import get_sensor_types, \
+from utils import get_sensor_types, \
                     get_units, get_synapse_table,  \
                     get_script_id, get_healthcodes, get_sensor_specs, \
                     normalize_feature
