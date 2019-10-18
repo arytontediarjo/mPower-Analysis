@@ -86,8 +86,7 @@ def main():
     cores = int(args.num_cores)                     
     chunksize = int(args.num_chunks)                
     features = args.featurize                                                 
-    is_filtered = args.filtered                     
-    filter_table_ref = args.filter_table_ref             
+    is_filtered = args.filtered                               
     script_parent_id = args.script_parent_id        
     data_parent_id = args.data_parent_id
     
