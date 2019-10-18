@@ -27,43 +27,45 @@ def pdkit_pipeline(filepath, var):
     ### instantiate empty dictionary ###
     feature_dict = {}
     try:  
-        no_of_steps = gp.gait(data[var])[0]
+        feature_dict["no_of_steps"] = gp.gait(data[var])[0]
     except:
-        no_of_steps = 0
+        feature_dict["no_of_steps"] = 0    
     try:
-        gait_step_regularity, gait_stride_regularity, gait_symmetry = gp.gait_regularity_symmetry(data[var])
+        feature_dict["gait_step_regularity"]    = gp.gait_regularity_symmetry(data[var])[0]
+        feature_dict["gait_stride_regularity"]  = gp.gait_regularity_symmetry(data[var])[1]
+        feature_dict["gait_symmetry"]           = gp.gait_regularity_symmetry(data[var])[2]
     except:
-        gait_step_regularity = 0
-        gait_stride_regularity = 0
-        gait_symmetry = 0
+        feature_dict["gait_step_regularity"]    = 0
+        feature_dict["gait_stride_regularity"]  = 0
+        feature_dict["gait_symmetry"]           = 0
     try:
-        frequency_of_peaks = gp.frequency_of_peaks(data[var])
+        feature_dict["frequency_of_peaks"] = gp.frequency_of_peaks(data[var])
     except:
-        frequency_of_peaks = 0
+        feature_dict["frequency_of_peaks"] = 0
     try:
-        freeze_index = gp.freeze_of_gait(data[var])[1]
+        feature_dict["freeze_index"] = gp.freeze_of_gait(data[var])[1]
     except:
-        freeze_index = 0
+        feature_dict["freeze_index"] = 0
     try:
-        freeze_count = sum(i > 2.0 for i in freeze_index)
+        feature_dict["freeze_count"] = sum(i > 2.0 for i in freeze_index)
     except:
-        freeze_count = 0
+        feature_dict["freeze_count"] = 0
     try:
-        speed_of_gait = gp.speed_of_gait(data[var], wavelet_level = 6)
+        feature_dict["speed_of_gait"] = gp.speed_of_gait(data[var], wavelet_level = 6)
     except:
-        speed_of_gait = 0
+        feature_dict["speed_of_gait"] = 0
         
-    ### fill in values to each keys
-    feature_dict["no_of_steps"] = no_of_steps
-    feature_dict["mean_freeze_index"] = np.mean(freeze_index)
-    feature_dict["median_freeze_index"] = np.median(freeze_index)
-    feature_dict["max_freeze_index"] = np.max(freeze_index)
-    feature_dict["count_freeze_index"] = freeze_count
-    feature_dict["speed_of_gait"] = speed_of_gait
-    feature_dict["gait_step_regularity"] = gait_step_regularity
-    feature_dict["gait_stride_regularity"] = gait_stride_regularity
-    feature_dict["gait_symmetry"] = gait_symmetry
-    feature_dict["frequency_of_peaks"] = frequency_of_peaks
+    # ### fill in values to each keys
+    # feature_dict["no_of_steps"] = no_of_steps
+    # feature_dict["mean_freeze_index"] = np.mean(freeze_index)
+    # feature_dict["median_freeze_index"] = np.median(freeze_index)
+    # feature_dict["max_freeze_index"] = np.max(freeze_index)
+    # feature_dict["count_freeze_index"] = freeze_count
+    # feature_dict["speed_of_gait"] = speed_of_gait
+    # feature_dict["gait_step_regularity"] = gait_step_regularity
+    # feature_dict["gait_stride_regularity"] = gait_stride_regularity
+    # feature_dict["gait_symmetry"] = gait_symmetry
+    # feature_dict["frequency_of_peaks"] = frequency_of_peaks
         
     ## Final Check to clear nan values to zero ##
     for k, v in feature_dict.items():
@@ -78,7 +80,7 @@ def pdkit_featurize(data):
                                                     and ("balance" not in _)
                                                     and ("rest" not in _)]:
             print(pathfile)
-            data[pathfile[:-8] + "features_{}".format(coord)] = data[pathfile].apply(pdkit_pipeline, var = coord)
+            data["userAccel_features_{}".format(coord)] = data[pathfile].apply(pdkit_pipeline, var = coord)
     return data
 def pdkit_normalize(data):
     for feature in [feat for feat in data.columns if "features" in feat]:
