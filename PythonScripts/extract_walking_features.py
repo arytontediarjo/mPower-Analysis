@@ -47,8 +47,6 @@ def read_args():
                         help = "Features choices: 'pdkit' or 'spectral-flatness' ")
     parser.add_argument("--filtered", action='store_true', 
                         help = "use case matched healthcodes?")
-    parser.add_argument("--filter-table-ref", default = "syn8381056", 
-                        help = "table reference for filtering")
     parser.add_argument("--script-parent-id", default= "syn20987850", 
                         help = "executed script folders parent ids")
     parser.add_argument("--data-parent-id", default = "syn20988708", 
@@ -103,7 +101,7 @@ def main():
     ## login
     syn = sc.login()
     ## process data ##
-    data = get_synapse_table(syn, get_healthcodes(syn, filter_table_ref, is_filtered), table_id,    version)
+    data = get_synapse_table(syn, get_healthcodes(syn, is_filtered), table_id,  version)
     
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))
