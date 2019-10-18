@@ -6,37 +6,32 @@ import ast
 from synapseclient import Entity, Project, Folder, File, Link, Activity
 
 """
-Constants of table ID for query
-"""
-WALK_TABLE_V1      = "syn7222425"
-WALK_TABLE_V2      = "syn12514611"
-WALK_TABLE_PASSIVE = "syn17022539"
-
-"""
 Query for synapse table entity (can be used for tremors and walking V1 and V2)
 parameter:  syn: synapse object, 
             healthcodes: list of objects
 returns: a dataframe of healthCodes and their respective filepaths 
 """
-def get_synapse_table(syn, healthcodes, version):
+def get_synapse_table(syn, healthcodes, table_id, version):
     ### get healthcode subset from case-matched tsv, or any other subset of healthcodes
     healthcode_subset = "({})".format([i for i in healthcodes]).replace("[", "").replace("]", "")   
     ### query from synapse and download to synapsecache ###     
     if version == "V1":
         print("Querying V1 Data")
-        query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(WALK_TABLE_V1, healthcode_subset))
+        query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthcode_subset))
         data = query.asDataFrame()
         json_list = [_ for _ in data.columns if ("deviceMotion" in _)]
-    elif version == "V2":
+    else version == "V2":
         print("Querying V2 Data")
-        query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(WALK_TABLE_V2, healthcode_subset))
+        query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthcode_subset))
         data = query.asDataFrame()
         json_list = [_ for _ in data.columns if ("json" in _)]
     else:
         print("Querying Passive Data")
-        query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(WALK_TABLE_PASSIVE, healthcode_subset))
+        query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthcode_subset))
         data = query.asDataFrame()
         json_list = [_ for _ in data.columns if ("json" in _)]   
+        
+    ### Download tmp into ordered dictionary ###
     file_map = syn.downloadTableColumns(query, json_list)
     ### Loop through the dictionary ### 
     dict_ = {}

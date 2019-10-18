@@ -23,6 +23,14 @@ warnings.simplefilter("ignore")
 
 
 """
+Constants of table ID for query
+"""
+WALK_TABLE_V1      = "syn7222425"
+WALK_TABLE_V2      = "syn12514611"
+WALK_TABLE_PASSIVE = "syn17022539"
+
+
+"""
 Function for parsing in argument given by client
 """
 def read_args():
@@ -31,9 +39,9 @@ def read_args():
                         help = "mpower version number (either V1 or V2)")
     parser.add_argument("--filename", default= "data.csv",
                         help = "Name for Output File")
-    parser.add_argument("--num-cores", default= 8,
+    parser.add_argument("--num-cores", default= 16,
                         help = "Number of Cores, negative number not allowed")
-    parser.add_argument("--num-chunks", default= 10,
+    parser.add_argument("--num-chunks", default= 250,
                         help = "Number of sample per partition, no negative number")
     parser.add_argument("--featurize", default= "spectral-flatness",
                         help = "Features choices: 'pdkit' or 'spectral-flatness' ")
@@ -83,7 +91,14 @@ def main():
     is_filtered = args.filtered                     
     filter_table_ref = args.filter_table_ref             
     script_parent_id = args.script_parent_id        
-    data_parent_id = args.data_parent_id            
+    data_parent_id = args.data_parent_id
+    
+    if version == "V1":
+        table_id = WALK_TABLE_V1
+    elif version == "V2":
+        table_id = WALK_TABLE_V2
+    else:
+        table_id = WALK_TABLE_PASSIVE    
     
     ## login
     syn = sc.login()
@@ -109,7 +124,7 @@ def main():
     new_file = syn.store(new_file)
     os.remove(output_filename)
     syn.setProvenance(new_file, 
-                      activity = Activity(used = synId, 
+                      activity = Activity(used = table_id, 
                                           executed = get_script_id(syn, __file__, script_parent_id)))
     
 ## Run Main Function ##
