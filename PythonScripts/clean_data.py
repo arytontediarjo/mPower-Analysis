@@ -57,7 +57,20 @@ def clean_data(version, demographic_table, walking_table, balance_table):
     
     return pdkit_data, sfm_data
 
-def assess_data_quality(data):
+def main():
+    cleaned_mpV1_pdkit_data,  cleaned_mpV2_sfm_data = \
+        clean_data("V1", DEMOGRAPHIC_TABLE_V1, WALKING_TABLE_V1, BALANCE_TABLE_V1)
+    cleaned_mpV2_pdkit_data,  cleaned_mpV2_sfm_data = \
+        clean_data("V2", DEMOGRAPHIC_TABLE_V2, WALKING_TABLE_V2, BALANCE_TABLE_V2)
+    path_to_script = os.path.join(os.getcwd(), __file__)
+    output_filename = os.path.join(os.getcwd(), filename)
+    data = data.to_csv(output_filename)
+    new_file = File(path = output_filename, parentId = data_parent_id)
+    new_file = syn.store(new_file)
+    os.remove(output_filename)
+    syn.setProvenance(new_file, 
+                      activity = Activity(used = synId, 
+                                          executed = get_script_id(syn, __file__, "syn20987850")))
     
     
 
