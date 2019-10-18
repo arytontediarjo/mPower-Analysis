@@ -140,7 +140,7 @@ def get_healthcodes(syn, table_id, is_filtered):
         print(healthcode_list)
         return healthcode_list
     else:
-        healthcode_list = list(syn.tableQuery("select distinct(healthCode) as healthCode from {}".format(synId))
+        healthcode_list = list(syn.tableQuery("select distinct(healthCode) as healthCode from {}".format(table_id))
                                    .asDataFrame()["healthCode"])
         return healthcode_list
     
