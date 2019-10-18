@@ -79,8 +79,7 @@ def main():
     filename = args.filename                      
     cores = int(args.num_cores)                     
     chunksize = int(args.num_chunks)                
-    features = args.featurize                        
-    synId = args.table_id                           
+    features = args.featurize                                                 
     is_filtered = args.filtered                     
     filter_table_ref = args.filter_table_ref             
     script_parent_id = args.script_parent_id        
