@@ -50,7 +50,7 @@ def pdkit_pipeline(filepath, var):
     except:
         feature_dict["frequency_of_peaks"]      = 0
     try:
-        feature_dict["max_freeze_index"]        = gp.freeze_of_gait(data[var])[1]
+        feature_dict["max_freeze_index"]        = np.max(gp.freeze_of_gait(data[var])[1])
     except:
         feature_dict["max_freeze_index"]        = 0
     try:
