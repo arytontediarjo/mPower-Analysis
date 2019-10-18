@@ -61,26 +61,11 @@ def pdkit_pipeline(filepath, var):
         feature_dict["speed_of_gait"]           = gp.speed_of_gait(data[var], wavelet_level = 6)
     except:
         feature_dict["speed_of_gait"]           = 0
-        
-    # ### fill in values to each keys
-    # feature_dict["no_of_steps"] = no_of_steps
-    # feature_dict["mean_freeze_index"] = np.mean(freeze_index)
-    # feature_dict["median_freeze_index"] = np.median(freeze_index)
-    # feature_dict["max_freeze_index"] = np.max(freeze_index)
-    # feature_dict["count_freeze_index"] = freeze_count
-    # feature_dict["speed_of_gait"] = speed_of_gait
-    # feature_dict["gait_step_regularity"] = gait_step_regularity
-    # feature_dict["gait_stride_regularity"] = gait_stride_regularity
-    # feature_dict["gait_symmetry"] = gait_symmetry
-    # feature_dict["frequency_of_peaks"] = frequency_of_peaks
-        
-    # ## Final Check to clear nan values to zero ##
-    # for k, v in feature_dict.items():
-    #     if np.isnan(v):
-    #         feature_dict[k] = 0
-        
     return feature_dict
 
+"""
+Function to featurize the data
+"""
 def pdkit_featurize(data):
     for coord in ["x", "y", "z", "AA"]:
         for feature in [_ for _ in data.columns if ("pathfile" in _) 
@@ -91,6 +76,9 @@ def pdkit_featurize(data):
             data["{}_features_{}".format(feature[:-8], coord)] = data[feature].apply(pdkit_pipeline, var = coord)
     return data
 
+"""
+Function to normalize the pdkit feature
+"""
 def pdkit_normalize(data):
     for feature in [feat for feat in data.columns if "features" in feat]:
         print(feature)

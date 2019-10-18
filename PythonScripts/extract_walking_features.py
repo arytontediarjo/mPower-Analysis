@@ -27,24 +27,24 @@ Function for parsing in argument given by client
 """
 def read_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--version", default= "V1", choices = ["V1", "V2"],
+    parser.add_argument("--version", default= "V1", choices = ["V1", "V2", "PASSIVE"],
                         help = "mpower version number (either V1 or V2)")
     parser.add_argument("--filename", default= "data.csv",
-                        help = "Path for output results")
+                        help = "Name for Output File")
     parser.add_argument("--num-cores", default= 8,
                         help = "Number of Cores, negative number not allowed")
     parser.add_argument("--num-chunks", default= 10,
                         help = "Number of sample per partition, no negative number")
     parser.add_argument("--featurize", default= "spectral-flatness",
                         help = "Features choices: 'pdkit' or 'spectral-flatness' ")
-    parser.add_argument("--table-id", default= "syn7222425", ## mpower V1
-                        help = "mpower gait table to query from")
     parser.add_argument("--filtered", action='store_true', 
-                        help = "filter healthcodes")
+                        help = "use case matched healthcodes?")
+    parser.add_argument("--filter-table-ref", default = "syn8381056", 
+                        help = "table reference for filtering")
     parser.add_argument("--script-parent-id", default= "syn20987850", 
-                        help = "script folders parent ids")
+                        help = "executed script folders parent ids")
     parser.add_argument("--data-parent-id", default = "syn20988708", 
-                        help = "data folders parent ids")
+                        help = "output data folders parent ids")
     args = parser.parse_args()
     return args
 
@@ -76,19 +76,20 @@ def main():
     ## Retrieve Arguments
     args = read_args()
     version = args.version
-    filename = args.filename                        ## name of the file
-    cores = int(args.num_cores)                     ## number of cores
-    chunksize = int(args.num_chunks)                ## number of chunks
-    features = args.featurize                       ## which features to query
-    synId = args.table_id                           ## which table to query from
-    is_filtered = args.filtered                     ## filter the dataset
-    script_parent_id = args.script_parent_id        ## parent id where script will be stored
-    data_parent_id = args.data_parent_id            ## parent id where data will be stored
+    filename = args.filename                      
+    cores = int(args.num_cores)                     
+    chunksize = int(args.num_chunks)                
+    features = args.featurize                        
+    synId = args.table_id                           
+    is_filtered = args.filtered                     
+    filter_table_ref = args.filter_table_ref             
+    script_parent_id = args.script_parent_id        
+    data_parent_id = args.data_parent_id            
     
     ## login
     syn = sc.login()
     ## process data ##
-    data = get_synapse_table(syn, get_healthcodes(syn, "syn8381056", is_filtered), synId, version)
+    data = get_synapse_table(syn, get_healthcodes(syn, filter_table_ref, is_filtered), version)
     
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))
@@ -108,10 +109,9 @@ def main():
     new_file = File(path = output_filename, parentId = data_parent_id)
     new_file = syn.store(new_file)
     os.remove(output_filename)
-    
     syn.setProvenance(new_file, 
                       activity = Activity(used = synId, 
-                                          executed = get_script_id(syn, __file__, "syn20987850")))
+                                          executed = get_script_id(syn, __file__, script_parent_id)))
     
 ## Run Main Function ##
 if __name__ == "__main__":

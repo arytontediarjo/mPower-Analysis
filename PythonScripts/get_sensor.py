@@ -18,14 +18,14 @@ warnings.simplefilter("ignore")
 
 def read_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--version", default= "V1", choices = ["V1", "V2", "PASSIVE"],
+                        help = "mpower version number (either V1 or V2)")
     parser.add_argument("--filename", default= "data.csv",
                         help = "Path for output results")
     parser.add_argument("--num-cores", default= 16,
                         help = "Number of Cores, negative number not allowed")
     parser.add_argument("--num-chunks", default= 250,
                         help = "Number of sample per partition, no negative number")
-    parser.add_argument("--table-id", default= "syn7222425", ## mpower V1
-                        help = "mpower gait table to query from")
     parser.add_argument("--filtered", action='store_true', 
                         help = "filter healthcodes")
     parser.add_argument("--script-parent-id", default= "syn20987850", 
@@ -73,7 +73,7 @@ def main():
     script_parent_id  = args.script_parent_id  ## parent id of python scripts
     
     syn = sc.login()
-    data = get_synapse_table(syn, get_healthcodes(syn, synId, is_filtered), synId)
+    data = get_synapse_table(syn, get_healthcodes(syn, synId, is_filtered), version)
     data = _parallelize_dataframe(data, _featurize, 16, 250)
     data = normalize_feature(data, "walking_specs")
     data = normalize_feature(data, "balance_specs")
