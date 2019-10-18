@@ -27,7 +27,7 @@ Function for parsing in argument given by client
 """
 def read_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--version", default= "V1", choices = ["V1", "V2"]
+    parser.add_argument("--version", default= "V1", choices = ["V1", "V2"],
                         help = "mpower version number (either V1 or V2)")
     parser.add_argument("--filename", default= "data.csv",
                         help = "Path for output results")
