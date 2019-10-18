@@ -132,7 +132,7 @@ parameter:  syn: syn object,
             is_filtered: boolean values of whether user wants to have filtered healthcode queries
 returns list of healthcodes
 """
-def get_healthcodes(syn, is_filtered):
+def get_healthcodes(syn, table_id, is_filtered):
     ## get demographic information
     if is_filtered:
         filtered_entity = syn.get("syn8381056")
