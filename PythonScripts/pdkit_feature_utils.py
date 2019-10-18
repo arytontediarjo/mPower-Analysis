@@ -87,7 +87,7 @@ def pdkit_featurize(data):
                                                     and ("balance" not in _)
                                                     and ("rest" not in _)]:
             print(pathfile)
-            data["userAccel_features_{}".format(coord)] = data[pathfile].apply(pdkit_pipeline, var = coord)
+            data[pathfile + "_features_{}".format(coord)] = data[pathfile].apply(pdkit_pipeline, var = coord)
     return data
 
 def pdkit_normalize(data):
