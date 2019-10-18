@@ -103,7 +103,7 @@ def main():
     ## login
     syn = sc.login()
     ## process data ##
-    data = get_synapse_table(syn, get_healthcodes(syn, filter_table_ref, is_filtered), table_id, version)
+    data = get_synapse_table(syn, get_healthcodes(syn, filter_table_ref, is_filtered), table_id,    version)
     
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))

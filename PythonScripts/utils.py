@@ -24,6 +24,7 @@ def get_synapse_table(syn, healthcodes, table_id, version):
         print("Querying V2 Data")
         query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthcode_subset))
         data = query.asDataFrame()
+        print(data)
         json_list = [_ for _ in data.columns if ("json" in _)]
     else:
         print("Querying Passive Data")
