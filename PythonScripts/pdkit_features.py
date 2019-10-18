@@ -24,8 +24,11 @@ def pdkit_pipeline(filepath, var):
     except IndexError:
         return data
     data = gp.resample_signal(data)
+    
     ### instantiate empty dictionary ###
     feature_dict = {}
+    
+    ### featurize pdkit features into the dictionary ###
     try:  
         feature_dict["no_of_steps"]             = gp.gait(data[var])[0]
     except:
@@ -47,13 +50,13 @@ def pdkit_pipeline(filepath, var):
     except:
         feature_dict["frequency_of_peaks"]      = 0
     try:
-        feature_dict["freeze_index"]            = gp.freeze_of_gait(data[var])[1]
+        feature_dict["max_freeze_index"]        = gp.freeze_of_gait(data[var])[1]
     except:
-        feature_dict["freeze_index"]            = 0
+        feature_dict["max_freeze_index"]        = 0
     try:
-        feature_dict["freeze_count"]            = sum(i > 2.0 for i in freeze_index)
+        feature_dict["freeze_occurences"]       = sum(i > 2.0 for i in gp.freeze_of_gait(data[var])[1])
     except:
-        feature_dict["freeze_count"]            = 0
+        feature_dict["freeze_occurences"]       = 0
     try:
         feature_dict["speed_of_gait"]           = gp.speed_of_gait(data[var], wavelet_level = 6)
     except:
@@ -86,6 +89,7 @@ def pdkit_featurize(data):
             print(pathfile)
             data["userAccel_features_{}".format(coord)] = data[pathfile].apply(pdkit_pipeline, var = coord)
     return data
+
 def pdkit_normalize(data):
     for feature in [feat for feat in data.columns if "features" in feat]:
         print(feature)
