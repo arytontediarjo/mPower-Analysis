@@ -85,7 +85,7 @@ def pdkit_featurize(data):
     for coord in ["x", "y", "z", "AA"]:
         for feature in [_ for _ in data.columns if ("pathfile" in _) 
                                                     and ("balance" not in _)
-                                                    and ("rest" not in _),
+                                                    and ("rest" not in _)
                                                     and ("coord" not in _)]:
             print(feature)
             data["{}_features_{}".format(feature, coord)] = data[feature].apply(pdkit_pipeline, var = coord)
