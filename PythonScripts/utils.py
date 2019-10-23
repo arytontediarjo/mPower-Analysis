@@ -1,3 +1,4 @@
+import sys
 import pandas as pd
 import numpy as np
 import json 
@@ -116,7 +117,7 @@ def clean_accelerometer_data(data):
     if all(data.index[:-1] <= data.index[1:]):
         return data 
     else:
-        return "#ERROR" 
+        sys.exit('Time Series File is not Sorted')
 
 """
 General Function to open a filepath 
