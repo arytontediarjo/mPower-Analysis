@@ -41,7 +41,7 @@ def get_synapse_table(syn, healthcodes, table_id, version):
         dict_["file_handle_id"].append(k)
         dict_["file_path"].append(v)
     filepath_data = pd.DataFrame(dict_)
-    data = data[["recordId","phoneInfo", "createdOn", "healthCode", "createdOnTimeZone", "uploadDate"] + json_list]
+    data = data[["recordId","phoneInfo", "createdOn"] + json_list]
     filepath_data["file_handle_id"] = filepath_data["file_handle_id"].astype(float)
     
     ### Join the filehandles with each acceleration files ###
