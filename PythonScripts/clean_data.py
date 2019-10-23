@@ -40,7 +40,7 @@ def fix_column_name(data):
     return data
 
 
-def clean_data(version, demographic_table_id, walking_table_id, filename):
+def clean_data(version, demographic_table_id, walking_table_id, script_parent_id, filename):
     if version == "V1":
         ## demographic data ## 
         demographic_entity = syn.get(demographic_table_id)
@@ -89,11 +89,16 @@ def clean_data(version, demographic_table_id, walking_table_id, filename):
     
 
 def main():
-    cleaned_PDKIT_MPV1 = clean_data("V1", DEMOGRAPHIC_TABLE_V1, WALKING_TABLE_V1, "cleaned_PDKIT_MPV1.csv")
-    cleaned_PDKIT_MPV2 = clean_data("V2", DEMOGRAPHIC_TABLE_V2, WALKING_TABLE_V2, "cleaned_PDKIT_MPV2.csv")
-    cleaned_SFM_MPV1 = clean_data("V1", DEMOGRAPHIC_TABLE_V1, BALANCE_TABLE_V1, "cleaned_SFM_MPV1.csv")
-    cleaned_SFM_MPV2 = clean_data("V2", DEMOGRAPHIC_TABLE_V2, BALANCE_TABLE_V2, "cleaned_SFM_MPV2.csv")
-    cleaned_PDKIT_PASSIVE= clean_data("V2", DEMOGRAPHIC_TABLE_V2, PASSIVE_TABLE, "cleaned_PDKIT_PASSIVE.csv")
+    cleaned_PDKIT_MPV1 = clean_data("V1", DEMOGRAPHIC_TABLE_V1, 
+                                    WALKING_TABLE_V1, SCRIPT_PARENT_ID, "cleaned_PDKIT_MPV1.csv")
+    cleaned_PDKIT_MPV2 = clean_data("V2", DEMOGRAPHIC_TABLE_V2, 
+                                    WALKING_TABLE_V2, SCRIPT_PARENT_ID, "cleaned_PDKIT_MPV2.csv")
+    cleaned_SFM_MPV1 = clean_data("V1", DEMOGRAPHIC_TABLE_V1, 
+                                  BALANCE_TABLE_V1, SCRIPT_PARENT_ID, "cleaned_SFM_MPV1.csv")
+    cleaned_SFM_MPV2 = clean_data("V2", DEMOGRAPHIC_TABLE_V2, 
+                                  BALANCE_TABLE_V2, SCRIPT_PARENT_ID, "cleaned_SFM_MPV2.csv")
+    cleaned_PDKIT_PASSIVE= clean_data("V2", DEMOGRAPHIC_TABLE_V2, 
+                                      PASSIVE_TABLE, SCRIPT_PARENT_ID, "cleaned_PDKIT_PASSIVE.csv")
     
 ## Run Main Function ##
 if __name__ == "__main__":
