@@ -59,7 +59,7 @@ def read_args():
 Function for parallelization
 returns featurized dataframes
 """
-def _parallelize_dataframe(df, func, no_of_processors, chunksize):
+def parallelize_dataframe(df, func, no_of_processors, chunksize):
     ### split dataframe into 250 partitions ###
     df_split = np.array_split(df, chunksize)
     ### instantiate 16 processors as EC2 instance has 8 cores ###
@@ -105,15 +105,13 @@ def main():
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))
     if features == "spectral-flatness":
-        data = _parallelize_dataframe(data, sfm_featurize, cores, chunksize)
+        data = parallelize_dataframe(data, sfm_featurize, cores, chunksize)
     elif features == "pdkit":
-        data = _parallelize_dataframe(data, pdkit_featurize, cores, chunksize)
+        data = parallelize_dataframe(data, pdkit_featurize, cores, chunksize)
         data = pdkit_normalize(data)
     print("parallelization process finished")
-    print(data)
     data = data[[feat for feat in data.columns if ("path" not in feat) 
                  and ("0" not in feat)]]
-    print(data)
     path_to_script = os.path.join(os.getcwd(), __file__)
     output_filename = os.path.join(os.getcwd(), filename)
     data = data.to_csv(output_filename)

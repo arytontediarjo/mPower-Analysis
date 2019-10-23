@@ -24,7 +24,6 @@ def get_synapse_table(syn, healthcodes, table_id, version):
         print("Querying V2 Data")
         query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthcode_subset))
         data = query.asDataFrame()
-        print(data)
         json_list = [_ for _ in data.columns if ("json" in _)]
     else:
         print("Querying Passive Data")
@@ -42,7 +41,7 @@ def get_synapse_table(syn, healthcodes, table_id, version):
         dict_["file_handle_id"].append(k)
         dict_["file_path"].append(v)
     filepath_data = pd.DataFrame(dict_)
-    data = data[["recordId","phoneInfo", "createdOn", "healthCode"] + json_list]
+    data = data[["recordId","phoneInfo", "createdOn", "healthCode", "createdOnTimeZone", "uploadDate"] + json_list]
     filepath_data["file_handle_id"] = filepath_data["file_handle_id"].astype(float)
     
     ### Join the filehandles with each acceleration files ###
@@ -111,7 +110,13 @@ def clean_accelerometer_data(data):
     data = data.set_index("time")
     data.index = pd.to_datetime(data.index, unit = "s")
     data["AA"] = np.sqrt(data["x"]**2 + data["y"]**2 + data["z"]**2)
-    return data
+    data = data.sort_index()
+    
+    ## check if datetime index is sorted
+    if all(data.index[:-1] <= data.index[1:]):
+        return data 
+    else:
+        return "#ERROR" 
 
 """
 General Function to open a filepath 
@@ -202,11 +207,16 @@ def map_to_json(params):
         return params
     else:
         return np.NaN
-    
+
+
+"""
+Function to normalize pdkit dictionaries to columns
+Fill none as 0 meaning that the signal is too weak to be detected
+"""    
 def normalize_feature(data, feature):
     normalized_data = data[feature].map(map_to_json) \
                                 .apply(pd.Series) \
-                                .fillna("#ERROR").add_prefix('{}.'.format(feature))
+                                .fillna(0).add_prefix('{}.'.format(feature))
     data = pd.concat([data, normalized_data], 
                      axis = 1).drop(feature, axis = 1)
     return data
