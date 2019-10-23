@@ -79,8 +79,7 @@ def clean_data(version, demographic_table_id, walking_table_id, script_parent_id
     new_file = File(path = output_filename, parentId = DATA_PARENT_ID)
     new_file = syn.store(new_file)
     syn.setProvenance(new_file, 
-                      activity = Activity(used = [walking_table_id], 
-                                          executed = get_script_id(syn, __file__, script_parent_id)))
+                      activity = Activity(executed = get_script_id(syn, __file__, script_parent_id)))
                    
     os.remove(output_filename)
     
