@@ -207,7 +207,7 @@ def map_to_json(params):
     if isinstance(params, dict):
         return params
     else:
-        return np.NaN
+        return "#ERROR"
 
 
 """
