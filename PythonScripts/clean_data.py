@@ -78,9 +78,10 @@ def clean_data(version, demographic_table_id, walking_table_id, filename):
     data = data.to_csv(output_filename)
     new_file = File(path = output_filename, parentId = DATA_PARENT_ID)
     new_file = syn.store(new_file)
-    syn.store(new_file)
-                    #   activity = Activity(used = walking_table_id, 
-                    #                       executed = get_script_id(syn, __file__, SCRIPT_PARENT_ID)))
+    syn.setProvenance(new_file, 
+                      activity = Activity(used = table_id, 
+                                          executed = get_script_id(syn, __file__, script_parent_id)))
+                   
     os.remove(output_filename)
     
 
