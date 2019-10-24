@@ -1,9 +1,9 @@
 import sys
-import pandas as pd
-import numpy as np
 import json 
 import os
 import ast
+import pandas as pd
+import numpy as np
 from synapseclient import Entity, Project, Folder, File, Link, Activity
 
 """
@@ -143,7 +143,6 @@ def get_healthcodes(syn, table_id, is_filtered):
     if is_filtered:
         filtered_entity = syn.get("syn8381056")
         healthcode_list = list(pd.read_csv(filtered_entity["path"], sep = "\t")["healthCode"])
-        print(healthcode_list)
         return healthcode_list
     else:
         healthcode_list = list(syn.tableQuery("select distinct(healthCode) as healthCode from {}".format(table_id))
@@ -155,7 +154,6 @@ def get_healthcodes(syn, table_id, is_filtered):
 function to retrieve sensors 
 """
 def get_sensor_types(filepath):
-    print(filepath)
     if filepath == "#ERROR":
         return filepath
     data = open_filepath(filepath)

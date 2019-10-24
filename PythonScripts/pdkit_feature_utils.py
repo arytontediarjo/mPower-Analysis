@@ -1,12 +1,12 @@
 import sys
 import os
+import ast
 import pandas as pd
 import numpy as np
 import pdkit
 from pdkit.gait_time_series import GaitTimeSeries
 from pdkit.gait_processor import GaitProcessor
 from utils import get_acceleration_ts, normalize_feature
-import ast
 
 """
 Applicable to walking motions
