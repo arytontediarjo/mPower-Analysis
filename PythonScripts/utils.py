@@ -16,7 +16,14 @@ parameter:  syn: synapse object,
             healthcodes: list of objects
 returns: a dataframe of healthCodes and their respective filepaths 
 """
-def get_synapse_table(syn, healthcodes, table_id, version):
+def get_synapse_table(healthcodes, table_id, version):
+    
+    ## check syn object ##
+    if ("syn" not in globals()):
+        syn = sc.login()
+    else:
+        syn = globals()["syn"]
+    
     ### get healthcode subset from case-matched tsv, or any other subset of healthcodes
     healthcode_subset = "({})".format([i for i in healthcodes]).replace("[", "").replace("]", "")   
     ### query from synapse and download to synapsecache ###     
