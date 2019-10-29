@@ -149,7 +149,12 @@ parameter:  syn: syn object,
             is_filtered: boolean values of whether user wants to have filtered healthcode queries
 returns list of healthcodes
 """
-def get_healthcodes(syn, table_id, is_filtered):
+def get_healthcodes(table_id, is_filtered):
+    ## check syn object ##
+    if ("syn" not in globals()):
+        syn = sc.login()
+    else:
+        syn = globals()["syn"]
     ## get demographic information
     if is_filtered:
         filtered_entity = syn.get("syn8381056")

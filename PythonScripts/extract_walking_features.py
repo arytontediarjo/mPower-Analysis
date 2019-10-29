@@ -98,7 +98,7 @@ def main():
         walking_table_id = WALK_TABLE_PASSIVE    
     
     ## process data ##
-    data = get_synapse_table(get_healthcodes(syn, walking_table_id, is_filtered), 
+    data = get_synapse_table(get_healthcodes(walking_table_id, is_filtered), 
                              table_id,  version)
     
     ## condition on choosing which features
