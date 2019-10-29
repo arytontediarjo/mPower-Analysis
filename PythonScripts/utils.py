@@ -4,7 +4,11 @@ import os
 import ast
 import pandas as pd
 import numpy as np
+import synapseclient as sc
 from synapseclient import Entity, Project, Folder, File, Link, Activity
+
+## instantiate syn global variable ##
+syn = sc.login()
 
 """
 Query for synapse table entity (can be used for tremors and walking V1 and V2)
@@ -189,18 +193,61 @@ def get_sensor_specs(filepath):
     
 
 """
- function to retrieve synId of a scripts 
+ Function to retrieve synId of a scripts 
 """
-def get_script_id(syn, filename, parentId):
-    #   get list of files
-    file_list = list(syn.getChildren(parent = parentId, includeTypes = ['file']))
-    #   iterate through children
-    for dict_ in file_list:
-        if dict_["name"] == filename:
+def get_script_id(path_to_script, script_parent_Id):
+    
+    ## check syn object ##
+    if ("syn" not in globals()):
+        syn = sc.login()
+    else:
+        syn = globals()["syn"]
+    
+    ##  save file to synapse first ##
+    new_script = File(path = path_to_script, parentId = script_parent_Id)
+    syn.store(new_script)   
+    
+    ##  iterate through children to find the synId of saved script ##
+    for dict_ in list(syn.getChildren(parent = script_parent_Id, includeTypes = ['file'])):
+        if dict_["name"] == path_to_script.split("/")[-1]:
             return dict_["id"]
-    #   file not available
-    return np.NaN 
+    
+    ##  file not available ##
+    raise Exeption("Check script name in %s" %script_parent_Id)
 
+
+
+"""
+Function to save to synapse 
+params: data
+"""
+def save_to_synapse(data, used_script,
+                    walking_table_id,
+                    data_parent_id, 
+                    script_parent_id, 
+                    output_filename): 
+
+        ## check if syn object is a global variable ##
+        if ("syn" not in globals()):
+            syn = sc.login()
+        else:
+            syn = globals()["syn"]
+        
+        ## set path to script and output filename ##
+        path_to_script = os.path.join(os.getcwd(), used_script)
+        path_to_output_filename = os.path.join(os.getcwd(), output_filename)
+        
+        ## save the script to synapse ##
+        data     = data.to_csv(path_to_output_filename)
+        new_file = File(path = path_to_output_filename, parentId = data_parent_id)
+        act      = Activity(used  = walking_table_id,
+                            executed = get_script_id(used_script, script_parent_id))
+        new_file = syn.store(new_file, activity = act)           
+        os.remove(output_filename)
+
+"""
+Function to check json 
+"""
 def map_to_json(params):
     if isinstance(params, dict):
         return params
@@ -221,21 +268,10 @@ def normalize_feature(data, feature):
     return data
 
 
-# def generate_provenance(syn, filename, 
-#                         data, pyfile, 
-#                         synId, **parentId):
-#     ## store data and script ##
-#         path_to_script = os.path.join(os.getcwd(), pyfile)
-#         output_filename = os.path.join(os.getcwd(), filename)
-#         store_script = store_to_synapse(syn  = syn, filename = path_to_script,
-#                                     data = np.NaN, parentId = parentId.get("script_id"))
-#         store_data = store_to_synapse(syn  = syn, filename  = output_filename,
-#                                   data = data, parentId = parentId.get("data_id"),
-#                                   source_id = synId, name = "feature preprocessing",
-#                                   script_id = get_script_id(syn, __file__, parentId.get("script_id")))
-    
-    
-    
-    
+def fix_column_name(data):
+    for feature in filter(lambda x: "feature" in x, data.columns): 
+        data  = data.rename({feature: "%s"\
+                            %(feature.split("features_")[1])}, axis = 1)
+    return data
 
     
