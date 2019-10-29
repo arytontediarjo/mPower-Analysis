@@ -50,7 +50,8 @@ def get_demographic_data(version, demographic_table_id):
     
     if version == "V1":
         demographic_entity = syn.get(demographic_table_id)
-        demographic_data   = pd.read_csv(demographic_entity["path"], sep = "\t")[["healthCode", "PD", "gender", "age"]]
+        demographic_data   = pd.read_csv(demographic_entity["path"], sep = "\t")[["healthCode", "PD", 
+                                                                                  "gender", "age", "education"]]
         demographic_data["PD"] = demographic_data["PD"].map({True:1, False:0})
         demographic_data["gender"] = demographic_data["gender"].apply(lambda x: x.lower())
     

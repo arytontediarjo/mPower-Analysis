@@ -15,7 +15,7 @@ import multiprocessing as mp
 from multiprocessing import Pool
 import time
 import warnings
-from utils import get_synapse_table, get_healthcodes, get_script_id
+from utils import get_synapse_table, get_healthcodes, get_script_id, save_to_synapse
 from pdkit_feature_utils import pdkit_featurize, pdkit_normalize
 from sfm_feature_utils import sfm_featurize
 import argparse
