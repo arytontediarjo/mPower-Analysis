@@ -99,7 +99,7 @@ def main():
     
     ## process data ##
     data = get_synapse_table(get_healthcodes(walking_table_id, is_filtered), 
-                             table_id,  version)
+                             walking_table_id, version)
     
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))
