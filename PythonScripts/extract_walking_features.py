@@ -82,7 +82,7 @@ def main():
     ## Retrieve Arguments
     args = read_args()
     version = args.version
-    filename = args.filename                      
+    output_filename = args.filename                      
     cores = int(args.num_cores)                     
     chunksize = int(args.num_chunks)                
     features = args.featurize                                                 
@@ -91,11 +91,11 @@ def main():
     data_parent_id = args.data_parent_id
     
     if version == "V1":
-        table_id = WALK_TABLE_V1
+        walking_table_id = WALK_TABLE_V1
     elif version == "V2":
-        table_id = WALK_TABLE_V2
+        walking_table_id = WALK_TABLE_V2
     else:
-        table_id = WALK_TABLE_PASSIVE    
+        walking_table_id = WALK_TABLE_PASSIVE    
     
     ## login
     syn = sc.login()
@@ -112,16 +112,16 @@ def main():
     print("parallelization process finished")
     data = data[[feat for feat in data.columns if ("path" not in feat) 
                  and ("0" not in feat)]]
-    path_to_script = os.path.join(os.getcwd(), __file__)
-    output_filename = os.path.join(os.getcwd(), filename)
-    data = data.to_csv(output_filename)
-    new_file = File(path = output_filename, parentId = data_parent_id)
-    new_file = syn.store(new_file)
-    os.remove(output_filename)
-    syn.setProvenance(new_file, 
-                      activity = Activity(used = table_id, 
-                                          executed = get_script_id(syn, __file__, script_parent_id)))
     
+    
+    ### save script to synapse and save cleaned dataset to synapse ###
+    save_to_synapse(data, __file__, 
+                    walking_table_id,
+                    data_parent_id,
+                    script_parent_id, 
+                    output_filename)
+
+
 ## Run Main Function ##
 if __name__ == "__main__":
     start_time = time.time()
