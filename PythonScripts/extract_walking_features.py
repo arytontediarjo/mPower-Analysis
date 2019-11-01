@@ -17,7 +17,8 @@ import multiprocessing as mp
 from multiprocessing import Pool
 import time
 import warnings
-from utils import get_synapse_table, get_healthcodes, get_script_id, save_to_synapse
+from utils import get_walking_synapse_table, get_healthcodes, 
+                                get_script_id, save_to_synapse
 from pdkit_feature_utils import pdkit_featurize, pdkit_normalize
 from sfm_feature_utils import sfm_featurize
 import argparse
@@ -100,8 +101,8 @@ def main():
         walking_table_id = WALK_TABLE_PASSIVE    
     
     ## process data ##
-    data = get_synapse_table(get_healthcodes(walking_table_id, is_filtered), 
-                             walking_table_id, version)
+    data = get_walking_synapse_table(get_healthcodes(walking_table_id, is_filtered), 
+                                    walking_table_id, version)
     
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))
