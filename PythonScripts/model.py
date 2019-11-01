@@ -46,7 +46,8 @@ def logreg_fit(X_train, y_train):
              {'feature_selection__threshold' : ["1.1*mean", "1.2*mean", "mean"], 
                 'classifier__penalty': ['l1'], 
                 'classifier__solver': [ 'liblinear', 'saga']}]
-    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = 1, cv = 10)
+    CV = GridSearchCV(estimator = pipe, param_grid = param , 
+                      scoring= "roc_auc", n_jobs = -1, cv = 10, verbose = True)
     CV.fit(X_train, y_train)
     return CV
 
@@ -66,7 +67,8 @@ def xgb_fit(X_train, y_train):
         "classifier__subsample"     : [0.8],
         "classifier__n_estimators"  : [100]
     }
-    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = 1, cv = 10)
+    CV = GridSearchCV(estimator = pipe, param_grid = param, 
+                      scoring= "roc_auc", n_jobs = -1, cv = 10, verbose = True)
     CV.fit(X_train, y_train)
     return CV
     
@@ -84,7 +86,8 @@ def gradientboost_fit(X_train, y_train):
         'classifier__loss': ["deviance", "exponential"], ## exponential will result in adaBoost
         "classifier__n_estimators"  : [100]
     }
-    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = 1, cv = 10)
+    CV = GridSearchCV(estimator = pipe, param_grid = param , 
+                      scoring= "roc_auc", n_jobs = -1, cv = 10, verbose = True)
     CV.fit(X_train, y_train)
     return CV
 
@@ -101,7 +104,8 @@ def randomforest_fit(X_train, y_train):
         'classifier__max_features': ["auto", "sqrt", "log2", None], 
         'classifier__n_estimators'  : [100]
     }
-    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = 1, cv = 10)
+    CV = GridSearchCV(estimator = pipe, param_grid = param, 
+                      scoring= "roc_auc", n_jobs = -1, cv = 10, verbose = True)
     CV.fit(X_train, y_train)
     return CV
 
