@@ -65,7 +65,7 @@ def xgb_fit(X_train, y_train):
         "classifier__tree_method"   : ["hist", "auto"],
         "classifier__max_depth"     : [3, 6, 8, 10],
         "classifier__gamma"         : [0, 1],
-        "classifier__colsample_bytree": [0.8, 0.9, 0.1]
+        "classifier__colsample_bytree": [0.8, 0.9, 0.1],
         "classifier__subsample"     : [0.8, 0.9, 1],
         "classifier__n_estimators"  : [100, 200, 300]
     }
@@ -77,7 +77,7 @@ def xgb_fit(X_train, y_train):
 
 def gradientboost_fit(X_train, y_train):
     pipe = Pipeline(steps=[
-        ("feature_selection", SelectFromModel(estimator = ExtraTreesClassifier(n_estimators = 300,
+        ("feature_selection", SelectFromModel(estimator = XGBClassifier(n_estimators = 300,
                                                                               random_state  = 100))),
         ('classifier', GradientBoostingClassifier(random_state = 100))
         ])
