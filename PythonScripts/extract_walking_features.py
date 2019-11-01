@@ -1,8 +1,10 @@
 """
-Errors that will be catched:
-Empty filepaths, Empty Features, Empty Files
-Will be annotated as #ERROR universally
-#ERROR will be removed on feature engineering
+AUTHOR: Aryton Tediarjo
+DESCRIPTION: Script for extracting walking features 
+            features available: spectral flatness on balance tests and PDKIT features
+
+Side Notes:
+ - #ERROR string will be annotated on empty filepaths or empty dataframes
 """
 
 

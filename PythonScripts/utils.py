@@ -16,7 +16,7 @@ parameter:  syn: synapse object,
             healthcodes: list of objects
 returns: a dataframe of healthCodes and their respective filepaths 
 """
-def get_synapse_table(healthcodes, table_id, version):
+def get_walking_synapse_table(healthcodes, table_id, version):
     
     ## check syn object ##
     if ("syn" not in globals()):
@@ -53,7 +53,7 @@ def get_synapse_table(healthcodes, table_id, version):
         dict_["file_handle_id"].append(k)
         dict_["file_path"].append(v)
     filepath_data = pd.DataFrame(dict_)
-    data = data[["recordId", "healthCode", "phoneInfo", "createdOn"] + json_list]
+    data = data[["recordId", "healthCode", "appVersion", "phoneInfo", "createdOn"] + json_list]
     filepath_data["file_handle_id"] = filepath_data["file_handle_id"].astype(float)
     
     ### Join the filehandles with each acceleration files ###
@@ -225,7 +225,7 @@ def get_script_id(path_to_script, script_parent_Id):
             return dict_["id"]
     
     ##  file not available ##
-    raise Exeption("Check script name in %s" %script_parent_Id)
+    raise Exception("Check script name in %s" %script_parent_Id)
 
 
 

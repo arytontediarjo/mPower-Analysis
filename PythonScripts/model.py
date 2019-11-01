@@ -1,6 +1,9 @@
-## required dependencies ##
+## imports ##
+import sys
+sys.path.append("../PythonScripts")
+from ML_utils import LogTransformer, DropFeatures
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
 from sklearn.externals import joblib
@@ -8,101 +11,110 @@ from sklearn.linear_model import LogisticRegression
 from sklearn import svm, decomposition, tree
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, ExtraTreesClassifier
 from sklearn import metrics
-from sklearn.model_selection import learning_curve, GridSearchCV, cross_val_score
+from sklearn.model_selection import learning_curve, GridSearchCV, cross_val_score, validation_curve
 from sklearn.metrics import classification_report, confusion_matrix
 import pandas as pd
 import numpy as np
 import warnings
-from sklearn.feature_selection import RFECV, SelectKBest, chi2
+from sklearn.feature_selection import RFECV, SelectKBest, chi2, SelectFromModel, RFE
 from xgboost import XGBClassifier
-from synapseclient import Entity, Project, Folder, File, Link
-import synapseclient as sc
-import pickle
-from joblib import dump, load
-import time
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.base import BaseEstimator, TransformerMixin
 
 warnings.simplefilter("ignore")
 np.random.seed(100)
 
 
+def preprocess(X):
+    X = X.copy()
+    X = DropFeatures(variables_to_drop = [feat for feat in X.columns if ("stride_regularity" in feat)]).transform(X)
+    X = LogTransformer(variables = [feat for feat in X.columns if ("frequency_of_peaks" in feat)]).transform(X)
+    return X
+
 def logreg_fit(X_train, y_train):
     pipe = Pipeline(steps=[
-        ('kbest', SelectKBest(chi2)),
+        ("feature_selection", SelectFromModel(ExtraTreesClassifier(n_estimators = 100,
+                                                                   random_state  = 100))),
         ('scaler', StandardScaler()),
         ('classifier', LogisticRegression(random_state = 100))
         ])
-    param = [{
-            "kbest__k"                    : [10, 16, 32],
-            'classifier__penalty'         : ['l2'], 
-            'classifier__solver'          : ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga']}, 
-            {
-            'classifier__penalty'         : ['l1'], 
-            'classifier__solver'          : ['liblinear', 'saga']}  
-            ]
-
-    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = -1, cv = 10, verbose = 10)
+    param = [{'feature_selection__threshold' : ["1.1*mean", "1.2*mean", "mean"], 
+                'classifier__penalty': ['l2'], 
+                'classifier__solver': [ 'newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga']}, 
+             {'feature_selection__threshold' : ["1.1*mean", "1.2*mean", "mean"], 
+                'classifier__penalty': ['l1'], 
+                'classifier__solver': [ 'liblinear', 'saga']}]
+    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = 1, cv = 10)
     CV.fit(X_train, y_train)
     return CV
 
 
-
 def xgb_fit(X_train, y_train):
     pipe = Pipeline(steps=[
-        ('kbest', SelectKBest(chi2)),
+        ("feature_selection", SelectFromModel(ExtraTreesClassifier(n_estimators = 100,
+                                                            random_state  = 100))),
         ('classifier', XGBClassifier(seed = 100))
         ])
     param = {
-        "kbest__k"                         : [10, 16, 32],
-        "classifier__learning_rate"        : [0.001, 0.01, 0.05, 0.1],
-        "classifier__tree_method"          : ["hist", "auto"],
-        "classifier__max_depth"            : [2, 6, 8],
-        "classifier__gamma"                : [0, 1],
-        "classifier__subsample"            : [0.8, 1],
-        "classifier__colsample_bytree"     : [0.8, 1],
-        "classifier__n_estimators"         : [100, 200]
+        'feature_selection__threshold' : ["1.1*mean", "1.2*mean", "mean"], 
+        "classifier__learning_rate" : [0.01, 0.05, 0.1],
+        "classifier__tree_method"   : ["hist", "auto"],
+        "classifier__max_depth"     : [6, 8],
+        "classifier__gamma"         : [0, 1],
+        "classifier__subsample"     : [0.8],
+        "classifier__n_estimators"  : [100]
     }
-    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", cv = 10)
+    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = 1, cv = 10)
     CV.fit(X_train, y_train)
     return CV
     
 
 def gradientboost_fit(X_train, y_train):
-    # pca = decomposition.PCA()
     pipe = Pipeline(steps=[
-        ('kbest', SelectKBest(chi2)),
+        ("feature_selection", SelectFromModel(estimator = ExtraTreesClassifier(n_estimators = 100,
+                                                                              random_state  = 100))),
         ('classifier', GradientBoostingClassifier(random_state = 100))
         ])
     param = {
-        "kbest__k"                          : [10, 16, 32],
-        'classifier__learning_rate'         : [0.001, 0.01, 0.05, 0.1],
-        'classifier__max_depth'             : [3, 4, 5, 6,7,8,9,10],
-        'classifier__loss'                  : ["deviance", "exponential"], ## exponential will result in adaBoost
-        "classifier__n_estimators"          : [100, 200],
+        'feature_selection__threshold' : ["1.1*mean", "1.2*mean", "mean"],
+        'classifier__learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1],
+        'classifier__max_depth':[1, 2, 3, 4, 5, 6],
+        'classifier__loss': ["deviance", "exponential"], ## exponential will result in adaBoost
+        "classifier__n_estimators"  : [100]
     }
-    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = -1, cv = 10, verbose = 10)
+    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = 1, cv = 10)
     CV.fit(X_train, y_train)
     return CV
 
 def randomforest_fit(X_train, y_train):
     pipe = Pipeline(steps=[
-        ('kbest', SelectKBest(chi2)),
+        ("feature_selection", SelectFromModel(estimator = ExtraTreesClassifier(n_estimators = 100,
+                                                                              random_state = 100))),
         ('classifier', RandomForestClassifier(random_state = 100))
-        ])
+    ])
     param = {
-        "kbest__k"                          : [10, 16, 32],
-        'classifier__max_depth'             : [2, 3, 6, 8],
-        'classifier__criterion'             : ["gini", "entropy"],
-        'classifier__max_features'          : ["auto", "sqrt", "log2", None], 
-        'classifier__n_estimators'          : [100, 200],
-        'classifier__min_samples_leaf'      : [1,2,4],
-        'classifier__min_samples_split'     : [2,5,10]
-        
+        'feature_selection__threshold' : ["1.1*mean", "1.2*mean", "mean"], 
+        'classifier__max_depth':[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        'classifier__criterion': ["gini", "entropy"],## exponential will result in adaBoost
+        'classifier__max_features': ["auto", "sqrt", "log2", None], 
+        'classifier__n_estimators'  : [100]
     }
-    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = -1, cv = 10, verbose = 10)
+    CV = GridSearchCV(estimator = pipe, param_grid = param , scoring= "roc_auc", n_jobs = 1, cv = 10)
     CV.fit(X_train, y_train)
     return CV
 
 
+def printPerformance(model, X_test, y_test):
+    print("Mean AUC score on K-folds: {}".format(model.best_score_))
+    print("Parameter Used: {}".format(model.best_params_))
+    y_true, y_pred = y_test, model.predict(X_test)
+    print("ROC-AUC on Test-Set: {}".format(metrics.roc_auc_score(y_true, y_pred)))
+    print("log-loss: {}".format(metrics.log_loss(y_true, y_pred)))
+    print("Precision: {}".format(metrics.precision_score(y_true, y_pred)))
+    print("Recall: {}".format(metrics.recall_score(y_true, y_pred)))
+    print("F1-Score: {}".format(metrics.f1_score(y_true, y_pred)))
 def savePerformances(models, X_test, y_test):
     pred_result_dict = {}
     pred_result_dict["MODEL"] = []
@@ -132,30 +144,44 @@ def savePerformances(models, X_test, y_test):
     return pred_result_dict
     
 def main():
-    
     # split training and test # 
-    walking_train = pd.read_csv("../Data/walking_data_training.csv", index_col=0)
+    walking_train = pd.read_csv("../Data/MAX_DATA.csv", index_col=0).reset_index(drop = True)
     # balance_train = pd.read_csv("../Data/balance_data_training.csv", index_col=0).dropna()
     # balance_X_train, balance_X_test, balance_y_train, balance_y_test = train_test_split(balance_train.drop(["healthCode", "PD"], axis = 1), balance_train["PD"], test_size=0.20, random_state = 100)
-    walking_X_train, walking_X_test, walking_y_train, walking_y_test = train_test_split(walking_train.drop(["healthCode", "PD"], axis = 1), walking_train["PD"], test_size=0.20, random_state = 100)
+    walking_X_train, walking_X_test, walking_y_train, walking_y_test = \
+            train_test_split(walking_train.drop(["PD"], axis = 1), 
+                             walking_train["PD"], test_size=0.20, random_state = 100)
 
     # model #
+    walking_X_train = preprocess(walking_X_train)
+    walking_X_test = preprocess(walking_X_test)
     lr_walking_model = logreg_fit(walking_X_train, walking_y_train)
     rf_walking_model = randomforest_fit(walking_X_train, walking_y_train)
     gb_walking_model = gradientboost_fit(walking_X_train, walking_y_train)
     xgb_walking_model = xgb_fit(walking_X_train, walking_y_train)
-    models = [(lr_walking_model, "LOGISTIC_REGRESSION"),
-              (rf_walking_model, "RANDOM_FOREST"),
-              (gb_walking_model, "SKLEARN_GRADIENT BOOSTING"),
-              (xgb_walking_model, "XTREME_GRADIENT BOOSTING")]
-    predictions = savePerformances(models, walking_X_test, walking_y_test)
     
-    ## save to synapse file ##
-    syn = sc.login()
-    file_path = "../Data/prediction_results.csv"
-    data = pd.DataFrame.from_dict(predictions).to_csv(file_path)
-    data = File(path = file_path, parentId = "syn20816722")
-    data = syn.store(data)
+    
+    print("\n### Gradient Boosting Walking ###")
+    printPerformance(gb_walking_model, walking_X_test, walking_y_test)
+    print("\n### XTreme Gradient Boosting Walking ###")
+    printPerformance(xgb_walking_model, walking_X_test, walking_y_test)
+    print("\n### Random Forest Walking ###")
+    printPerformance(rf_walking_model, walking_X_test, walking_y_test)
+    print("\n### Logistic Regression Walking ###")
+    printPerformance(lr_walking_model, walking_X_test, walking_y_test)
+    
+    # models = [(lr_walking_model, "LOGISTIC_REGRESSION"),
+    #           (rf_walking_model, "RANDOM_FOREST"),
+    #           (gb_walking_model, "SKLEARN_GRADIENT BOOSTING"),
+    #           (xgb_walking_model, "XTREME_GRADIENT BOOSTING")]
+    # predictions = savePerformances(models, walking_X_test, walking_y_test)
+    
+    # ## save to synapse file ##
+    # syn = sc.login()
+    # file_path = "../Data/prediction_results.csv"
+    # data = pd.DataFrame.from_dict(predictions).to_csv(file_path)
+    # data = File(path = file_path, parentId = "syn20816722")
+    # data = syn.store(data)
     
 if __name__ == "__main__":
     start_time = time.time()
