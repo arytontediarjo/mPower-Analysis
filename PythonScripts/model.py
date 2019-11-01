@@ -66,7 +66,7 @@ def xgb_fit(X_train, y_train):
         "classifier__max_depth"     : [3, 6, 8, 10],
         "classifier__gamma"         : [0, 1],
         "classifier__subsample"     : [0.8, 0.9],
-        "classifier__n_estimators"  : [100]
+        "classifier__n_estimators"  : [100, 200, 300]
     }
     CV = GridSearchCV(estimator = pipe, param_grid = param, 
                       scoring= "roc_auc", n_jobs = -1, cv = 10, verbose = True)
@@ -83,9 +83,9 @@ def gradientboost_fit(X_train, y_train):
     param = {
         'feature_selection__threshold' : ["1.1*mean", "1.2*mean", "mean"],
         'classifier__learning_rate': [0.005, 0.01, 0.05, 0.1],
-        'classifier__max_depth':[3, 6, 8, 10],
+        'classifier__max_depth':[3, 6, 8, 10, 12],
         'classifier__loss': ["deviance", "exponential"], ## exponential will result in adaBoost
-        "classifier__n_estimators"  : [100]
+        "classifier__n_estimators"  : [100, 200, 300]
     }
     CV = GridSearchCV(estimator = pipe, param_grid = param , 
                       scoring= "roc_auc", n_jobs = -1, cv = 10, verbose = True)
@@ -100,10 +100,10 @@ def randomforest_fit(X_train, y_train):
     ])
     param = {
         'feature_selection__threshold' : ["1.1*mean", "1.2*mean", "mean"], 
-        'classifier__max_depth':[3, 6, 8, 10],
+        'classifier__max_depth':[3, 6, 8, 10, 12],
         'classifier__criterion': ["gini", "entropy"],## exponential will result in adaBoost
         'classifier__max_features': ["auto", "sqrt", "log2", None], 
-        'classifier__n_estimators'  : [100]
+        'classifier__n_estimators'  : [100, 200, 300]
     }
     CV = GridSearchCV(estimator = pipe, param_grid = param, 
                       scoring= "roc_auc", n_jobs = -1, cv = 10, verbose = True)
