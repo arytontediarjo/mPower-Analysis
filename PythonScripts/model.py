@@ -61,11 +61,11 @@ def xgb_fit(X_train, y_train):
         ])
     param = {
         'feature_selection__threshold' : ["1.1*mean", "1.2*mean", "mean"], 
-        "classifier__learning_rate" : [0.01, 0.05, 0.1],
+        "classifier__learning_rate" : [0.005, 0.01, 0.05, 0.1],
         "classifier__tree_method"   : ["hist", "auto"],
-        "classifier__max_depth"     : [6, 8],
+        "classifier__max_depth"     : [3, 6, 8, 10],
         "classifier__gamma"         : [0, 1],
-        "classifier__subsample"     : [0.8],
+        "classifier__subsample"     : [0.8, 0.9],
         "classifier__n_estimators"  : [100]
     }
     CV = GridSearchCV(estimator = pipe, param_grid = param, 
@@ -82,8 +82,8 @@ def gradientboost_fit(X_train, y_train):
         ])
     param = {
         'feature_selection__threshold' : ["1.1*mean", "1.2*mean", "mean"],
-        'classifier__learning_rate': [0.001, 0.005, 0.01, 0.05, 0.1],
-        'classifier__max_depth':[1, 2, 3, 4, 5, 6],
+        'classifier__learning_rate': [0.005, 0.01, 0.05, 0.1],
+        'classifier__max_depth':[3, 6, 8, 10],
         'classifier__loss': ["deviance", "exponential"], ## exponential will result in adaBoost
         "classifier__n_estimators"  : [100]
     }
@@ -100,7 +100,7 @@ def randomforest_fit(X_train, y_train):
     ])
     param = {
         'feature_selection__threshold' : ["1.1*mean", "1.2*mean", "mean"], 
-        'classifier__max_depth':[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        'classifier__max_depth':[3, 6, 8, 10],
         'classifier__criterion': ["gini", "entropy"],## exponential will result in adaBoost
         'classifier__max_features': ["auto", "sqrt", "log2", None], 
         'classifier__n_estimators'  : [100]
