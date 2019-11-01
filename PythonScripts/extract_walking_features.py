@@ -27,7 +27,7 @@ warnings.simplefilter("ignore")
 """
 Constants of table ID for query
 """
-WALK_TABLE_V1      = "syn7222425"
+WALK_TABLE_V1      = "syn10308918"
 WALK_TABLE_V2      = "syn12514611"
 WALK_TABLE_PASSIVE = "syn17022539"
 
