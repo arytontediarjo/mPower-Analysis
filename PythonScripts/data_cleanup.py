@@ -89,6 +89,7 @@ def clean_data(version, demographic_table_id,
     ### Get data from raw gait data files ###
     entity = syn.get(walking_table_id)
     data   = pd.read_csv(entity["path"], index_col = 0)
+    
     data = (data[data["phoneInfo"].str.contains("iPhone")]) \
                             [(data != "#ERROR").all(axis = 1)]
     data.drop_duplicates(subset=['healthCode', 'createdOn'], keep = "first", inplace = True)

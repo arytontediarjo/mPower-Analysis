@@ -13,7 +13,6 @@ Applicable to walking motions
 """
 def pdkit_pipeline(filepath, var):
     ### Process data to be usable by pdkit ###
-    print(filepath)
     data = get_acceleration_ts(filepath)
     ### parse through gait processor to retrieve resampled signal
     try:
@@ -29,6 +28,10 @@ def pdkit_pipeline(filepath, var):
     feature_dict = {}
     
     ### featurize pdkit features into the dictionary ###
+    try:
+        feature_dict["duration"] = data.td[-1]
+    else:
+        feature_dict["duration"] = 0
     try:  
         feature_dict["no_of_steps"]             = gp.gait(data[var])[0]
     except:

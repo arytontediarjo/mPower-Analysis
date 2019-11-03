@@ -31,20 +31,20 @@ def get_walking_synapse_table(healthcodes, table_id, version):
         print("Querying V1 Data")
         query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthcode_subset))
         data = query.asDataFrame()
-        json_list = [_ for _ in data.columns if ("deviceMotion" in _)]
+        feature_list = [_ for _ in data.columns if ("deviceMotion" in _)]
     elif version == "V2":
         print("Querying V2 Data")
         query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthcode_subset))
         data = query.asDataFrame()
-        json_list = [_ for _ in data.columns if ("json" in _)]
+        feature_list = [_ for _ in data.columns if ("json" in _)]
     else:
         print("Querying Passive Data")
         query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthcode_subset))
         data = query.asDataFrame()
-        json_list = [_ for _ in data.columns if ("json" in _)]   
+        feature_list = [_ for _ in data.columns if ("json" in _)]   
         
     ### Download tmp into ordered dictionary ###
-    file_map = syn.downloadTableColumns(query, json_list)
+    file_map = syn.downloadTableColumns(query, feature_list)
     ### Loop through the dictionary ### 
     dict_ = {}
     dict_["file_handle_id"] = []
@@ -53,11 +53,11 @@ def get_walking_synapse_table(healthcodes, table_id, version):
         dict_["file_handle_id"].append(k)
         dict_["file_path"].append(v)
     filepath_data = pd.DataFrame(dict_)
-    data = data[["recordId", "healthCode", "appVersion", "phoneInfo", "createdOn"] + json_list]
+    data = data[["recordId", "healthCode", "appVersion", "phoneInfo", "createdOn"] + feature_list]
     filepath_data["file_handle_id"] = filepath_data["file_handle_id"].astype(float)
     
     ### Join the filehandles with each acceleration files ###
-    for feat in json_list:
+    for feat in feature_list:
         data[feat] = data[feat].astype(float)
         data = pd.merge(data, filepath_data, 
                         left_on = feat, 
@@ -274,7 +274,7 @@ Fill none as 0 meaning that the signal is too weak to be detected
 def normalize_feature(data, feature):
     normalized_data = data[feature].map(map_to_json) \
                                 .apply(pd.Series) \
-                                .fillna("#ERROR").add_prefix('{}.'.format(feature))
+                                .fillna("#NULL_FROM_PDKIT").add_prefix('{}.'.format(feature))
     data = pd.concat([data, normalized_data], 
                      axis = 1).drop(feature, axis = 1)
     return data
