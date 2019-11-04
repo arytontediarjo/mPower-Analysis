@@ -150,17 +150,17 @@ def main():
     ## split training and test ##
     entity = syn.get("syn21046180")
     data   = pd.read_csv(entity["path"], index_col = 0)
+    data = preprocess(data, is_feature_engineered = True)
     
     feature_columns = [feat for feat in data.columns if ("." in feat) 
                    or ("duration" in feat) or ("healthCode" in feat)]
+    
     
     walking_X_train, walking_X_test, walking_y_train, walking_y_test = \
             train_test_split(data[feature_columns], 
                              data["PD"], test_size=0.25, random_state = 100)
 
     # model #
-    walking_X_train = preprocess(walking_X_train, is_feature_engineered = True)
-    walking_X_test = preprocess(walking_X_test, is_feature_engineered = True)
     lr_walking_model = logreg_fit(walking_X_train, walking_y_train)
     rf_walking_model = randomforest_fit(walking_X_train, walking_y_train)
     gb_walking_model = gradientboost_fit(walking_X_train, walking_y_train)
