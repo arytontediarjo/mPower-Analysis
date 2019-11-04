@@ -30,7 +30,7 @@ DEMOGRAPHIC_TABLE_V1 = "syn8381056"
 DEMOGRAPHIC_TABLE_V2 = "syn15673379"
 WALKING_TABLE_V1     = "syn21111818"
 WALKING_TABLE_V2     = "syn21113231"
-PASSIVE_TABLE        = "syn21028519"
+PASSIVE_TABLE        = "syn21114136"
 BALANCE_TABLE_V1     = "syn21028418"
 BALANCE_TABLE_V2     = "syn21018245"
 DATA_PARENT_ID       = "syn21024857"
@@ -47,7 +47,7 @@ returns: demographic data
 """
 def get_demographic_data(version, demographic_table_id):
     
-    
+    ### Version 1 data gathered from .tsv assays ###
     if version == "V1":
         demographic_entity = syn.get(demographic_table_id)
         demographic_data   = pd.read_csv(demographic_entity["path"], sep = "\t")[["healthCode", "PD", 
@@ -55,6 +55,7 @@ def get_demographic_data(version, demographic_table_id):
         demographic_data["PD"] = demographic_data["PD"].map({True:1, False:0})
         demographic_data["gender"] = demographic_data["gender"].apply(lambda x: x.lower())
     
+    ### Version 2 data gathered from table entity ###
     else:
         demographic_data   = syn.tableQuery("SELECT distinct(healthCode) as healthCode, \
                                              diagnosis as PD, sex as gender, birthYear from {} \
@@ -95,9 +96,9 @@ def clean_data(version, demographic_table_id,
     data.drop_duplicates(subset=['healthCode', 'createdOn'], keep = "first", inplace = True)
     
     
-    ## rename columns accordingly and concatenate outbound and return data for version one, 
-    ## while version 2 does not require extra concatenation as all walking data is consolidated
-    ## into one ##
+    ### rename columns accordingly and concatenate outbound and return data for version one, 
+    ### while version 2 does not require extra concatenation as all walking data is consolidated
+    ### into one ###
     if version == "V1":
         data_return   = data[[feature for feature in data.columns if "outbound" not in feature]]
         data_outbound = data[[feature for feature in data.columns if "return" not in feature]]
@@ -105,17 +106,17 @@ def clean_data(version, demographic_table_id,
     else:
         data = fix_column_name(data)
     
-    ## remove empty cells that contains empty pdkit features ## 
+    ### remove empty cells that contains empty pdkit features ### 
     data = (data[data["phoneInfo"].str.contains("iPhone")]) \
                             [(data != "#NULL_FROM_PDKIT").all(axis = 1)]
                             
-    ## change data type to numericals ## 
+    ### change dtype to float64 ### 
     data[[_ for _ in data.columns if "feature" in _]] = \
     data[[_ for _ in data.columns if "feature" in _]].apply(pd.to_numeric)
     
     
     ### reset indexing of data, and remove redundant duration data gathered 
-    ### from AWS data pipeline 
+    ### from AWS data pipeline ###
     data.reset_index(drop = True, inplace = True)
     data.drop(["y.duration", "z.duration", "AA.duration"], axis = 1, inplace = True) 
     data.rename({"x.duration": "duration"}, axis = 1, inplace = True)
@@ -150,9 +151,9 @@ def main():
     # cleaned_SFM_MPV2 = clean_data("V2", DEMOGRAPHIC_TABLE_V2, 
     #                               BALANCE_TABLE_V2, DATA_PARENT_ID,
     #                               SCRIPT_PARENT_ID, "cleaned_SFM_MPV2.csv")
-    # cleaned_PDKIT_PASSIVE= clean_data("V2", DEMOGRAPHIC_TABLE_V2, 
-    #                                   PASSIVE_TABLE, DATA_PARENT_ID,
-                                    #   SCRIPT_PARENT_ID, "cleaned_.csv")
+    cleaned_PDKIT_PASSIVE= clean_data("V2", DEMOGRAPHIC_TABLE_V2, 
+                                      PASSIVE_TABLE, DATA_PARENT_ID,
+                                      SCRIPT_PARENT_ID, "cleaned_pdkit_passive.csv")
     
 ## Run Main Function ##
 if __name__ == "__main__":
