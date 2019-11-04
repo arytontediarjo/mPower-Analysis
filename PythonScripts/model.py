@@ -22,6 +22,7 @@ from xgboost import XGBClassifier
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
+import synapseclient as sc
 # from sklearn.base import BaseEstimator, TransformerMixin
 
 warnings.simplefilter("ignore")
