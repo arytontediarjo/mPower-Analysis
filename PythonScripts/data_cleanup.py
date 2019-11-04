@@ -29,7 +29,7 @@ GLOBAL VARIABLES
 DEMOGRAPHIC_TABLE_V1 = "syn8381056"
 DEMOGRAPHIC_TABLE_V2 = "syn15673379"
 WALKING_TABLE_V1     = "syn21111818"
-WALKING_TABLE_V2     = "syn21018127"
+WALKING_TABLE_V2     = "syn21113231"
 PASSIVE_TABLE        = "syn21028519"
 BALANCE_TABLE_V1     = "syn21028418"
 BALANCE_TABLE_V2     = "syn21018245"
@@ -113,13 +113,11 @@ def clean_data(version, demographic_table_id,
     data[[_ for _ in data.columns if "feature" in _]] = \
     data[[_ for _ in data.columns if "feature" in _]].apply(pd.to_numeric)
     
-    print(data.columns)
-    
     
     ### reset indexing of data, and remove redundant duration data gathered 
     ### from AWS data pipeline 
     data.reset_index(drop = True, inplace = True)
-    data.drop(["y.duration", "z.duration"], axis = 1, inplace = True) 
+    data.drop(["y.duration", "z.duration", "AA.duration"], axis = 1, inplace = True) 
     data.rename({"x.duration": "duration"}, axis = 1, inplace = True)
     
     ### Merge with demographic data to have more metadata ###
@@ -142,19 +140,19 @@ iteratively cleaned all raw featurized datasets given their demographics data, f
 def main():
     cleaned_PDKIT_MPV1 = clean_data("V1", DEMOGRAPHIC_TABLE_V1, 
                                     WALKING_TABLE_V1, DATA_PARENT_ID,
-                                    SCRIPT_PARENT_ID, "cleaned_PDKIT_MPV1.csv")
+                                    SCRIPT_PARENT_ID, "cleaned_pdkit_mpv1.csv")
     cleaned_PDKIT_MPV2 = clean_data("V2", DEMOGRAPHIC_TABLE_V2, 
                                     WALKING_TABLE_V2, DATA_PARENT_ID,
-                                    SCRIPT_PARENT_ID, "cleaned_PDKIT_MPV2.csv")
-    cleaned_SFM_MPV1 = clean_data("V1", DEMOGRAPHIC_TABLE_V1, 
-                                  BALANCE_TABLE_V1, DATA_PARENT_ID,
-                                  SCRIPT_PARENT_ID, "cleaned_SFM_MPV1.csv")
-    cleaned_SFM_MPV2 = clean_data("V2", DEMOGRAPHIC_TABLE_V2, 
-                                  BALANCE_TABLE_V2, DATA_PARENT_ID,
-                                  SCRIPT_PARENT_ID, "cleaned_SFM_MPV2.csv")
-    cleaned_PDKIT_PASSIVE= clean_data("V2", DEMOGRAPHIC_TABLE_V2, 
-                                      PASSIVE_TABLE, DATA_PARENT_ID,
-                                      SCRIPT_PARENT_ID, "cleaned_PDKIT_PASSIVE.csv")
+                                    SCRIPT_PARENT_ID, "cleaned_pdkit_mpv2.csv")
+    # cleaned_SFM_MPV1 = clean_data("V1", DEMOGRAPHIC_TABLE_V1, 
+    #                               BALANCE_TABLE_V1, DATA_PARENT_ID,
+    #                               SCRIPT_PARENT_ID, "cleaned_SFM_MPV1.csv")
+    # cleaned_SFM_MPV2 = clean_data("V2", DEMOGRAPHIC_TABLE_V2, 
+    #                               BALANCE_TABLE_V2, DATA_PARENT_ID,
+    #                               SCRIPT_PARENT_ID, "cleaned_SFM_MPV2.csv")
+    # cleaned_PDKIT_PASSIVE= clean_data("V2", DEMOGRAPHIC_TABLE_V2, 
+    #                                   PASSIVE_TABLE, DATA_PARENT_ID,
+                                    #   SCRIPT_PARENT_ID, "cleaned_.csv")
     
 ## Run Main Function ##
 if __name__ == "__main__":

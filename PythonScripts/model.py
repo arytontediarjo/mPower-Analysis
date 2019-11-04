@@ -31,8 +31,22 @@ np.random.seed(100)
 def preprocess(X):
     X = X.copy()
     X = DropFeatures(variables_to_drop = [feat for feat in X.columns if ("stride_regularity" in feat)]).transform(X)
+    X = DropFeatures(variables_to_drop = ["MAX_x.freeze_occurences", 
+                                          "MAX_y.freeze_occurences", 
+                                          "MAX_z.freeze_occurences",
+                                          "MAX_AA.freeze_occurences"]).transform(X)
+    X = DropFeatures(variables_to_drop = ["MAX_x.no_of_steps", 
+                                          "MAX_y.no_of_steps", 
+                                          "MAX_z.no_of_steps",
+                                          "MAX_fc.no_of_steps",
+                                          "MAX_AA.no_of_steps"]).transform(X)
+    X = DropFeatures(variables_to_drop = ["MAX_x.frequency_of_peaks", 
+                                          "MAX_y.frequency_of_peaks", 
+                                          "MAX_z.frequency_of_peaks",
+                                          "MAX_AA.frequency_of_peaks"]).transform(X)
     X = LogTransformer(variables = [feat for feat in X.columns if ("frequency_of_peaks" in feat)]).transform(X)
     return X
+
 
 def logreg_fit(X_train, y_train):
     pipe = Pipeline(steps=[
