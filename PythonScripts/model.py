@@ -27,6 +27,9 @@ import numpy as np
 warnings.simplefilter("ignore")
 np.random.seed(100)
 
+
+syn = sc.login()
+
 def logreg_fit(X_train, y_train):
     pipe = Pipeline(steps=[
         ("feature_selection", SelectFromModel(ExtraTreesClassifier(n_estimators = 300,
@@ -143,17 +146,20 @@ def savePerformances(models, X_test, y_test):
     return pred_result_dict
     
 def main():
-    # split training and test # 
-    walking_train = pd.read_csv("../Data/MAX_DATA.csv", index_col=0).reset_index(drop = True)
-    # balance_train = pd.read_csv("../Data/balance_data_training.csv", index_col=0).dropna()
-    # balance_X_train, balance_X_test, balance_y_train, balance_y_test = train_test_split(balance_train.drop(["healthCode", "PD"], axis = 1), balance_train["PD"], test_size=0.20, random_state = 100)
+    ## split training and test ##
+    entity = syn.get("syn21046180")
+    data   = pd.read_csv(entity["path"], index_col = 0)
+    
+    feature_columns = [feat for feat in data.columns if ("." in feat) 
+                   or ("duration" in feat) or ("healthCode" in feat)]
+    
     walking_X_train, walking_X_test, walking_y_train, walking_y_test = \
-            train_test_split(walking_train.drop(["PD"], axis = 1), 
-                             walking_train["PD"], test_size=0.20, random_state = 100)
+            train_test_split(data[feature_columns], 
+                             data["PD"], test_size=0.25, random_state = 100)
 
     # model #
-    walking_X_train = preprocess(walking_X_train)
-    walking_X_test = preprocess(walking_X_test)
+    walking_X_train = preprocess(walking_X_train, is_feature_engineered = True)
+    walking_X_test = preprocess(walking_X_test, is_feature_engineered = True)
     lr_walking_model = logreg_fit(walking_X_train, walking_y_train)
     rf_walking_model = randomforest_fit(walking_X_train, walking_y_train)
     gb_walking_model = gradientboost_fit(walking_X_train, walking_y_train)
