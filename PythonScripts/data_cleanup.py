@@ -28,7 +28,7 @@ GLOBAL VARIABLES
 """
 DEMOGRAPHIC_TABLE_V1 = "syn8381056"
 DEMOGRAPHIC_TABLE_V2 = "syn15673379"
-WALKING_TABLE_V1     = "syn21021435"
+WALKING_TABLE_V1     = "syn21111818"
 WALKING_TABLE_V2     = "syn21018127"
 PASSIVE_TABLE        = "syn21028519"
 BALANCE_TABLE_V1     = "syn21028418"
@@ -90,23 +90,42 @@ def clean_data(version, demographic_table_id,
     entity = syn.get(walking_table_id)
     data   = pd.read_csv(entity["path"], index_col = 0)
     
-    data = (data[data["phoneInfo"].str.contains("iPhone")]) \
-                            [(data != "#ERROR").all(axis = 1)]
+    ### Drop duplicates of activities that contains the same data
+    ### by removing same healthcodes that has repeated data creation date ###
     data.drop_duplicates(subset=['healthCode', 'createdOn'], keep = "first", inplace = True)
-    data[[_ for _ in data.columns if "feature" in _]] = \
-    data[[_ for _ in data.columns if "feature" in _]].apply(pd.to_numeric)
     
-    data.reset_index(drop = True, inplace = True)
-    data = pd.merge(data, demographic_data, 
-                    how = "inner", on = "healthCode")
     
-    ## rename columns and concat 
+    ## rename columns accordingly and concatenate outbound and return data for version one, 
+    ## while version 2 does not require extra concatenation as all walking data is consolidated
+    ## into one ##
     if version == "V1":
         data_return   = data[[feature for feature in data.columns if "outbound" not in feature]]
         data_outbound = data[[feature for feature in data.columns if "return" not in feature]]
         data = pd.concat([fix_column_name(data_outbound), fix_column_name(data_return)])
     else:
         data = fix_column_name(data)
+    
+    ## remove empty cells that contains empty pdkit features ## 
+    data = (data[data["phoneInfo"].str.contains("iPhone")]) \
+                            [(data != "#NULL_FROM_PDKIT").all(axis = 1)]
+                            
+    ## change data type to numericals ## 
+    data[[_ for _ in data.columns if "feature" in _]] = \
+    data[[_ for _ in data.columns if "feature" in _]].apply(pd.to_numeric)
+    
+    print(data.columns)
+    
+    
+    ### reset indexing of data, and remove redundant duration data gathered 
+    ### from AWS data pipeline 
+    data.reset_index(drop = True, inplace = True)
+    data.drop(["y.duration", "z.duration"], axis = 1, inplace = True) 
+    data.rename({"x.duration": "duration"}, axis = 1, inplace = True)
+    
+    ### Merge with demographic data to have more metadata ###
+    data = pd.merge(data, demographic_data, 
+                    how = "inner", on = "healthCode")
+    
     
     ### save script to synapse and save cleaned dataset to synapse ###
     save_to_synapse(data, __file__, 
