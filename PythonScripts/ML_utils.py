@@ -85,7 +85,7 @@ def preprocess(X, is_feature_engineered):
         return X
     else:
         X = addAdditionalFeatures().transform(X)
-        X = collapseFeatures(aggregation_type = "max").transform(X)
+        # X = collapseFeatures(aggregation_type = "max").transform(X)
         X = logTransformer(variables = [feat for feat in X.columns if ("frequency_of_peaks" in feat)]).transform(X)
         X = dropFeatures(variables_to_drop = [feat for feat in X.columns if ("stride_regularity" in feat)]).transform(X)
         X = dropFeatures(variables_to_drop = ["MAX_x.freeze_occurences", 
