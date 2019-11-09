@@ -2,6 +2,12 @@ from sklearn.base import BaseEstimator, TransformerMixin
 import numpy as np
 import pandas as pd
 
+
+""""
+class for log transformation
+returns if value is lower than 1 or zero, 
+it will return zero instead of negative infinity
+"""
 class logTransformer(BaseEstimator, TransformerMixin):
     """Logarithm transformer."""
     def __init__(self, variables=None):
@@ -19,7 +25,11 @@ class logTransformer(BaseEstimator, TransformerMixin):
         for feature in self.variables:
             X["%s_log"%feature] = np.where(X[feature] < 1, 0, np.log(X[feature]))
         return X
-    
+
+"""
+class for dropping features
+returns a transformed dataframe with features dropped
+"""  
 class dropFeatures(BaseEstimator, TransformerMixin):
     
     """
@@ -36,7 +46,8 @@ class dropFeatures(BaseEstimator, TransformerMixin):
         X = X.copy()
         X = X.drop(self.variables, axis=1)
         return X
-    
+
+   
 class collapseFeatures(BaseEstimator, TransformerMixin):
     def __init__(self, aggregation_type = None):
         self.aggregation_type = aggregation_type
@@ -85,7 +96,7 @@ def preprocess(X, is_feature_engineered):
         return X
     else:
         X = addAdditionalFeatures().transform(X)
-        # X = collapseFeatures(aggregation_type = "max").transform(X)
+        X = collapseFeatures(aggregation_type = "max").transform(X)
         X = logTransformer(variables = [feat for feat in X.columns if ("frequency_of_peaks" in feat)]).transform(X)
         X = dropFeatures(variables_to_drop = [feat for feat in X.columns if ("stride_regularity" in feat)]).transform(X)
         X = dropFeatures(variables_to_drop = ["MAX_x.freeze_occurences", 
@@ -101,5 +112,5 @@ def preprocess(X, is_feature_engineered):
                                               "MAX_y.frequency_of_peaks", 
                                               "MAX_z.frequency_of_peaks",
                                               "MAX_AA.frequency_of_peaks",
-                                              "duration"]).transform(X)
+                                              ]).transform(X)
         return X
