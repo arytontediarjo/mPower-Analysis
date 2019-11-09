@@ -89,28 +89,28 @@ class addAdditionalFeatures(BaseEstimator, TransformerMixin):
         X["AA.freeze_occurences_per_sec"] = X["AA.freeze_occurences"]/X["duration"]
         return X
     
-def preprocess(X, is_feature_engineered):
+def preprocess(X, aggregator, is_feature_engineered):
     X = X.copy()
     if is_feature_engineered == False:
-        X = collapseFeatures(aggregation_type = "max").transform(X)
+        X = collapseFeatures(aggregation_type = aggregator).transform(X)
         return X
     else:
         X = addAdditionalFeatures().transform(X)
-        X = collapseFeatures(aggregation_type = "max").transform(X)
+        X = collapseFeatures(aggregation_type = aggregator).transform(X)
         X = logTransformer(variables = [feat for feat in X.columns if ("frequency_of_peaks" in feat)]).transform(X)
         X = dropFeatures(variables_to_drop = [feat for feat in X.columns if ("stride_regularity" in feat)]).transform(X)
-        X = dropFeatures(variables_to_drop = ["MAX_x.freeze_occurences", 
-                                              "MAX_y.freeze_occurences", 
-                                              "MAX_z.freeze_occurences",
-                                              "MAX_AA.freeze_occurences",
-                                              "MAX_x.no_of_steps", 
-                                              "MAX_y.no_of_steps", 
-                                              "MAX_z.no_of_steps",
-                                              "MAX_FC.no_of_steps",
-                                              "MAX_AA.no_of_steps",
-                                              "MAX_x.frequency_of_peaks", 
-                                              "MAX_y.frequency_of_peaks", 
-                                              "MAX_z.frequency_of_peaks",
-                                              "MAX_AA.frequency_of_peaks",
+        X = dropFeatures(variables_to_drop = ["%s_x.freeze_occurences" %aggregator.upper(), 
+                                              "%s_y.freeze_occurences" %aggregator.upper(), 
+                                              "%s_z.freeze_occurences" %aggregator.upper(),
+                                              "%s_AA.freeze_occurences" %aggregator.upper(),
+                                              "%s_x.no_of_steps" %aggregator.upper(), 
+                                              "%s_y.no_of_steps" %aggregator.upper(), 
+                                              "%s_z.no_of_steps" %aggregator.upper(),
+                                              "%s_FC.no_of_steps" %aggregator.upper(),
+                                              "%s_AA.no_of_steps" %aggregator.upper(),
+                                              "%s_x.frequency_of_peaks" %aggregator.upper(), 
+                                              "%s_y.frequency_of_peaks" %aggregator.upper(), 
+                                              "%s_z.frequency_of_peaks" %aggregator.upper(),
+                                              "%s_AA.frequency_of_peaks" %aggregator.upper(),
                                               ]).transform(X)
         return X
