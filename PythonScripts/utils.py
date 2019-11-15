@@ -203,59 +203,42 @@ def get_sensor_specs(filepath):
         return "#ERROR"
     
     
-
-"""
- Function to retrieve synId of a scripts 
-"""
-def get_script_id(path_to_script, script_parent_Id):
-    
-    ## check syn object ##
-    if ("syn" not in globals()):
-        syn = sc.login()
-    else:
-        syn = globals()["syn"]
-    
-    ##  save file to synapse first ##
-    new_script = File(path = path_to_script, parentId = script_parent_Id)
-    syn.store(new_script)   
-    
-    ##  iterate through children to find the synId of saved script ##
-    for dict_ in list(syn.getChildren(parent = script_parent_Id, includeTypes = ['file'])):
-        if dict_["name"] == path_to_script.split("/")[-1]:
-            return dict_["id"]
-    
-    ##  file not available ##
-    raise Exception("Check script name in %s" %script_parent_Id)
-
-
-
 """
 Function to save to synapse 
 params: data
 """
-def save_to_synapse(data, used_script,
-                    walking_table_id,
+def save_to_synapse(data, 
+                    output_filename,
                     data_parent_id, 
-                    script_parent_id, 
-                    output_filename): 
+                    used_script = None,
+                    walking_table_id = None,
+                    script_parent_id = None): 
+
+
+        GIT_REPO_URL = "https://github.com/arytontediarjo/mPower-Analysis/tree/master/PythonScripts/{}"
 
         ## check if syn object is a global variable ##
         if ("syn" not in globals()):
             syn = sc.login()
         else:
             syn = globals()["syn"]
-        
+
         ## set path to script and output filename ##
-        path_to_script = os.path.join(os.getcwd(), used_script)
+        ## path_to_script = os.path.join(os.getcwd(), used_script) ##
         path_to_output_filename = os.path.join(os.getcwd(), output_filename)
         
         ## save the script to synapse ##
-        data     = data.to_csv(path_to_output_filename)
+        data = data.to_csv(path_to_output_filename)
+        
+        ## create new file instance and set up the provenance
         new_file = File(path = path_to_output_filename, parentId = data_parent_id)
-        act      = Activity(used  = walking_table_id,
-                            executed = get_script_id(used_script, script_parent_id))
+        act = Activity()
+        if walking_table_id is not None:
+            act.used([walking_table_id])
+        if used_script is not None:
+            act.executed(GIT_REPO_URL.format(used_script))
         new_file = syn.store(new_file, activity = act)           
-        os.remove(output_filename)
+        os.remove(path_to_output_filename)
 
 """
 Function to check json 
@@ -285,5 +268,20 @@ def fix_column_name(data):
         data  = data.rename({feature: "%s"\
                             %(feature.split("features_")[1])}, axis = 1)
     return data
+
+
+"""
+Get file entity and turn it into pandas csv
+returns pandas dataframe 
+"""
+def get_file_entity(synid):
+    if ("syn" not in globals()):
+        syn = sc.login()
+    else:
+        syn = globals()["syn"]
+    entity = syn.get(synid)
+    data = pd.read_csv(entity["path"],index_col = 0)
+    return data
+
 
     
