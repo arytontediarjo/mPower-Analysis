@@ -314,4 +314,30 @@ def get_file_entity(synid):
     return data
 
 
+
+def parallel_func_apply(df, func, no_of_processors, chunksize):
+    """
+    Function for parallelization
+    parameter: df               = dataset
+               func             = function for data transformation
+               no_of_processors = number of processors to transform the data
+               chunksize        = number of chunk partition 
+    
+    return: featurized dataframes
+    """
+    ### split dataframe into 250 partitions ###
+    df_split = np.array_split(df, chunksize)
+    ### instantiate 16 processors as EC2 instance has 8 cores ###
+    print("Currently running on {} processors".format(no_of_processors))
+    pool = Pool(no_of_processors)
+    ### map function into each pools ###
+    map_values = pool.map(func, df_split)
+    ### concatenate dataframe into one ###
+    df = pd.concat(map_values)
+    ### close pools
+    pool.close()
+    pool.join()
+    return df
+
+
     

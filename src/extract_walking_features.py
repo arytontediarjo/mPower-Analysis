@@ -16,7 +16,7 @@ import multiprocessing as mp
 from multiprocessing import Pool
 import time
 import warnings
-from utils import get_walking_synapse_table, get_healthcodes, save_data_to_synapse
+from utils import get_walking_synapse_table, get_healthcodes, save_data_to_synapse, parallel_func_apply
 from pdkit_feature_utils import pdkit_featurize, pdkit_normalize
 from sfm_feature_utils import sfm_featurize
 import argparse
@@ -59,29 +59,29 @@ def read_args():
     return args
 
 
-def parallelize_dataframe(df, func, no_of_processors, chunksize):
-    """
-    Function for parallelization
-    parameter: df               = dataset
-               func             = function for data transformation
-               no_of_processors = number of processors to transform the data
-               chunksize        = number of chunk partition 
+# def parallelize_dataframe(df, func, no_of_processors, chunksize):
+#     """
+#     Function for parallelization
+#     parameter: df               = dataset
+#                func             = function for data transformation
+#                no_of_processors = number of processors to transform the data
+#                chunksize        = number of chunk partition 
     
-    return: featurized dataframes
-    """
-    ### split dataframe into 250 partitions ###
-    df_split = np.array_split(df, chunksize)
-    ### instantiate 16 processors as EC2 instance has 8 cores ###
-    print("Currently running on {} processors".format(no_of_processors))
-    pool = Pool(no_of_processors)
-    ### map function into each pools ###
-    map_values = pool.map(func, df_split)
-    ### concatenate dataframe into one ###
-    df = pd.concat(map_values)
-    ### close pools
-    pool.close()
-    pool.join()
-    return df
+#     return: featurized dataframes
+#     """
+#     ### split dataframe into 250 partitions ###
+#     df_split = np.array_split(df, chunksize)
+#     ### instantiate 16 processors as EC2 instance has 8 cores ###
+#     print("Currently running on {} processors".format(no_of_processors))
+#     pool = Pool(no_of_processors)
+#     ### map function into each pools ###
+#     map_values = pool.map(func, df_split)
+#     ### concatenate dataframe into one ###
+#     df = pd.concat(map_values)
+#     ### close pools
+#     pool.close()
+#     pool.join()
+#     return df
 
 """
 Main function to query mpower V1 Data 
@@ -113,9 +113,9 @@ def main():
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))
     if features == "spectral-flatness":
-        data = parallelize_dataframe(data, sfm_featurize, cores, chunksize)
+        data = parallel_func_apply(data, sfm_featurize, cores, chunksize)
     elif features == "pdkit":
-        data = parallelize_dataframe(data, pdkit_featurize, cores, chunksize)
+        data = parallel_func_apply(data, pdkit_featurize, cores, chunksize)
         data = pdkit_normalize(data)
     print("parallelization process finished")
     data = data[[feat for feat in data.columns if ("path" not in feat) 
