@@ -32,8 +32,8 @@ def get_walking_synapse_table(healthcodes, table_id, version):
     ### get healthcode subset from case-matched tsv, or any other subset of healthcodes
     healthcode_subset = "({})".format([i for i in healthcodes]).replace("[", "").replace("]", "")   
     ### query from synapse and download to synapsecache ###     
-    if version == "V1":
-        print("Querying V1 Data")
+    if (version == "V1") or (version == "ELEVATE_MS"):
+        print("Querying %s Data" %version)
         query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthcode_subset))
         data = query.asDataFrame()
         feature_list = [_ for _ in data.columns if ("deviceMotion" in _)]

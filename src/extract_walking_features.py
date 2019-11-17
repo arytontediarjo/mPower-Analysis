@@ -39,7 +39,7 @@ def read_args():
     returns arguments parameter
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("--version", default= "V1", choices = ["V1", "V2", "PASSIVE", "ElevateMS"],
+    parser.add_argument("--version", default= "V1", choices = ["V1", "V2", "PASSIVE", "ELEVATE_MS"],
                         help = "mpower version number (either V1 or V2)")
     parser.add_argument("--filename", default= "data.csv",
                         help = "Name for Output File")
@@ -59,35 +59,15 @@ def read_args():
     return args
 
 
-# def parallelize_dataframe(df, func, no_of_processors, chunksize):
-#     """
-#     Function for parallelization
-#     parameter: df               = dataset
-#                func             = function for data transformation
-#                no_of_processors = number of processors to transform the data
-#                chunksize        = number of chunk partition 
-    
-#     return: featurized dataframes
-#     """
-#     ### split dataframe into 250 partitions ###
-#     df_split = np.array_split(df, chunksize)
-#     ### instantiate 16 processors as EC2 instance has 8 cores ###
-#     print("Currently running on {} processors".format(no_of_processors))
-#     pool = Pool(no_of_processors)
-#     ### map function into each pools ###
-#     map_values = pool.map(func, df_split)
-#     ### concatenate dataframe into one ###
-#     df = pd.concat(map_values)
-#     ### close pools
-#     pool.close()
-#     pool.join()
-#     return df
-
-"""
-Main function to query mpower V1 Data 
-Will be updated with mpower V2 Data
-""" 
 def main():
+    """
+    Main function
+    - Takes in arguments from user
+    - Query walking and balance table from synapse
+    - Parallelly process each features, to be featurized with choice of feature computation
+    - Saves the raw data into synapse (synID: syn20988708) with provenance of source walking table id
+      and script from github repository
+    """ 
     ## Retrieve Arguments
     args = read_args()
     version = args.version
@@ -131,7 +111,9 @@ def main():
                          used_script     = script,
                          source_table_id = source_table_id) 
                          
-## Run Main Function ##
+"""
+Run main function and record the time of script runtime
+"""
 if __name__ == "__main__":
     start_time = time.time()
     main()
