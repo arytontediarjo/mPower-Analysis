@@ -10,13 +10,16 @@ from synapseclient import Entity, Project, Folder, File, Link, Activity
 ## instantiate syn global variable ##
 syn = sc.login()
 
-"""
-Query for synapse table entity (can be used for tremors and walking V1 and V2)
-parameter:  syn: synapse object, 
-            healthcodes: list of objects
-returns: a dataframe of healthCodes and their respective filepaths 
-"""
+
 def get_walking_synapse_table(healthcodes, table_id, version):
+    """
+    Query for synapse walking table entity 
+    parameter:  syn         : synapse object, 
+                healthcodes : list of objects
+                version     : the version number of the table entity
+    returns: a dataframe of healthCodes and their respective filehandle IDs and filepaths  
+
+    """
     
     ## check syn object ##
     if ("syn" not in globals()):
@@ -32,17 +35,12 @@ def get_walking_synapse_table(healthcodes, table_id, version):
         query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthcode_subset))
         data = query.asDataFrame()
         feature_list = [_ for _ in data.columns if ("deviceMotion" in _)]
-    elif version == "V2":
-        print("Querying V2 Data")
+    else:
+        print("Querying %s Data" %version)
         query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthcode_subset))
         data = query.asDataFrame()
         feature_list = [_ for _ in data.columns if ("json" in _)]
-    else:
-        print("Querying Passive Data")
-        query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthcode_subset))
-        data = query.asDataFrame()
-        feature_list = [_ for _ in data.columns if ("json" in _)]   
-        
+
     ### Download tmp into ordered dictionary ###
     file_map = syn.downloadTableColumns(query, feature_list)
     ### Loop through the dictionary ### 
@@ -72,13 +70,19 @@ def get_walking_synapse_table(healthcodes, table_id, version):
     return data
 
 
-"""
-Function to produce accelerometer data
-parameter: filepath: filepaths of given data
-returns:    a tidied version of the dataframe that contains a time-index dataframe, time differences,
-            (x, y, z, AA) acceleration
-"""
 def get_acceleration_ts(filepath): 
+    """
+    Function to get accelerometer data given a filepath,
+    will adjust to different table entity versions accordingly by 
+    extracting specific keys in json pattern. 
+    Empty filepaths will be annotated with "#ERROR"
+
+    parameter : filepath: filepaths of given data
+
+    return    : a tidied version of the dataframe that contains a time-index dataframe (timestamp), 
+                time differences (td), (x, y, z, AA) user acceleration (non-g)
+    """
+
     ## if empty filepaths return it back
     if filepath == "#ERROR":
         return filepath
@@ -109,11 +113,19 @@ def get_acceleration_ts(filepath):
         data = clean_accelerometer_data(data)
         return data[["td","x", "y", "z", "AA"]]
     
-"""
-Generalized function to clean accelerometer data 
-format: time index, time difference from point zero, (x, y, z, AA) vector coordinates
-"""
+
 def clean_accelerometer_data(data):
+    """
+    Generalized function to clean accelerometer data to
+    a desirable format 
+
+    parameter: time-series dataset
+
+    returns  : index (datetimeindex), td (float64), 
+            x (float64), y (float64), z (float64),
+            AA (float64)
+        
+    """
     data = data.dropna(subset = ["x", "y", "z"])
     date_series = pd.to_datetime(data["timestamp"], unit = "s")
     data["td"] = date_series - date_series.iloc[0]
@@ -130,26 +142,31 @@ def clean_accelerometer_data(data):
     else:
         sys.exit('Time Series File is not Sorted')
 
-"""
-General Function to open a filepath 
-and returns a dataframe 
-"""
+
 def open_filepath(filepath):
+    """
+    General Function to open a filepath 
+    
+    parameter: a filepath
+
+    return: pandas dataframe of the respective filepath
+    """
     with open(filepath) as f:
         json_data = f.read()
         data = pd.DataFrame(json.loads(json_data))
     return data
 
 
-"""
-General Function get filtered healthcodes or all the healthcodes
-parameter:  syn: syn object,
-            filter: file of the filtered healthcodes,
-            synId: table that user want to query from,
-            is_filtered: boolean values of whether user wants to have filtered healthcode queries
-returns list of healthcodes
-"""
 def get_healthcodes(table_id, is_filtered):
+    """
+    General Function get filtered healthcodes or all the healthcodes
+    
+    parameter:  syn: syn object,
+                synId: table that user want to query from,
+                is_filtered: boolean values of whether user wants to have filtered healthcode queries
+    
+    returns list of healthcodes
+    """
     ## check syn object ##
     if ("syn" not in globals()):
         syn = sc.login()
@@ -203,58 +220,70 @@ def get_sensor_specs(filepath):
         return "#ERROR"
     
     
-"""
-Function to save to synapse 
-params: data
-"""
-def save_to_synapse(data, 
+def save_data_to_synapse(data, 
                     output_filename,
                     data_parent_id, 
                     used_script = None,
-                    walking_table_id = None,
-                    script_parent_id = None): 
+                    source_table_id = None): 
 
+    """
+    Function to save data to synapse 
 
-        GIT_REPO_URL = "https://github.com/arytontediarjo/mPower-Analysis/tree/master/PythonScripts/{}"
+    params: data             = tabular data, script or notebook 
+            output_filename  = the name of the output file 
+            data_parent_id   = the parent synid where data will be stored 
+            used_script      = git repo url that produces this data (if available)
+            source_table_id  = the source of where this data is produced (if available)   
+
+    return: Stored entity in Synapse Database
+    """
 
         ## check if syn object is a global variable ##
-        if ("syn" not in globals()):
-            syn = sc.login()
-        else:
-            syn = globals()["syn"]
+    if ("syn" not in globals()):
+        syn = sc.login()
+    else:
+        syn = globals()["syn"]
 
-        ## set path to script and output filename ##
-        ## path_to_script = os.path.join(os.getcwd(), used_script) ##
-        path_to_output_filename = os.path.join(os.getcwd(), output_filename)
+    ## path to output filename for reference ##
+    path_to_output_filename = os.path.join(os.getcwd(), output_filename)
         
-        ## save the script to synapse ##
+    ## save the script to synapse ##
+    if isinstance(data, pd.DataFrame):
         data = data.to_csv(path_to_output_filename)
+    
         
-        ## create new file instance and set up the provenance
-        new_file = File(path = path_to_output_filename, parentId = data_parent_id)
-        act = Activity()
-        if walking_table_id is not None:
-            act.used([walking_table_id])
-        if used_script is not None:
-            act.executed(GIT_REPO_URL.format(used_script))
-        new_file = syn.store(new_file, activity = act)           
-        os.remove(path_to_output_filename)
+    ## create new file instance and set up the provenance
+    new_file = File(path = path_to_output_filename, parentId = data_parent_id)
+        
+    ## instantiate activity object
+    act = Activity()
+    if source_table_id is not None:
+        act.used([source_table_id])
+    if used_script is not None:
+        act.executed(used_script)
+        
+    ## store to synapse ## 
+    new_file = syn.store(new_file, activity = act)           
+        
+    ## remove the file ##
+    os.remove(path_to_output_filename)
 
-"""
-Function to check json 
-"""
+
 def map_to_json(params):
+    """
+    Function to check json 
+    """
     if isinstance(params, dict):
         return params
     else:
         return "#ERROR"
 
-
-"""
-Function to normalize pdkit dictionaries to columns
-Fill none as 0 meaning that the signal is too weak to be detected
-"""    
+  
 def normalize_feature(data, feature):
+    """
+    Function to normalize pdkit dictionaries to columns
+    Fill none as 0 meaning that the signal is too weak to be detected
+    """    
     normalized_data = data[feature].map(map_to_json) \
                                 .apply(pd.Series) \
                                 .fillna("#NULL_FROM_PDKIT").add_prefix('{}.'.format(feature))
@@ -270,11 +299,12 @@ def fix_column_name(data):
     return data
 
 
-"""
-Get file entity and turn it into pandas csv
-returns pandas dataframe 
-"""
+
 def get_file_entity(synid):
+    """
+    Get file entity and turn it into pandas csv
+    returns pandas dataframe 
+    """
     if ("syn" not in globals()):
         syn = sc.login()
     else:

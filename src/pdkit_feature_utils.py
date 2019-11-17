@@ -29,9 +29,9 @@ def pdkit_pipeline(filepath, var):
     
     ### featurize pdkit features into the dictionary ###
     try:
-        feature_dict["duration"] = data.td[-1]
+        feature_dict["duration"]                = data.td[-1]
     except:
-        feature_dict["duration"] = 0
+        feature_dict["duration"]                = 0
     try:  
         feature_dict["no_of_steps"]             = gp.gait(data[var])[0]
     except:

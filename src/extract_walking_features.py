@@ -1,5 +1,4 @@
 """
-AUTHOR: Aryton Tediarjo
 DESCRIPTION: Script for extracting walking features 
             features available: spectral flatness on balance tests and PDKIT features
 
@@ -17,8 +16,7 @@ import multiprocessing as mp
 from multiprocessing import Pool
 import time
 import warnings
-from utils import get_walking_synapse_table, get_healthcodes, \
-                                get_script_id, save_to_synapse
+from utils import get_walking_synapse_table, get_healthcodes, save_data_to_synapse
 from pdkit_feature_utils import pdkit_featurize, pdkit_normalize
 from sfm_feature_utils import sfm_featurize
 import argparse
@@ -31,18 +29,21 @@ Constants of table ID for query
 WALK_TABLE_V1      = "syn10308918"
 WALK_TABLE_V2      = "syn12514611"
 WALK_TABLE_PASSIVE = "syn17022539"
+GIT_URL = "https://github.com/arytontediarjo/mPower-Analysis/blob/master/PythonScripts/extract_walking_features.py
 
 
-"""
-Function for parsing in argument given by client
-"""
+
 def read_args():
+    """
+    Function for parsing in argument given by client
+    returns arguments parameter
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--version", default= "V1", choices = ["V1", "V2", "PASSIVE"],
                         help = "mpower version number (either V1 or V2)")
     parser.add_argument("--filename", default= "data.csv",
                         help = "Name for Output File")
-    parser.add_argument("--num-cores", default= 16,
+    parser.add_argument("--num-cores", default= mp.cpu_count(),
                         help = "Number of Cores, negative number not allowed")
     parser.add_argument("--num-chunks", default= 250,
                         help = "Number of sample per partition, no negative number")
@@ -50,19 +51,24 @@ def read_args():
                         help = "Features choices: 'pdkit' or 'spectral-flatness' ")
     parser.add_argument("--filtered", action='store_true', 
                         help = "use case matched healthcodes?")
-    parser.add_argument("--script-parent-id", default= "syn20987850", 
-                        help = "executed script folders parent ids")
+    parser.add_argument("--script", default= GIT_URL, 
+                        help = "executed script")
     parser.add_argument("--data-parent-id", default = "syn20988708", 
                         help = "output data folders parent ids")
     args = parser.parse_args()
     return args
 
 
-"""
-Function for parallelization
-returns featurized dataframes
-"""
 def parallelize_dataframe(df, func, no_of_processors, chunksize):
+    """
+    Function for parallelization
+    parameter: df               = dataset
+               func             = function for data transformation
+               no_of_processors = number of processors to transform the data
+               chunksize        = number of chunk partition 
+    
+    return: featurized dataframes
+    """
     ### split dataframe into 250 partitions ###
     df_split = np.array_split(df, chunksize)
     ### instantiate 16 processors as EC2 instance has 8 cores ###
@@ -89,20 +95,20 @@ def main():
     cores = int(args.num_cores)                     
     chunksize = int(args.num_chunks)                
     features = args.featurize                                                 
-    is_filtered = args.filtered                               
-    script_parent_id = args.script_parent_id        
+    is_filtered = args.filtered                                    
     data_parent_id = args.data_parent_id
+    script = args.script
     
     if version == "V1":
-        walking_table_id = WALK_TABLE_V1
+        source_table_id = WALK_TABLE_V1
     elif version == "V2":
-        walking_table_id = WALK_TABLE_V2
+        source_table_id = WALK_TABLE_V2
     else:
-        walking_table_id = WALK_TABLE_PASSIVE    
+        source_table_id = WALK_TABLE_PASSIVE    
     
     ## process data ##
-    data = get_walking_synapse_table(get_healthcodes(walking_table_id, is_filtered), 
-                                    walking_table_id, version)
+    data = get_walking_synapse_table(get_healthcodes(source_table_id, is_filtered), 
+                                    source_table_id, version)
     
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))
@@ -117,13 +123,12 @@ def main():
     
     
     ### save script to synapse and save cleaned dataset to synapse ###
-    save_to_synapse(data, __file__, 
-                    walking_table_id,
-                    data_parent_id,
-                    script_parent_id, 
-                    output_filename)
-
-
+    save_data_to_synapse(data            = data, 
+                         output_filename = output_filename, 
+                         data_parent_id  = data_parent_id,
+                         used_script     = script,
+                         source_table_id = source_table_id) 
+                         
 ## Run Main Function ##
 if __name__ == "__main__":
     start_time = time.time()
