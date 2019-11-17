@@ -6,6 +6,8 @@ import pandas as pd
 import numpy as np
 import synapseclient as sc
 from synapseclient import Entity, Project, Folder, File, Link, Activity
+import multiprocessing as mp
+from multiprocessing import Pool
 
 ## instantiate syn global variable ##
 syn = sc.login()

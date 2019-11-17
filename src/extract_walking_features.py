@@ -12,9 +12,8 @@ import pandas as pd
 import numpy as np
 import synapseclient as sc
 from synapseclient import Entity, Project, Folder, File, Link, Activity
-import multiprocessing as mp
-from multiprocessing import Pool
 import time
+import multiprocessing as mp
 import warnings
 from utils import get_walking_synapse_table, get_healthcodes, save_data_to_synapse, parallel_func_apply
 from pdkit_feature_utils import pdkit_featurize, pdkit_normalize
@@ -29,6 +28,7 @@ Constants of table ID for query
 WALK_TABLE_V1      = "syn10308918"
 WALK_TABLE_V2      = "syn12514611"
 WALK_TABLE_PASSIVE = "syn17022539"
+ELEVATE_MS         = "syn10278766"
 GIT_URL = "https://github.com/arytontediarjo/mPower-Analysis/blob/master/PythonScripts/extract_walking_features.py"
 
 
@@ -39,7 +39,7 @@ def read_args():
     returns arguments parameter
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("--version", default= "V1", choices = ["V1", "V2", "PASSIVE"],
+    parser.add_argument("--version", default= "V1", choices = ["V1", "V2", "PASSIVE", "ElevateMS"],
                         help = "mpower version number (either V1 or V2)")
     parser.add_argument("--filename", default= "data.csv",
                         help = "Name for Output File")
@@ -103,8 +103,10 @@ def main():
         source_table_id = WALK_TABLE_V1
     elif version == "V2":
         source_table_id = WALK_TABLE_V2
+    elif version == "PASSIVE":
+        source_table_id = WALK_TABLE_PASSIVE
     else:
-        source_table_id = WALK_TABLE_PASSIVE    
+        source_table_id = ELEVATE_MS     
     
     ## process data ##
     data = get_walking_synapse_table(get_healthcodes(source_table_id, is_filtered), 
