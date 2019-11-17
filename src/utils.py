@@ -288,7 +288,7 @@ def normalize_feature(data, feature):
     """    
     normalized_data = data[feature].map(map_to_json) \
                                 .apply(pd.Series) \
-                                .fillna("#NULL_FROM_PDKIT").add_prefix('{}.'.format(feature))
+                                .fillna("#ERROR").add_prefix('{}.'.format(feature))
     data = pd.concat([data, normalized_data], 
                      axis = 1).drop(feature, axis = 1)
     return data
