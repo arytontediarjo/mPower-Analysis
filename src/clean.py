@@ -108,7 +108,7 @@ def clean_data(version, demographic_table_id,
     
     ### remove empty cells that contains empty pdkit features ### 
     data = (data[data["phoneInfo"].str.contains("iPhone")]) \
-                            [(data != "#NULL_FROM_PDKIT").all(axis = 1)]
+                            [(data != "ERROR").all(axis = 1)]
                             
     ### change dtype to float64 ### 
     data[[_ for _ in data.columns if "feature" in _]] = \
