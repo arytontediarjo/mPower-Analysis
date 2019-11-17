@@ -39,7 +39,7 @@ def read_args():
     returns arguments parameter
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("--version", default= "V1", choices = ["V1", "V2", "PASSIVE", "ELEVATE_MS"],
+    parser.add_argument("--version", default= "V1", choices = ["V1", "V2", "PASSIVE", "EMS"],
                         help = "mpower version number (either V1 or V2)")
     parser.add_argument("--filename", default= "data.csv",
                         help = "Name for Output File")
