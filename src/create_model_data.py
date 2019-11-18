@@ -2,12 +2,12 @@ import sys
 import os
 import warnings
 import time 
-sys.path.append("../../src")
-warnings.simplefilter("ignore")
 import pandas as pd
 import numpy as np
 import utils
 import preprocessing_utils as proc
+warnings.simplefilter("ignore")
+sys.path.append("../../src")
 
 
 WALKING_V1 = "syn21046180"
@@ -30,19 +30,17 @@ def main():
     ### retrieve data from mPower version 2 ###
     ### side note: some data are prune to match the distribution to those in V1 ###
     dataV2 = utils.get_file_entity(WALKING_V2)
-    dataV2 = proc.preprocess(dataV2, "max", True)
-
-    ## set bottom limit of age that is not lower than the lowest age at version 1 to sustain distribution ##
-    dataV2 = dataV2[dataV2["age"] >= dataV1["age"].min()]
-    dataV2["version"] = "V2"
+    ### run data into preprocessing sklearn class to collapse each features by its maximum ###
+    dataV2              = proc.preprocess(dataV2, "max", True)
+    ### annotate each data versions ###
+    dataV2["version"]   = "V2"
 
 
     ### retrieve passive data ####
-    dataPassive = utils.get_file_entity(WALKING_PASSIVE)
-    dataPassive = proc.preprocess(dataPassive, "max", True)
-
+    dataPassive         = utils.get_file_entity(WALKING_PASSIVE)
+    ### Ensure that per healthcodes is not only contributing one data (>5 recordIds threshold) ###
+    dataPassive         = proc.preprocess(dataPassive, "max", True)
     ## set bottom limit of age that is not lower than the lowest age at version 1 to sustain distribution ##
-    dataPassive = dataPassive[dataPassive["age"] >= dataV1["age"].min()]
     dataPassive["version"] = "PASSIVE"
 
 
