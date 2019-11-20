@@ -4,8 +4,8 @@ import warnings
 import time 
 import pandas as pd
 import numpy as np
-import src.utils as utils
-import src.preprocessing_utils as proc
+import utils as utils
+import preprocessing_utils as proc
 warnings.simplefilter("ignore")
 
 
