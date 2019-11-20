@@ -20,8 +20,8 @@ def visualize_agegroups(data, features):
     
     data["ageGroups"] = data["age"].apply(ageGroups)
     
-    male = data[(data["gender"] == "male") & (data["version"] != "Passive")]
-    female = data[(data["gender"] == "female") & (data["version"] != "Passive")]
+    male = data[(data["gender"] == "male") & (data["version"] != "PD_Passive")]
+    female = data[(data["gender"] == "female") & (data["version"] != "PD_Passive")]
 
     fig, axes = plt.subplots(nrows = 1, ncols = 2, figsize= (15, 5))
     
@@ -102,7 +102,7 @@ def visualize_agegroups(data, features):
     
     
 def visualize_groupComparisons(data, features):
-    plt.figure(figsize = (15,5))
+    plt.figure(figsize = (12,5))
     sns.distplot(data[features][(data["is_control"] == 1)], kde_kws={"shade": True}, label = "Control", hist = False)
     sns.distplot(data[features][(data["PD"] == 1)], kde_kws={"shade": True}, label = "PD", hist = False)
     sns.distplot(data[features][(data["MS"] == 1)], kde_kws={"shade": True}, label = "MS", hist = False)
@@ -112,9 +112,9 @@ def visualize_groupComparisons(data, features):
     
     
 def visualize_passive_active(data, features):
-    plt.figure(figsize = (15,5))
-    sns.distplot(data[features][(data["PD"] == 1) & (data["version"] == "Passive")], kde_kws={"shade": True}, label = "ACTIVE-PD", hist = False)
-    sns.distplot(data[features][(data["PD"] == 1) & (data["version"] == "V2")], kde_kws={"shade": True}, label = "PASSIVE-PD", hist = False)
+    plt.figure(figsize = (12,5))
+    sns.distplot(data[features][(data["PD"] == 1) & (data["version"] == "PD_passive")], kde_kws={"shade": True}, label = "PASSIVE-PD", hist = False)
+    sns.distplot(data[features][(data["PD"] == 1) & (data["version"] == "V2")], kde_kws={"shade": True}, label = "ACTIVE-PD", hist = False)
     plt.legend()
     plt.grid()
     plt.show()
