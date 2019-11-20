@@ -65,7 +65,6 @@ def get_walking_synapse_table(healthcodes, table_id, version):
                         how = "left")
         data = data.rename(columns = {feat: "{}_path_id".format(feat), 
                             "file_path": "{}_pathfile".format(feat)}).drop(["file_handle_id"], axis = 1)
-    data["createdOn"] = pd.to_datetime(data["createdOn"], unit = "ms")
     
     ## Empty Filepaths ##
     data = data.fillna("#ERROR") 
