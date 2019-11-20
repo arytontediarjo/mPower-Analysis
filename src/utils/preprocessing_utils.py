@@ -97,20 +97,27 @@ class addAdditionalFeatures_viz(BaseEstimator, TransformerMixin):
         return self
     def transform(self, X):
         X = X.copy()
+        X = logTransformer(variables = [feat for feat in X.columns if ("frequency_of_peaks" in feat)]).transform(X)
         ## number of steps that is based on resultant steps, not based on the resultant signals ##
-        X["Number of Steps"] = np.sqrt(X["x.no_of_steps"] ** 2 + \
+        X["FC.Number_of_steps"] = np.sqrt(X["x.no_of_steps"] ** 2 + \
                                         X["y.no_of_steps"] ** 2 + \
                                         X["z.no_of_steps"] ** 2)
 
 
         ## the speed of gait based on the resultant speed of gait of X,Y,and Z not based on the speed of 
         ## gait assessed from the resultant signals ##
-        X["Speed of Gait"] = np.sqrt(X["x.speed_of_gait"] ** 2 + \
+        X["FC.Speed_of_gait"] = np.sqrt(X["x.speed_of_gait"] ** 2 + \
                                         X["y.speed_of_gait"] ** 2 + \
                                         X["z.speed_of_gait"] ** 2)
         
         ## per second basis features as mPower previous versions have discrepancies in recording data ##
-        X["Number of Steps per Seconds"] = X["FC.no_of_steps"]/X["duration"]
+        X["FC.Number_of_steps_per_seconds"] = X["FC.Number_of_steps"]/X["duration"]
+        X["FC.Gait_freezes_per_seconds"] = (np.sqrt(X["x.freeze_occurences"] ** 2 + \
+                                                X["y.freeze_occurences"] ** 2 + \
+                                                X["z.freeze_occurences"] ** 2))/X["duration"]
+        X["FC.Max_freeze_index"] = (np.sqrt(X["x.max_freeze_index"] ** 2 + \
+                                        X["y.max_freeze_index"] ** 2 + \
+                                        X["z.max_freeze_index"] ** 2))
         X["x.freeze_occurences_per_sec"] = X["x.freeze_occurences"]/X["duration"]
         X["y.freeze_occurences_per_sec"] = X["y.freeze_occurences"]/X["duration"]
         X["z.freeze_occurences_per_sec"] = X["z.freeze_occurences"]/X["duration"]
