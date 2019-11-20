@@ -114,8 +114,9 @@ def main():
         print("update data")
         prev_stored_data, prev_recordId_list = check_children(data_parent_id, output_filename)
         print(prev_stored_data.shape)
+    print(prev_recordId_list)
     ## only featurize new recordIds
-    data = data[~data.isin(prev_recordId_list)]
+    data = data[~data["recordId"].isin(prev_recordId_list)]
     print(data.shape)
     
     ## condition on choosing which features
