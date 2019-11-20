@@ -116,33 +116,39 @@ def main():
         print(prev_stored_data.shape)
     print(prev_recordId_list)
     ## only featurize new recordIds
+    
+    print("############ NUMBER OF NEW RECORDS ####################")
+    print(data.shape[0])
+    print("#######################################################")
+    
     data = data[~data["recordId"].isin(prev_recordId_list)]
+
 
     print("############ NUMBER OF NEW RECORDS ####################")
     print(data.shape[0])
     print("#######################################################")
 
     
-    ## condition on choosing which features
-    print("Retrieving {} Features".format(features))
-    if features == "spectral-flatness":
-        data = parallel_func_apply(data, sfm_featurize, cores, chunksize)
-    elif features == "pdkit":
-        data = parallel_func_apply(data, pdkit_featurize, cores, chunksize)
-        data = pdkit_normalize(data)
-    print("parallelization process finished")
-    data = data[[feat for feat in data.columns if ("path" not in feat) 
-                 and ("0" not in feat)]]
+    # ## condition on choosing which features
+    # print("Retrieving {} Features".format(features))
+    # if features == "spectral-flatness":
+    #     data = parallel_func_apply(data, sfm_featurize, cores, chunksize)
+    # elif features == "pdkit":
+    #     data = parallel_func_apply(data, pdkit_featurize, cores, chunksize)
+    #     data = pdkit_normalize(data)
+    # print("parallelization process finished")
+    # data = data[[feat for feat in data.columns if ("path" not in feat) 
+    #              and ("0" not in feat)]]
 
-    data = pd.concat([prev_stored_data, data]).reset_index(drop = True)
+    # data = pd.concat([prev_stored_data, data]).reset_index(drop = True)
     
     
-    ### save script to synapse and save cleaned dataset to synapse ###
-    save_data_to_synapse(data            = data, 
-                         output_filename = output_filename, 
-                         data_parent_id  = data_parent_id,
-                         used_script     = script,
-                         source_table_id = source_table_id) 
+    # ### save script to synapse and save cleaned dataset to synapse ###
+    # save_data_to_synapse(data            = data, 
+    #                      output_filename = output_filename, 
+    #                      data_parent_id  = data_parent_id,
+    #                      used_script     = script,
+    #                      source_table_id = source_table_id) 
                          
 """
 Run main function and record the time of script runtime
