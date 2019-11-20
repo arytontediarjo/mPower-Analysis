@@ -346,6 +346,8 @@ def check_children(data_parent_id, output_filename):
         syn = sc.login()
     else:
         syn = globals()["syn"]
+    prev_stored_data = pd.DataFrame()
+    prev_recordId_list = []
     for children in syn.getChildren(parent = data_parent_id):
             if children["name"] == output_filename:
                 prev_stored_data_id = children["id"]

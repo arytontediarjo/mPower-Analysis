@@ -110,14 +110,11 @@ def main():
                                     source_table_id, version)
     print(data.shape)
 
-
     if is_update:
         print("update data")
         prev_stored_data, prev_recordId_list = check_children(data_parent_id, output_filename)
         print(prev_stored_data.shape)
-    else:
-        prev_stored_data= pd.DataFrame()
-    
+    prev_stored_data = pd.DataFrame()
 
     ## only featurize new recordIds
     data = data[~data.isin(prev_recordId_list)]
