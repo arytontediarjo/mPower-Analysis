@@ -88,6 +88,34 @@ class addAdditionalFeatures(BaseEstimator, TransformerMixin):
         X["z.freeze_occurences_per_sec"] = X["z.freeze_occurences"]/X["duration"]
         X["AA.freeze_occurences_per_sec"] = X["AA.freeze_occurences"]/X["duration"]
         return X
+
+
+class addAdditionalFeatures_viz(BaseEstimator, TransformerMixin):
+    def __init__(self):
+        pass
+    def fit(self, X, y=None):
+        return self
+    def transform(self, X):
+        X = X.copy()
+        ## number of steps that is based on resultant steps, not based on the resultant signals ##
+        X["Number of Steps"] = np.sqrt(X["x.no_of_steps"] ** 2 + \
+                                        X["y.no_of_steps"] ** 2 + \
+                                        X["z.no_of_steps"] ** 2)
+
+
+        ## the speed of gait based on the resultant speed of gait of X,Y,and Z not based on the speed of 
+        ## gait assessed from the resultant signals ##
+        X["Speed of Gait"] = np.sqrt(X["x.speed_of_gait"] ** 2 + \
+                                        X["y.speed_of_gait"] ** 2 + \
+                                        X["z.speed_of_gait"] ** 2)
+        
+        ## per second basis features as mPower previous versions have discrepancies in recording data ##
+        X["Number of Steps per Seconds"] = X["FC.no_of_steps"]/X["duration"]
+        X["x.freeze_occurences_per_sec"] = X["x.freeze_occurences"]/X["duration"]
+        X["y.freeze_occurences_per_sec"] = X["y.freeze_occurences"]/X["duration"]
+        X["z.freeze_occurences_per_sec"] = X["z.freeze_occurences"]/X["duration"]
+        X["AA.freeze_occurences_per_sec"] = X["AA.freeze_occurences"]/X["duration"]
+        return X
     
 def preprocess(X, aggregator, is_feature_engineered):
     X = X.copy()

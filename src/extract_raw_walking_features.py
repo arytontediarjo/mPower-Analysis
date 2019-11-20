@@ -111,13 +111,17 @@ def main():
     print(data.shape)
     prev_stored_data = pd.DataFrame()
     if is_update:
-        print("update data")
+        print(" #########  UPDATING DATA  ################")
         prev_stored_data, prev_recordId_list = check_children(data_parent_id, output_filename)
         print(prev_stored_data.shape)
     print(prev_recordId_list)
     ## only featurize new recordIds
     data = data[~data["recordId"].isin(prev_recordId_list)]
-    print(data.shape)
+
+    print("############ NUMBER OF NEW RECORDS ####################")
+    print(data.shape[0])
+    print("#######################################################")
+
     
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))
