@@ -341,5 +341,17 @@ def parallel_func_apply(df, func, no_of_processors, chunksize):
     pool.join()
     return df
 
+def check_children(data_parent_id, output_filename):
+    if ("syn" not in globals()):
+        syn = sc.login()
+    else:
+        syn = globals()["syn"]
+    for children in syn.getChildren(parent = data_parent_id):
+            if children["name"] == output_filename:
+                prev_stored_data_id = children["id"]
+                prev_stored_data = get_file_entity(prev_stored_data_id)
+                prev_recordId_list = prev_stored_data["recordId"].unique()
+    return prev_stored_data, prev_recordId_list
+
 
     

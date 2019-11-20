@@ -5,7 +5,7 @@ import scipy.fftpack
 import json
 import statsmodels as stats
 from sklearn.metrics import auc
-from utils import get_acceleration_ts
+from utils.munging_utils import get_acceleration_ts
 
 def get_spectrum(signal):
     ## Number of samplepoints
@@ -13,7 +13,7 @@ def get_spectrum(signal):
     ## sample spacing 1/sampling rate delta t
     T = 1/100
     ## linspace of 0 to 20 seconds given N samples
-    x = np.linspace(0.0, N*T, N)
+    # x = np.linspace(0.0, N*T, N)
     y = signal 
     ## calculate fft
     yf = scipy.fftpack.fft(y)

@@ -15,11 +15,13 @@ from synapseclient import Entity, Project, Folder, File, Link, Activity
 import time
 import multiprocessing as mp
 import warnings
-from utils import get_walking_synapse_table, get_healthcodes, save_data_to_synapse, parallel_func_apply
-from pdkit_feature_utils import pdkit_featurize, pdkit_normalize
-from sfm_feature_utils import sfm_featurize
 import argparse
+from utils.munging_utils import get_walking_synapse_table, get_healthcodes, \
+                                check_children, parallel_func_apply, save_data_to_synapse
+from utils.pdkit_feature_utils import pdkit_featurize, pdkit_normalize
+from utils.sfm_feature_utils import sfm_featurize                                
 warnings.simplefilter("ignore")
+
 
 
 """
@@ -55,6 +57,8 @@ def read_args():
                         help = "executed script")
     parser.add_argument("--data-parent-id", default = "syn20988708", 
                         help = "output data folders parent ids")
+    parser.add_argument("--update", default = True,
+                        help = "user choice of update or start fresh")
     args = parser.parse_args()
     return args
 
@@ -78,6 +82,8 @@ def main():
     is_filtered = args.filtered                                    
     data_parent_id = args.data_parent_id
     script = args.script
+    is_update = args.update
+
     
     if version == "V1":
         source_table_id = WALK_TABLE_V1
@@ -86,11 +92,36 @@ def main():
     elif version == "PASSIVE":
         source_table_id = WALK_TABLE_PASSIVE
     else:
-        source_table_id = ELEVATE_MS     
-    
+        source_table_id = ELEVATE_MS   
+
+    ### pseudo code ###
+    """
+    for the data parent id
+    go through the children of files
+    if file is already available 
+    read the csv, get the recordIds
+    subset the new query by available walking IDS
+    then start featurizing on the data subset
+    then concat the data 
+    """
+
     ## process data ##
     data = get_walking_synapse_table(get_healthcodes(source_table_id, is_filtered), 
                                     source_table_id, version)
+    print(data.shape)
+
+
+    if is_update:
+        print("update data")
+        prev_stored_data, prev_recordId_list = check_children(data_parent_id, output_filename)
+        print(prev_stored_data.shape)
+    else:
+        prev_stored_data= pd.DataFrame()
+    
+
+    ## only featurize new recordIds
+    data = data[~data.isin(prev_recordId_list)]
+    print(data.shape)
     
     ## condition on choosing which features
     print("Retrieving {} Features".format(features))
@@ -102,6 +133,8 @@ def main():
     print("parallelization process finished")
     data = data[[feat for feat in data.columns if ("path" not in feat) 
                  and ("0" not in feat)]]
+
+    data = pd.concat([prev_stored_data, data]).reset_index(drop = True)
     
     
     ### save script to synapse and save cleaned dataset to synapse ###

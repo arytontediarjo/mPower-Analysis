@@ -15,7 +15,7 @@ import warnings
 import pandas as pd
 import numpy as np
 import synapseclient as sc
-from src.utils import save_data_to_synapse, fix_column_name
+from utils.munging_utils import save_data_to_synapse, fix_column_name
 from synapseclient import Entity, Project, Folder, File, Link, Activity
 import time
 import os

@@ -6,7 +6,7 @@ import numpy as np
 import pdkit
 from pdkit.gait_time_series import GaitTimeSeries
 from pdkit.gait_processor import GaitProcessor
-from utils import get_acceleration_ts, normalize_feature
+from utils.munging_utils import get_acceleration_ts, normalize_feature
 
 """
 Applicable to walking motions
