@@ -135,9 +135,10 @@ def main():
     print("parallelization process finished")
     data = data[[feat for feat in data.columns if ("path" not in feat) 
                  and ("0" not in feat)]]
-
     data = pd.concat([prev_stored_data, data]).reset_index(drop = True)
     
+    ## check if there is no duplicated columns ##
+    data = data.loc[:,~data.columns.duplicated()]
     
     ### save script to synapse and save cleaned dataset to synapse ###
     save_data_to_synapse(data            = data, 
