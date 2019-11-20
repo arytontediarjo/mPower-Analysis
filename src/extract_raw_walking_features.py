@@ -57,7 +57,7 @@ def read_args():
                         help = "executed script")
     parser.add_argument("--data-parent-id", default = "syn20988708", 
                         help = "output data folders parent ids")
-    parser.add_argument("--update", default = "store_true",
+    parser.add_argument("--update", action = "store_true",
                         help = "user choice of update or start fresh")
     args = parser.parse_args()
     return args
