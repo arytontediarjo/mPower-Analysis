@@ -15,7 +15,7 @@ from synapseclient import Entity, Project, Folder, File, Link, Activity
 import time
 import multiprocessing as mp
 import warnings
-from utils import get_walking_synapse_table, get_healthcodes, save_data_to_synapse, parallel_func_apply
+from src.utils import get_walking_synapse_table, get_healthcodes, save_data_to_synapse, parallel_func_apply
 from pdkit_feature_utils import pdkit_featurize, pdkit_normalize
 from sfm_feature_utils import sfm_featurize
 import argparse
@@ -29,7 +29,7 @@ WALK_TABLE_V1      = "syn10308918"
 WALK_TABLE_V2      = "syn12514611"
 WALK_TABLE_PASSIVE = "syn17022539"
 ELEVATE_MS         = "syn10278766"
-GIT_URL = "https://github.com/arytontediarjo/mPower-Analysis/blob/master/PythonScripts/extract_walking_features.py"
+GIT_URL = "https://github.com/arytontediarjo/mPower-Analysis/blob/master/PythonScripts/extract_raw_walking_features.py"
 
 
 

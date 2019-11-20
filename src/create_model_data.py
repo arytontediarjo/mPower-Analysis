@@ -4,10 +4,9 @@ import warnings
 import time 
 import pandas as pd
 import numpy as np
-import utils
-import preprocessing_utils as proc
+import src.utils as utils
+import src.preprocessing_utils as proc
 warnings.simplefilter("ignore")
-sys.path.append("../../src")
 
 
 WALKING_V1 = "syn21046180"

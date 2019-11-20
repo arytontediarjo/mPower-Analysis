@@ -1,8 +1,7 @@
 ## imports ##
 import sys
 import time
-sys.path.append("../PythonScripts")
-from ML_utils import preprocess
+from src.preprocessing_utils import preprocess
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.decomposition import PCA
@@ -152,7 +151,7 @@ def main():
     data   = pd.read_csv(entity["path"], index_col = 0)
     
     ## preprocess dataset using sklearn base estimator ##
-    data = preprocess(data, is_feature_engineered = True)
+    data = preprocess(data, "max", is_feature_engineered = True)
     
     
     ## feature columns ##

@@ -36,7 +36,7 @@ def get_walking_synapse_table(healthcodes, table_id, version):
         print("Querying %s Data" %version)
         query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthcode_subset))
         data = query.asDataFrame()
-        feature_list = [_ for _ in data.columns if ("deviceMotion" in _)]
+        feature_list = [_ for _ in data.columns if ("deviceMotion" in _) and ("rest" not in _)]
     else:
         print("Querying %s Data" %version)
         query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthcode_subset))

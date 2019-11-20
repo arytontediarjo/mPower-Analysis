@@ -15,7 +15,7 @@ import warnings
 import pandas as pd
 import numpy as np
 import synapseclient as sc
-from utils import save_data_to_synapse, fix_column_name
+from src.utils import save_data_to_synapse, fix_column_name
 from synapseclient import Entity, Project, Folder, File, Link, Activity
 import time
 import os
@@ -36,7 +36,7 @@ WALKING_FILE_EMS      = "syn21256442"
 BALANCE_TABLE_V1      = "syn21028418"
 BALANCE_TABLE_V2      = "syn21018245"
 DATA_PARENT_ID        = "syn21024857"
-GIT_REPO_URL          = "https://github.com/arytontediarjo/mPower-Analysis/blob/master/src/clean.py"
+GIT_REPO_URL          = "https://github.com/arytontediarjo/mPower-Analysis/blob/master/src/clean_data.py"
 
 
 syn = sc.login()
@@ -130,8 +130,10 @@ def clean_data(version,
     print(data.shape)
     
     ### remove empty cells that contains empty pdkit features ### 
-    data = data[(data["phoneInfo"].str.contains("iPhone")) | (data["phoneInfo"].str.contains("iOS"))]
+    # data = data[(data["phoneInfo"].str.contains("iPhone")) | (data["phoneInfo"].str.contains("iOS"))]
 
+    ## remove all errors in data ##
+    ## based on the #ERROR annotation lists ##
     data = data[(data != "#ERROR").all(axis = 1)]
     
     print(data.shape)
