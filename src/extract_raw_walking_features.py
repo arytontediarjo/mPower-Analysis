@@ -15,7 +15,7 @@ from synapseclient import Entity, Project, Folder, File, Link, Activity
 import time
 import multiprocessing as mp
 import warnings
-from src.utils import get_walking_synapse_table, get_healthcodes, save_data_to_synapse, parallel_func_apply
+from utils import get_walking_synapse_table, get_healthcodes, save_data_to_synapse, parallel_func_apply
 from pdkit_feature_utils import pdkit_featurize, pdkit_normalize
 from sfm_feature_utils import sfm_featurize
 import argparse
