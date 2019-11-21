@@ -27,10 +27,11 @@ warnings.simplefilter("ignore")
 """
 Constants of table ID for query
 """
-WALK_TABLE_V1      = "syn10308918"
-WALK_TABLE_V2      = "syn12514611"
-WALK_TABLE_PASSIVE = "syn17022539"
-ELEVATE_MS         = "syn10278766"
+WALK_TABLE_V1         = "syn10308918"
+WALK_TABLE_V2         = "syn12514611"
+WALK_TABLE_PASSIVE    = "syn17022539"
+ELEVATE_MS_ACTIVE     = "syn10278766"
+ELEVATE_MS_PASSIVE    = "syn10651116"
 GIT_URL = "https://github.com/arytontediarjo/mPower-Analysis/blob/master/PythonScripts/extract_raw_walking_features.py"
 
 
@@ -41,7 +42,8 @@ def read_args():
     returns arguments parameter
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("--version", default= "V1", choices = ["V1", "V2", "PASSIVE", "EMS"],
+    parser.add_argument("--version", default= "V1", choices = ["MPOWER_V1", "MPOWER_V2", 
+                                                                "MPOWER_PASSIVE", "MS_ACTIVE", "MS_PASSIVE"],
                         help = "mpower version number (either V1 or V2)")
     parser.add_argument("--filename", default= "data.csv",
                         help = "Name for Output File")
@@ -85,14 +87,16 @@ def main():
     is_update = args.update
 
     
-    if version == "V1":
+    if version == "MPOWER_V1":
         source_table_id = WALK_TABLE_V1
-    elif version == "V2":
+    elif version == "MPOWER_V2":
         source_table_id = WALK_TABLE_V2
-    elif version == "PASSIVE":
+    elif version == "MPOWER_PASSIVE":
         source_table_id = WALK_TABLE_PASSIVE
+    elif version == "MS_ACTIVE":
+        source_table_id = ELEVATE_MS_ACTIVE
     else:
-        source_table_id = ELEVATE_MS   
+        source_table_id = ELEVATE_MS_PASSIVE
 
     ### pseudo code ###
     """
