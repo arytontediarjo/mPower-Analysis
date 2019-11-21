@@ -136,6 +136,7 @@ def main():
     if features == "spectral-flatness":
         data = parallel_func_apply(data, sfm_featurize, cores, chunksize)
     elif features == "pdkit":
+        print("processing pdkit")
         data = parallel_func_apply(data, pdkit_featurize, cores, chunksize)
         data = pdkit_normalize(data)
     print("parallelization process finished")
