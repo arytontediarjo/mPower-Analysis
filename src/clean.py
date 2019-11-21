@@ -27,7 +27,22 @@ GIT_URL = "https://github.com/arytontediarjo/mPower-Analysis/blob/master/src/cle
 
 syn = sc.login()
 
-def create_mPowerV1_data(GAIT_DATA, DEMO_DATA, output_filename):
+def _create_mPowerV1_interim_gait_data(GAIT_DATA, DEMO_DATA):
+    """
+    Function to format mpower version 1 data,
+    list of formatting done:
+        -> Clean table from test users
+        -> Combine raw data with demographic table
+        -> Fix column naming convention
+        -> Map diagnosis to binary values
+        -> Clean data that is below the range of 0-100
+        -> Filter gender to male and female
+    Parameters:
+    GAIT_DATA = Takes in raw featurized gait data on version 1 (synapse file entity)
+    DEMO_DATA = Takes in demographic data (synapse table entity)
+
+    returns a formatized dataset of featurized gait data with its respective demographic data
+    """
     demo_data = syn.tableQuery("SELECT * FROM {} where dataGroups\
                                NOT LIKE '%test_user%'".format(DEMO_DATA)).asDataFrame()
     gait_data = get_file_entity(GAIT_DATA)
@@ -46,13 +61,25 @@ def create_mPowerV1_data(GAIT_DATA, DEMO_DATA, output_filename):
     data = fix_column_name(data)
     data = data.reset_index(drop = True)
     data = data[[feat for feat in data.columns if ("." in feat) or (feat in METADATA_COLS)]]
-    save_data_to_synapse(data = data, 
-                         output_filename = output_filename,
-                         data_parent_id = "syn21267355")
     return data
 
 
-def create_mPowerV2_data(GAIT_DATA, DEMO_DATA, output_filename):
+def _create_mPowerV2_interim_gait_data(GAIT_DATA, DEMO_DATA):
+    """
+    Function to format mpower version 2 data,
+    list of formatting done:
+        -> Clean table from test users
+        -> Combine raw data with demographic table
+        -> Fix column naming convention
+        -> Map diagnosis to binary values
+        -> Clean data that is below the range of 0-100
+        -> Filter gender to male and female
+    Parameters:
+    GAIT_DATA = Takes in raw featurized gait data on version 2(synapse file entity)
+    DEMO_DATA = Takes in demographic data (synapse table entity)
+
+    returns a formatized dataset of featurized gait data with its respective demographic data
+    """
     demo_data = syn.tableQuery("SELECT birthYear, healthCode, diagnosis, sex FROM {} \
                                 where dataGroups NOT LIKE '%test_user%'".format(DEMO_DATA)).asDataFrame()
     gait_data = get_file_entity(GAIT_DATA)
@@ -64,12 +91,22 @@ def create_mPowerV2_data(GAIT_DATA, DEMO_DATA, output_filename):
     data = fix_column_name(data)
     data = data.reset_index(drop = True)
     data = data[[feat for feat in data.columns if ("." in feat) or (feat in METADATA_COLS)]]
-    save_data_to_synapse(data = data, 
-                        output_filename = output_filename,
-                        data_parent_id = "syn21267355")
     return data
 
-def create_elevateMS_data(GAIT_DATA, DEMO_DATA, output_filename):
+def _create_elevateMS_interim_gait_data(GAIT_DATA, DEMO_DATA):
+    """
+    Function to format EMS data,
+    list of formatting done:
+        -> Clean table from test users
+        -> Combine raw data with demographic table
+        -> Fix column naming convention
+        -> Map diagnosis to binary values
+    Parameters:
+    GAIT_DATA = Takes in raw featurized gait data on EMS (synapse file entity)
+    DEMO_DATA = Takes in demographic data (synapse table entity)
+
+    returns a formatized dataset of featurized gait data with its respective demographic data
+    """
     demo_data = syn.tableQuery("SELECT healthCode, dataGroups, 'demographics.gender', 'demographics.age' FROM {}\
                                     where dataGroups NOT LIKE '%test_user%'".format(DEMO_DATA)).asDataFrame()
     gait_data    = get_file_entity(GAIT_DATA)
@@ -81,12 +118,12 @@ def create_elevateMS_data(GAIT_DATA, DEMO_DATA, output_filename):
     data = fix_column_name(data)
     data = data.reset_index(drop = True)
     data = data[[feat for feat in data.columns if ("." in feat) or (feat in METADATA_COLS)]]
-    save_data_to_synapse(data = data, 
-                        output_filename = output_filename,
-                        data_parent_id = "syn21267355")
     return data
 
-def combine_data(*dataframes):
+def combine_gait_data(*dataframes):
+    """
+    Function to join all interim data into one readily used dataframe
+    """
     dataframe_list = []
     for data in dataframes:
         dataframe_list.append(data)
@@ -104,24 +141,19 @@ def combine_data(*dataframes):
                         source_table_id = ["syn21256442", "syn21114136", "syn21111818", "syn21113231"],
                         used_script = GIT_URL)
 
+"""
+Main Function
+"""
 def main():
-    dataV1                    = create_mPowerV1_data(GAIT_DATA = MPOWER_GAIT_DATA_V1, 
-                                                     DEMO_DATA = MPOWER_DEMO_DATA_V1, 
-                                                     output_filename = "pdkit_mpowerv1_active_full.csv")
+    dataV1                    = _create_mPowerV1_interim_gait_data(GAIT_DATA = MPOWER_GAIT_DATA_V1, DEMO_DATA = MPOWER_DEMO_DATA_V1)
     dataV1["version"]         = "V1"
-    dataV2                    = create_mPowerV2_data(GAIT_DATA = MPOWER_GAIT_DATA_V2, 
-                                                     DEMO_DATA = MPOWER_DEMO_DATA_V2, 
-                                                     output_filename = "pdkit_mpowerv2_active_full.csv")
+    dataV2                    = _create_mPowerV2_interim_gait_data(GAIT_DATA = MPOWER_GAIT_DATA_V2, DEMO_DATA = MPOWER_DEMO_DATA_V2)
     dataV2["version"]         = "V2"
-    dataPassive               = create_mPowerV2_data(GAIT_DATA = MPOWER_GAIT_DATA_PASSIVE, 
-                                                     DEMO_DATA = MPOWER_DEMO_DATA_V2, 
-                                                     output_filename = "pdkit_mpowerv2_passive_full.csv")
+    dataPassive               = _create_mPowerV2_interim_gait_data(GAIT_DATA = MPOWER_GAIT_DATA_PASSIVE, DEMO_DATA = MPOWER_DEMO_DATA_V2)
     dataPassive["version"]    = "PD_passive"
-    dataEMS_active            = create_elevateMS_data(GAIT_DATA = EMS_GAIT_DATA, 
-                                                    DEMO_DATA = EMS_PROF_DATA, 
-                                                    output_filename = "pdkit_ems_active_full.csv")
+    dataEMS_active            = _create_elevateMS_interim_gait_data(GAIT_DATA = EMS_GAIT_DATA, DEMO_DATA = EMS_PROF_DATA)
     dataEMS_active["version"] = "MS_active"
-    combine_data(dataV1, dataV2, dataPassive, dataEMS_active)
+    combine_gait_data(dataV1, dataV2, dataPassive, dataEMS_active)
 
 """
 Run main function and record the time of script runtime

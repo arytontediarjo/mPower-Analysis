@@ -1,11 +1,6 @@
 """
-DESCRIPTION: Script for extracting walking features 
-            features available: spectral flatness on balance tests and PDKIT features
-
-Side Notes:
- - #ERROR string will be annotated on empty filepaths or empty dataframes
+SCRIPT FOR EXTRACTING GAIT FEATURES
 """
-
 
 import os
 import pandas as pd
@@ -43,7 +38,7 @@ def read_args():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("--version", default= "V1", choices = ["MPOWER_V1", "MPOWER_V2", 
-                                                                "MPOWER_PASSIVE", "MS_ACTIVE", "MS_PASSIVE"],
+                                                                "MPOWER_PASSIVE", "MS_ACTIVE"],
                         help = "mpower version number (either V1 or V2)")
     parser.add_argument("--filename", default= "data.csv",
                         help = "Name for Output File")
@@ -95,19 +90,8 @@ def main():
         source_table_id = WALK_TABLE_PASSIVE
     elif version == "MS_ACTIVE":
         source_table_id = ELEVATE_MS_ACTIVE
-    else:
-        source_table_id = ELEVATE_MS_PASSIVE
-
+    
     ### pseudo code ###
-    """
-    for the data parent id
-    go through the children of files
-    if file is already available 
-    read the csv, get the recordIds
-    subset the new query by available walking IDS
-    then start featurizing on the data subset
-    then concat the data 
-    """
 
     ## process data ##
     data = get_walking_synapse_table(get_healthcodes(source_table_id, is_filtered), 
