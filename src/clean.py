@@ -98,7 +98,6 @@ def combine_data(*dataframes):
         data[[_ for _ in data.columns if "." in _]].apply(pd.to_numeric)
     data.drop(["y.duration", "z.duration", "AA.duration"], axis = 1, inplace = True) 
     data.rename({"x.duration": "duration"}, axis = 1, inplace = True)
-    data = addAdditionalFeatures_viz().transform(data)
     save_data_to_synapse(data = data.reset_index(drop = True), 
                         output_filename = "combined_gait_data.csv",
                         data_parent_id  = "syn21267355",
