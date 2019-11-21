@@ -112,7 +112,8 @@ def main():
     ## process data ##
     data = get_walking_synapse_table(get_healthcodes(source_table_id, is_filtered), 
                                     source_table_id, version)
-    prev_stored_data = pd.DataFrame()
+    prev_stored_data   = pd.DataFrame()
+    prev_recordId_list = []
     if is_update:
         print(" #########  UPDATING DATA  ################")
         prev_stored_data, prev_recordId_list = check_children(data_parent_id, output_filename)
