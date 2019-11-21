@@ -23,6 +23,7 @@ EMS_PASSIVE_DATA = "syn10651116"
 METADATA_COLS  = ['recordId', 'healthCode', 'appVersion', 
                     'phoneInfo', 'createdOn', 'PD', 'MS',
                     'gender', 'age', 'version']
+GIT_URL = "https://github.com/arytontediarjo/mPower-Analysis/blob/master/src/clean.py"
 
 syn = sc.login()
 
@@ -100,7 +101,9 @@ def combine_data(*dataframes):
     data = addAdditionalFeatures_viz().transform(data)
     save_data_to_synapse(data = data.reset_index(drop = True), 
                         output_filename = "combined_gait_data.csv",
-                        data_parent_id = "syn21267355")
+                        data_parent_id  = "syn21267355",
+                        source_table_id = ["syn21256442", "syn21114136", "syn21111818", "syn21113231"],
+                        used_script = GIT_URL)
 
 def main():
     dataV1                    = create_mPowerV1_data(GAIT_DATA = MPOWER_GAIT_DATA_V1, 

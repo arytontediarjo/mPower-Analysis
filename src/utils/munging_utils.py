@@ -259,7 +259,7 @@ def save_data_to_synapse(data,
     ## instantiate activity object
     act = Activity()
     if source_table_id is not None:
-        act.used([source_table_id])
+        act.used(source_table_id)
     if used_script is not None:
         act.executed(used_script)
         
