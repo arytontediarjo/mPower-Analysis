@@ -46,7 +46,7 @@ def create_mPowerV1_data(GAIT_DATA, DEMO_DATA, output_filename):
     data = data.reset_index(drop = True)
     data = data[[feat for feat in data.columns if ("." in feat) or (feat in METADATA_COLS)]]
     save_data_to_synapse(data = data, 
-                         output_filename = "mpower_v1_active_full.csv",
+                         output_filename = output_filename,
                          data_parent_id = "syn21267355")
     return data
 
