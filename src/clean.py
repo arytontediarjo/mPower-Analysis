@@ -103,23 +103,22 @@ def combine_data(*dataframes):
                         data_parent_id = "syn21267355")
 
 def main():
-    dataV1                    = create_mPowerV1_data(MPOWER_GAIT_DATA_V1, 
-                                                    MPOWER_DEMO_DATA_V1, 
-                                                    "pdkit_mpowerv1_active_full.csv")
+    dataV1                    = create_mPowerV1_data(GAIT_DATA = MPOWER_GAIT_DATA_V1, 
+                                                     DEMO_DATA = MPOWER_DEMO_DATA_V1, 
+                                                     output_filename = "pdkit_mpowerv1_active_full.csv")
     dataV1["version"]         = "V1"
-    dataV2                    = create_mPowerV2_data(MPOWER_GAIT_DATA_V2, 
-                                                    MPOWER_DEMO_DATA_V2, 
-                                                    "pdkit_mpowerv2_active_full.csv")
+    dataV2                    = create_mPowerV2_data(GAIT_DATA = MPOWER_GAIT_DATA_V2, 
+                                                     DEMO_DATA = MPOWER_DEMO_DATA_V2, 
+                                                     output_filename = "pdkit_mpowerv2_active_full.csv")
     dataV2["version"]         = "V2"
-    dataPassive               = create_mPowerV2_data(MPOWER_GAIT_DATA_PASSIVE, 
-                                                    MPOWER_DEMO_DATA_V2, 
-                                                    "pdkit_mpowerv2_passive_full.csv")
+    dataPassive               = create_mPowerV2_data(GAIT_DATA = MPOWER_GAIT_DATA_PASSIVE, 
+                                                     DEMO_DATA = MPOWER_DEMO_DATA_V2, 
+                                                     output_filename = "pdkit_mpowerv2_passive_full.csv")
     dataPassive["version"]    = "PD_passive"
-    dataEMS_active            = create_elevateMS_data(EMS_GAIT_DATA, 
-                                                    EMS_PROF_DATA, 
-                                                    "pdkit_ems_active_full.csv")
+    dataEMS_active            = create_elevateMS_data(GAIT_DATA = EMS_GAIT_DATA, 
+                                                    DEMO_DATA = EMS_PROF_DATA, 
+                                                    output_filename = "ems_active_full.csv")
     dataEMS_active["version"] = "MS_active"
-
     combine_data(dataV1, dataV2, dataPassive, dataEMS_active)
 
 """
