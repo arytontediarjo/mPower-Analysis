@@ -112,18 +112,19 @@ def main():
     ## process data ##
     data = get_walking_synapse_table(get_healthcodes(source_table_id, is_filtered), 
                                     source_table_id, version)
-    prev_stored_data   = pd.DataFrame()
-    prev_recordId_list = []
-    if is_update:
-        print(" #########  UPDATING DATA  ################")
-        prev_stored_data, prev_recordId_list = check_children(data_parent_id, output_filename)
-    ## only featurize new recordIds
-    
+
     print("############ NUMBER OF RECORDS ####################")
     print(data.shape[0])
     print("#######################################################")
     
-    data = data[~data["recordId"].isin(prev_recordId_list)]
+    prev_stored_data   = pd.DataFrame()
+    prev_recordId_list = []
+    
+    if is_update:
+        print(" #########  UPDATING DATA  ################")
+        prev_stored_data, prev_recordId_list = check_children(data_parent_id, output_filename)
+        data = data[~data["recordId"].isin(prev_recordId_list)]
+    
 
     print("############ NUMBER OF NEW RECORDS ####################")
     print(data.shape[0])
