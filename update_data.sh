@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-python src/extract_raw_walking_features.py --version V1 --featurize pdkit --filename pdkit_mpower_v1.csv --filtered --update
-python src/extract_raw_walking_features.py --version V2 --featurize pdkit --filename pdkit_mpower_v2.csv --update
-python src/extract_raw_walking_features.py --version PASSIVE --featurize pdkit --filename pdkit_mpower_passive.csv --update
-python src/extract_raw_walking_features.py --version EMS --featurize pdkit --filename pdkit_mpower_elevateMS.csv --update
+python src/extract_raw_walking_features.py --version MPOWER_V1 --featurize pdkit --filename pdkit_mpower_v1.csv --update
+python src/extract_raw_walking_features.py --version MPOWER_V2 --featurize pdkit --filename pdkit_mpower_v2.csv --update
+python src/extract_raw_walking_features.py --version MPOWER_PASSIVE --featurize pdkit --filename pdkit_mpower_passive.csv --update
+python src/extract_raw_walking_features.py --version MS_ACTIVE --featurize pdkit --filename pdkit_mpower_elevateMS.csv --update
 python src/clean.py
-python src/create_model_data.py
+
