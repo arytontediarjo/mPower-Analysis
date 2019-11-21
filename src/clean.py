@@ -120,7 +120,7 @@ def main():
     dataPassive["version"]    = "PD_passive"
     dataEMS_active            = create_elevateMS_data(GAIT_DATA = EMS_GAIT_DATA, 
                                                     DEMO_DATA = EMS_PROF_DATA, 
-                                                    output_filename = "ems_active_full.csv")
+                                                    output_filename = "pdkit_ems_active_full.csv")
     dataEMS_active["version"] = "MS_active"
     combine_data(dataV1, dataV2, dataPassive, dataEMS_active)
 
