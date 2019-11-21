@@ -130,7 +130,7 @@ def clean_data(version,
     print(data.shape)
     
     ### remove empty cells that contains empty pdkit features ### 
-    # data = data[(data["phoneInfo"].str.contains("iPhone")) | (data["phoneInfo"].str.contains("iOS"))]
+    data = data[(data["phoneInfo"].str.contains("iPhone")) | (data["phoneInfo"].str.contains("iOS"))]
 
     ## remove all errors in data ##
     ## based on the #ERROR annotation lists ##
