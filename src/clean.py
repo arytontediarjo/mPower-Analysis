@@ -125,7 +125,6 @@ def combine_gait_data(*dataframes):
     """
     dataframe_list = []
     for data in dataframes:
-        print(data.shape)
         dataframe_list.append(data)
     data = pd.concat(dataframe_list).reset_index(drop = True)
     data = data[(data != "#ERROR").all(axis = 1)]
@@ -139,7 +138,6 @@ def combine_gait_data(*dataframes):
                         data_parent_id  = "syn21267355",
                         source_table_id = ["syn21256442", "syn21114136", "syn21111818", "syn21113231"],
                         used_script = GIT_URL)
-    print(data.shape)
 
 """
 Main Function
@@ -147,16 +145,12 @@ Main Function
 def main():
     dataV1                    = _create_mPowerV1_interim_gait_data(GAIT_DATA = MPOWER_GAIT_DATA_V1, DEMO_DATA = MPOWER_DEMO_DATA_V1)
     dataV1["version"]         = "V1"
-    print(dataV1.shape)
     dataV2                    = _create_mPowerV2_interim_gait_data(GAIT_DATA = MPOWER_GAIT_DATA_V2, DEMO_DATA = MPOWER_DEMO_DATA_V2)
     dataV2["version"]         = "V2"
-    print(dataV2.shape)
     dataPassive               = _create_mPowerV2_interim_gait_data(GAIT_DATA = MPOWER_GAIT_DATA_PASSIVE, DEMO_DATA = MPOWER_DEMO_DATA_V2)
     dataPassive["version"]    = "PD_passive"
-    print(dataPassive.shape)
     dataEMS_active            = _create_elevateMS_interim_gait_data(GAIT_DATA = EMS_GAIT_DATA, DEMO_DATA = EMS_PROF_DATA)
     dataEMS_active["version"] = "MS_active"
-    print(dataEMS_active.shape)
     combine_gait_data(dataV1, dataV2, dataPassive, dataEMS_active)
 
 """
