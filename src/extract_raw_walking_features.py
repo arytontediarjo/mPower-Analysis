@@ -37,8 +37,7 @@ def read_args():
     returns arguments parameter
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("--version", default= "V1", choices = ["MPOWER_V1", "MPOWER_V2", 
-                                                                "MPOWER_PASSIVE", "MS_ACTIVE"],
+    parser.add_argument("--version", default= "V1", choices = ["MPOWER_V1", "MPOWER_V2", "MPOWER_PASSIVE", "MS_ACTIVE"],
                         help = "mpower version number (either V1 or V2)")
     parser.add_argument("--filename", default= "data.csv",
                         help = "Name for Output File")
@@ -70,72 +69,43 @@ def main():
       and script from github repository
     """ 
     ## Retrieve Arguments
-    args = read_args()
-    version = args.version
-    output_filename = args.filename                      
-    cores = int(args.num_cores)                     
-    chunksize = int(args.num_chunks)                
-    features = args.featurize                                                 
-    is_filtered = args.filtered                                    
-    data_parent_id = args.data_parent_id
-    script = args.script
-    is_update = args.update
-
-    
-    if version == "MPOWER_V1":
+    args = read_args() 
+    if args.version == "MPOWER_V1":
         source_table_id = WALK_TABLE_V1
-    elif version == "MPOWER_V2":
+    elif args.version == "MPOWER_V2":
         source_table_id = WALK_TABLE_V2
-    elif version == "MPOWER_PASSIVE":
+    elif args.version == "MPOWER_PASSIVE":
         source_table_id = WALK_TABLE_PASSIVE
-    elif version == "MS_ACTIVE":
+    elif args.version == "MS_ACTIVE":
         source_table_id = ELEVATE_MS_ACTIVE
-    
-    ### pseudo code ###
-
-    ## process data ##
-    data = get_walking_synapse_table(get_healthcodes(source_table_id, is_filtered), 
-                                    source_table_id, version)
-
-    print("############ NUMBER OF RECORDS ####################")
-    print(data.shape[0])
-    print("#######################################################")
-    
+    data = get_walking_synapse_table(get_healthcodes(source_table_id, args.filtered), source_table_id, args.version)
     prev_stored_data   = pd.DataFrame()
     prev_recordId_list = []
-    
-    if is_update:
-        print(" #########  UPDATING DATA  ################")
-        prev_stored_data, prev_recordId_list = check_children(data_parent_id, output_filename)
+    if args.update:
+        print("\n#########  UPDATING DATA  ################\n")
+        prev_stored_data, prev_recordId_list = check_children(args.data_parent_id, args.filename)
         data = data[~data["recordId"].isin(prev_recordId_list)]
-    
 
-    print("############ NUMBER OF NEW RECORDS ####################")
-    print(data.shape[0])
-    print("#######################################################")
-
+    print("\n################################")    
+    print("Retrieving {} Features".format(args.featurize))
+    print("################################\n") 
     
-    ## condition on choosing which features
-    print("Retrieving {} Features".format(features))
-    if features == "spectral-flatness":
-        data = parallel_func_apply(data, sfm_featurize, cores, chunksize)
-    elif features == "pdkit":
+    if args.featurize == "spectral-flatness":
+        print("processing spectral-flatness")
+        data = parallel_func_apply(data, sfm_featurize, int(args.num_cores), int(args.num_chunks))
+    elif args.featurize == "pdkit":
         print("processing pdkit")
-        data = parallel_func_apply(data, pdkit_featurize, cores, chunksize)
+        data = parallel_func_apply(data, pdkit_featurize, int(args.num_cores), int(args.num_chunks))
         data = pdkit_normalize(data)
     print("parallelization process finished")
     data = data[[feat for feat in data.columns if ("path" not in feat) 
                  and ("0" not in feat)]]
     data = pd.concat([prev_stored_data, data]).reset_index(drop = True)
-    
-    ## check if there is no duplicated columns ##
     data = data.loc[:,~data.columns.duplicated()]
-    
-    ### save script to synapse and save cleaned dataset to synapse ###
     save_data_to_synapse(data            = data, 
-                         output_filename = output_filename, 
-                         data_parent_id  = data_parent_id,
-                         used_script     = script,
+                         output_filename = args.filename, 
+                         data_parent_id  = args.data_parent_id,
+                         used_script     = args.script,
                          source_table_id = source_table_id) 
                          
 """

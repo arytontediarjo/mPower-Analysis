@@ -13,39 +13,32 @@ from multiprocessing import Pool
 syn = sc.login()
 
 
-def get_walking_synapse_table(healthcodes, table_id, version):
+def get_walking_synapse_table(table_id, version, healthCodes = None, recordIds = None):
     """
     Query for synapse walking table entity 
     parameter:  syn         : synapse object, 
                 healthcodes : list of objects
                 version     : the version number of the table entity
     returns: a dataframe of healthCodes and their respective filehandle IDs and filepaths  
-
     """
-    
     ## check syn object ##
     if ("syn" not in globals()):
         syn = sc.login()
     else:
         syn = globals()["syn"]
-    
-    ### get healthcode subset from case-matched tsv, or any other subset of healthcodes
-    healthcode_subset = "({})".format([i for i in healthcodes]).replace("[", "").replace("]", "")   
-    ### query from synapse and download to synapsecache ###     
+    print("Querying %s Data" %version)
+    if not isinstance(recordIds, type(None)):
+        recordId_subset = "({})".format([i for i in recordIds]).replace("[", "").replace("]", "")
+        query = syn.tableQuery("select * from {} WHERE recordId in {}".format(table_id, recordId_subset))
+    else:
+        healthCode_subset = "({})".format([i for i in healthCodes]).replace("[", "").replace("]", "")
+        query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthCode_subset))
+    data = query.asDataFrame()
     if (version == "MPOWER_V1") or (version == "MS_ACTIVE") or (version == "MS_PASSIVE"):
-        print("Querying %s Data" %version)
-        query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthcode_subset))
-        data = query.asDataFrame()
         feature_list = [_ for _ in data.columns if ("deviceMotion" in _) and ("rest" not in _)]
     else:
-        print("Querying %s Data" %version)
-        query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthcode_subset))
-        data = query.asDataFrame()
         feature_list = [_ for _ in data.columns if ("json" in _)]
-
-    ### Download tmp into ordered dictionary ###
     file_map = syn.downloadTableColumns(query, feature_list)
-    ### Loop through the dictionary ### 
     dict_ = {}
     dict_["file_handle_id"] = []
     dict_["file_path"] = []
@@ -158,10 +151,9 @@ def open_filepath(filepath):
     return data
 
 
-def get_healthcodes(table_id, is_filtered):
+def get_healthcodes(is_filtered, table_id = None):
     """
-    General Function get filtered healthcodes or all the healthcodes
-    
+    General Function get filtered healthcodes or all the healthcodes from a given table
     parameter:  syn: syn object,
                 synId: table that user want to query from,
                 is_filtered: boolean values of whether user wants to have filtered healthcode queries
@@ -326,16 +318,11 @@ def parallel_func_apply(df, func, no_of_processors, chunksize):
     
     return: featurized dataframes
     """
-    ### split dataframe into 250 partitions ###
     df_split = np.array_split(df, chunksize)
-    ### instantiate 16 processors as EC2 instance has 8 cores ###
     print("Currently running on {} processors".format(no_of_processors))
     pool = Pool(no_of_processors)
-    ### map function into each pools ###
     map_values = pool.map(func, df_split)
-    ### concatenate dataframe into one ###
     df = pd.concat(map_values)
-    ### close pools
     pool.close()
     pool.join()
     return df

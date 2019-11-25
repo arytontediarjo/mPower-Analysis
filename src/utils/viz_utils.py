@@ -58,8 +58,8 @@ def visualize_groupComparisons(data, features):
     ######## Returns ##################
     returns plots of subgroup of controls vs PD vs MS based on different PDKIT features
     """
-    plt.figure(figsize = (12,5))
-    # sns.distplot(data[features][(data["is_control"] == 1)], kde_kws={"shade": True}, label = "Control", hist = False)
+    plt.figure(figsize = (10,5))
+    sns.distplot(data[features][(data["is_control"] == 0)], kde_kws={"shade": True}, label = "Control", hist = False)
     sns.distplot(data[features][(data["PD"] == 1)], kde_kws={"shade": True}, label = "PD", hist = False)
     sns.distplot(data[features][(data["MS"] == 1)], kde_kws={"shade": True}, label = "MS", hist = False)
     # sns.distplot(data[features][(data["PD"] == 0)], kde_kws={"shade": True}, label = "NON-PD", hist = False)
@@ -76,7 +76,7 @@ def visualize_passive_active(data, features):
                 features: the target feature for subgroupings
     returns plots of subgroup of PD_PASSIVE vs PD_ACTIVE
     """
-    plt.figure(figsize = (12,5))
+    plt.figure(figsize = (10,5))
     sns.distplot(data[features][(data["PD"] == 1) & (data["version"] == "PD_passive")], kde_kws={"shade": True}, label = "PASSIVE-PD", hist = False)
     sns.distplot(data[features][(data["PD"] == 1) & (data["version"] == "V2")], kde_kws={"shade": True}, label = "ACTIVE-PD", hist = False)
     plt.legend()
