@@ -165,15 +165,15 @@ def get_healthcodes(is_filtered, table_id = None):
         syn = sc.login()
     else:
         syn = globals()["syn"]
-    ## get demographic information
-    if is_filtered:
-        filtered_entity = syn.get("syn8381056")
-        healthcode_list = list(pd.read_csv(filtered_entity["path"], sep = "\t")["healthCode"])
-        return healthcode_list
-    else:
-        healthcode_list = list(syn.tableQuery("select distinct(healthCode) as healthCode from {}".format(table_id))
+    # ## get demographic information
+    # if is_filtered:
+    #     filtered_entity = syn.get("syn8381056")
+    #     healthcode_list = list(pd.read_csv(filtered_entity["path"], sep = "\t")["healthCode"])
+    #     return healthcode_list
+    # else:
+    healthcode_list = list(syn.tableQuery("select distinct(healthCode) as healthCode from {}".format(table_id))
                                    .asDataFrame()["healthCode"])
-        return healthcode_list
+    return healthcode_list
     
     
 """ 
