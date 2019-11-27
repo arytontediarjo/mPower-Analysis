@@ -151,7 +151,7 @@ def open_filepath(filepath):
     return data
 
 
-def get_healthcodes(is_filtered, table_id = None):
+def get_healthcodes(table_id):
     """
     General Function get filtered healthcodes or all the healthcodes from a given table
     parameter:  syn: syn object,

@@ -78,7 +78,8 @@ def main():
         source_table_id = WALK_TABLE_PASSIVE
     elif args.version == "MS_ACTIVE":
         source_table_id = ELEVATE_MS_ACTIVE
-    data = get_walking_synapse_table(healthCodes = get_healthcodes(source_table_id, args.filtered), table_id = source_table_id, version = args.version)
+
+    data = get_walking_synapse_table(healthCodes = get_healthcodes(table_id = source_table_id), table_id = source_table_id, version = args.version)
     prev_stored_data   = pd.DataFrame()
     prev_recordId_list = []
     if args.update:
