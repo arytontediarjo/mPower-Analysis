@@ -126,7 +126,7 @@ def annotate_classes(PD_status, MS_status):
     elif MS_status == 1:
         return "MS"
     else:
-        return 0
+        return "CONTROL"
 
 
 def combine_gait_data(*dataframes):
