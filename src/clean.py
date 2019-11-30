@@ -122,11 +122,13 @@ def _create_elevateMS_interim_gait_data(GAIT_DATA, DEMO_DATA):
 
 def annotate_classes(PD_status, MS_status):
     if PD_status == 1:
-        return "PD"
+        return "PD_Cases"
+    elif PD_status == 0:
+        return "PD_Controls"
     elif MS_status == 1:
-        return "MS"
+        return "MS_Cases"
     else:
-        return "CONTROL"
+        return "MS_Controls"
 
 
 def combine_gait_data(*dataframes):
