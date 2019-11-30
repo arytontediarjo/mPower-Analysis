@@ -120,6 +120,15 @@ def _create_elevateMS_interim_gait_data(GAIT_DATA, DEMO_DATA):
     data = data[[feat for feat in data.columns if ("." in feat) or (feat in METADATA_COLS)]]
     return data
 
+def annotate_classes(PD_status, MS_status):
+    if PD_status == 1:
+        return "PD"
+    elif MS_status == 1:
+        return "MS"
+    else:
+        return 0
+
+
 def combine_gait_data(*dataframes):
     """
     Function to join all interim data into one readily used dataframe
@@ -130,6 +139,7 @@ def combine_gait_data(*dataframes):
     data = pd.concat(dataframe_list).reset_index(drop = True)
     data = data[(data != "#ERROR").all(axis = 1)]
     data["is_control"] = data.apply(lambda x: 0 if ((x["PD"] == 0) or (x["MS"] == 0)) else 1, axis = 1)
+    data["class"] = data.apply(lambda x: annotate_classes(x["PD"], x["MS"]), axis = 1)
     data[[_ for _ in data.columns if "." in _]] = \
         data[[_ for _ in data.columns if "." in _]].apply(pd.to_numeric)
     data.drop(["y.duration", "z.duration", "AA.duration"], axis = 1, inplace = True) 
