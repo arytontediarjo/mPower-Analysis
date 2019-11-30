@@ -114,6 +114,7 @@ def _create_elevateMS_interim_gait_data(GAIT_DATA, DEMO_DATA):
     data["MS"] = data["dataGroups"].map({"ms_patient":1, "control":0})
     data  = data.rename({"demographics.gender" :"gender",
                          "demographics.age"    : "age"}, axis = 1)
+    data["gender"] = data["gender"].apply(lambda x: x.lower())
     data = fix_column_name(data)
     data = data.reset_index(drop = True)
     data = data[[feat for feat in data.columns if ("." in feat) or (feat in METADATA_COLS)]]

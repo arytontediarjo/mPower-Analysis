@@ -1,3 +1,4 @@
+# base image
 FROM python:3.7
 
 # updating repository
@@ -8,3 +9,4 @@ COPY requirements.txt requirements.txt
 
 # pip install 
 RUN pip install --no-cache -r requirements.txt
+
