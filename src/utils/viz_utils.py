@@ -77,8 +77,8 @@ def visualize_passive_active(data, features):
     returns plots of subgroup of PD_PASSIVE vs PD_ACTIVE
     """
     plt.figure(figsize = (10,5))
-    sns.distplot(data[features][(data["PD"] == 1) & (data["version"] == "PD_passive")], kde_kws={"shade": True}, label = "PASSIVE-PD", hist = False)
-    sns.distplot(data[features][(data["PD"] == 1) & (data["version"] == "V2")], kde_kws={"shade": True}, label = "ACTIVE-PD", hist = False)
+    sns.distplot(data[features][(data["PD"] == 1) & (data["version"] == "mpower_passive")], kde_kws={"shade": True}, label = "PASSIVE-PD", hist = False)
+    sns.distplot(data[features][(data["PD"] == 1) & (data["version"] == "mpower_v2")], kde_kws={"shade": True}, label = "ACTIVE-PD", hist = False)
     plt.legend()
     plt.grid()
     plt.show()

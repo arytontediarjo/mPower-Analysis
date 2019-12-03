@@ -94,7 +94,7 @@ class addAdditionalFeatures(BaseEstimator, TransformerMixin):
         return X
 
 
-class addAdditionalFeatures_viz(BaseEstimator, TransformerMixin):
+class addFeatures(BaseEstimator, TransformerMixin):
     def __init__(self):
         pass
     def fit(self, X, y=None):

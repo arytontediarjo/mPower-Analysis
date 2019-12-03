@@ -297,7 +297,12 @@ def get_file_entity(synid):
     else:
         syn = globals()["syn"]
     entity = syn.get(synid)
-    data = pd.read_csv(entity["path"],index_col = 0)
+
+    if (".tsv" in entity["name"]):
+        separator = "\t"
+    else:
+        separator = ","
+    data = pd.read_csv(entity["path"],index_col = 0, sep = separator)
     return data
 
 
