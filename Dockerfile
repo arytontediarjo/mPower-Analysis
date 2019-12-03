@@ -10,5 +10,5 @@ COPY requirements.txt requirements.txt
 # pip install 
 RUN pip install --no-cache -r requirements.txt
 
-COPY ~/.synapseConfig /root/
+ADD ~/.synapseConfig /root/
 
