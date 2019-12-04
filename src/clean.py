@@ -155,7 +155,8 @@ def combine_gait_data(*dataframes):
     save_data_to_synapse(data = data.reset_index(drop = True), 
                         output_filename = "combined_gait_data.csv",
                         data_parent_id  = "syn21267355",
-                        source_table_id = ["syn21256442", "syn21114136", "syn21111818", "syn21113231"],
+                        source_table_id = [MPOWER_GAIT_DATA_V1, MPOWER_DEMO_DATA_V1, MPOWER_GAIT_DATA_V2, 
+                                            MPOWER_DEMO_DATA_V2, MPOWER_GAIT_DATA_PASSIVE, EMS_PROF_DATA, EMS_GAIT_DATA],
                         used_script = GIT_URL)
 
 """

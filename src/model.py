@@ -1,7 +1,7 @@
 ## imports ##
 import sys
 import time
-from src.preprocessing_utils import preprocess
+from utils import preprocessing_utils as preprocess
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.decomposition import PCA
