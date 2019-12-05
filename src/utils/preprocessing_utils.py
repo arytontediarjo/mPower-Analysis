@@ -55,9 +55,11 @@ class collapseFeatures(BaseEstimator, TransformerMixin):
         return self
     def transform(self, X):
         X = X.copy()
+        ## take most recent date
         metadata = X[['MS', 'PD', 'age', 'appVersion', 'createdOn', 
                     'gender', 'healthCode', 'phoneInfo', 'recordId', 
-                    'version', 'duration', "is_control"]].drop_duplicates(subset = "healthCode", keep = "last")
+                    'version', 'duration', "is_control"]].sort_values("createdOn", ascending = True).\
+                        drop_duplicates(subset = "healthCode", keep = "last")
         feat_columns = [feat for feat in X.columns if ("." in feat) or ("healthCode" in feat)]
         X = X[feat_columns].groupby("healthCode").agg(self.aggregation_type)
         for feature in filter(lambda feature: ("." in feature), X.columns): 
