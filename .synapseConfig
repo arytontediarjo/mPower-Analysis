@@ -1,6 +1,2 @@
-###########################
-# Caching                 #
-###########################
-## your downloaded files are cached to avoid repeat downloads of the same file. change 'location' to use a different folder on your computer as the cache location
 [cache]
 location = /root/.synapseCache
