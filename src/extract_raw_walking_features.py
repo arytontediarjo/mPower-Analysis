@@ -18,7 +18,8 @@ import argparse
 from utils.query_utils import get_walking_synapse_table, get_healthcodes, \
                                 check_children, parallel_func_apply, save_data_to_synapse
 from utils.pdkit_feature_utils import pdkit_featurize, pdkit_normalize
-from utils.sfm_feature_utils import sfm_featurize                                
+from utils.sfm_feature_utils import sfm_featurize 
+warnings.simplefilter("ignore")                               
 
 
 
