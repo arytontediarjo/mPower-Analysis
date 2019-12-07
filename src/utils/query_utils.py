@@ -9,36 +9,44 @@ from synapseclient import Entity, Project, Folder, File, Link, Activity
 import multiprocessing as mp
 from multiprocessing import Pool
 
-## instantiate syn global variable ##
-syn = sc.login()
 
-
-def get_walking_synapse_table(table_id, version, healthCodes = None, recordIds = None):
+def get_walking_synapse_table(syn, 
+                            table_id, 
+                            version, 
+                            healthCodes = None, 
+                            recordIds = None):
     """
-    Query for synapse walking table entity 
+    Query synapse walking table entity 
     parameter:  syn         : synapse object, 
-                healthcodes : list of objects
-                version     : the version number of the table entity
-    returns: a dataframe of healthCodes and their respective filehandle IDs and filepaths  
+                table_id    : id of table entity,
+                version     : version number
+                healthcodes : list of healthcodes
+                recordIDs   : list of recordIds
+    returns: a dataframe of recordIds and their respective metadata, alongside their filehandleids and filepaths
+             empty filepath will be annotated as "#ERROR" on the dataframe
     """
-    ## check syn object ##
-    if ("syn" not in globals()):
-        syn = sc.login()
-    else:
-        syn = globals()["syn"]
     print("Querying %s Data" %version)
     if not isinstance(recordIds, type(None)):
+        if not isinstance(recordIds, list):
+            recordIds = list(recordIds)
         recordId_subset = "({})".format([i for i in recordIds]).replace("[", "").replace("]", "")
         query = syn.tableQuery("select * from {} WHERE recordId in {}".format(table_id, recordId_subset))
     else:
+        if not isinstance(healthCodes, list):
+            healthCodes = list(healthCodes)
         healthCode_subset = "({})".format([i for i in healthCodes]).replace("[", "").replace("]", "")
         query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthCode_subset))
     data = query.asDataFrame()
-    if (version == "MPOWER_V1") or (version == "MS_ACTIVE") or (version == "MS_PASSIVE"):
+
+    ## unique table identifier in mpowerV1 and EMS synapse table
+    if (version == "MPOWER_V1") or (version == "MS_ACTIVE"):
         feature_list = [_ for _ in data.columns if ("deviceMotion" in _) and ("rest" not in _)]
+    ## unique table identifier in mpowerV2 and passive data
     else:
         feature_list = [_ for _ in data.columns if ("json" in _)]
+    ## download columns that contains walking data based on the logical condition
     file_map = syn.downloadTableColumns(query, feature_list)
+    
     dict_ = {}
     dict_["file_handle_id"] = []
     dict_["file_path"] = []
@@ -57,9 +65,8 @@ def get_walking_synapse_table(table_id, version, healthCodes = None, recordIds =
                         right_on = "file_handle_id", 
                         how = "left")
         data = data.rename(columns = {feat: "{}_path_id".format(feat), 
-                            "file_path": "{}_pathfile".format(feat)}).drop(["file_handle_id"], axis = 1)
-    
-    ## Empty Filepaths ##
+                                    "file_path": "{}_pathfile".format(feat)}).drop(["file_handle_id"], axis = 1)
+    ## Empty Filepaths on synapseTable ##
     data = data.fillna("#ERROR") 
     return data
 
@@ -130,7 +137,7 @@ def clean_accelerometer_data(data):
     data["AA"] = np.sqrt(data["x"]**2 + data["y"]**2 + data["z"]**2)
     data = data.sort_index()
     
-    ## check if datetime index is sorted
+    ## check if datetime index is sorted ##
     if all(data.index[:-1] <= data.index[1:]):
         return data 
     else:
@@ -140,9 +147,7 @@ def clean_accelerometer_data(data):
 def open_filepath(filepath):
     """
     General Function to open a filepath 
-    
     parameter: a filepath
-
     return: pandas dataframe of the respective filepath
     """
     with open(filepath) as f:
@@ -151,20 +156,13 @@ def open_filepath(filepath):
     return data
 
 
-def get_healthcodes(table_id):
+def get_healthcodes(syn, table_id):
     """
-    General Function get filtered healthcodes or all the healthcodes from a given table
+    Function to get healthCodes in python list format
     parameter:  syn: syn object,
-                synId: table that user want to query from,
-                is_filtered: boolean values of whether user wants to have filtered healthcode queries
-    
+                synId: table that user want to query from,    
     returns list of healthcodes
     """
-    ## check syn object ##
-    if ("syn" not in globals()):
-        syn = sc.login()
-    else:
-        syn = globals()["syn"]
     healthcode_list = list(syn.tableQuery("select distinct(healthCode) as healthCode from {}".format(table_id))
                                    .asDataFrame()["healthCode"])
     return healthcode_list
@@ -207,16 +205,18 @@ def get_sensor_specs(filepath):
         return "#ERROR"
     
     
-def save_data_to_synapse(data, 
-                    output_filename,
-                    data_parent_id, 
-                    used_script = None,
-                    source_table_id = None): 
+def save_data_to_synapse(syn,
+                        data, 
+                        output_filename,
+                        data_parent_id, 
+                        used_script = None,
+                        source_table_id = None): 
 
     """
-    Function to save data to synapse 
-
-    params: data             = tabular data, script or notebook 
+    Function to save data to synapse given a parent id, used script, 
+    and source table where the query was sourced
+    params: syn              = synapse object
+            data             = tabular data, script or notebook 
             output_filename  = the name of the output file 
             data_parent_id   = the parent synid where data will be stored 
             used_script      = git repo url that produces this data (if available)
@@ -224,13 +224,6 @@ def save_data_to_synapse(data,
 
     return: Stored entity in Synapse Database
     """
-
-        ## check if syn object is a global variable ##
-    if ("syn" not in globals()):
-        syn = sc.login()
-    else:
-        syn = globals()["syn"]
-
     ## path to output filename for reference ##
     path_to_output_filename = os.path.join(os.getcwd(), output_filename)
         
@@ -238,7 +231,6 @@ def save_data_to_synapse(data,
     if isinstance(data, pd.DataFrame):
         data = data.to_csv(path_to_output_filename)
     
-        
     ## create new file instance and set up the provenance
     new_file = File(path = path_to_output_filename, parentId = data_parent_id)
         
@@ -266,10 +258,12 @@ def map_to_json(params):
         return "#ERROR"
 
   
-def normalize_feature(data, feature):
+def normalize_dict_features(data, feature):
     """
-    Function to normalize pdkit dictionaries to columns
-    Fill none as 0 meaning that the signal is too weak to be detected
+    Function to normalize column that conatins dictionaries different columns
+    parameter: data    : the data itself
+               feature : the target feature
+    returns a normalized dataframe with column containing dictionary normalized
     """    
     normalized_data = data[feature].map(map_to_json) \
                                 .apply(pd.Series) \
@@ -287,17 +281,12 @@ def fix_column_name(data):
 
 
 
-def get_file_entity(synid):
+def get_file_entity(syn, synid):
     """
     Get file entity and turn it into pandas csv
     returns pandas dataframe 
     """
-    if ("syn" not in globals()):
-        syn = sc.login()
-    else:
-        syn = globals()["syn"]
     entity = syn.get(synid)
-
     if (".tsv" in entity["name"]):
         separator = "\t"
     else:
@@ -326,17 +315,13 @@ def parallel_func_apply(df, func, no_of_processors, chunksize):
     pool.join()
     return df
 
-def check_children(data_parent_id, output_filename):
-    if ("syn" not in globals()):
-        syn = sc.login()
-    else:
-        syn = globals()["syn"]
+def check_children(syn, data_parent_id, output_filename):
     prev_stored_data = pd.DataFrame()
     prev_recordId_list = []
     for children in syn.getChildren(parent = data_parent_id):
             if children["name"] == output_filename:
                 prev_stored_data_id = children["id"]
-                prev_stored_data = get_file_entity(prev_stored_data_id)
+                prev_stored_data = get_file_entity(syn, prev_stored_data_id)
                 prev_recordId_list = prev_stored_data["recordId"].unique()
     return prev_stored_data, prev_recordId_list
 

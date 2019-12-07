@@ -2,7 +2,7 @@ import pandas as pd
 import synapseclient as sc
 import time
 import sys
-from utils.munging_utils import get_file_entity, fix_column_name, save_data_to_synapse
+from utils.query_utils import get_file_entity, fix_column_name, save_data_to_synapse
 from datetime import datetime
 import numpy as np
 import warnings
@@ -25,7 +25,7 @@ GIT_URL = "https://github.com/arytontediarjo/mPower-Analysis/blob/master/src/cle
 
 syn = sc.login()
 
-def _create_mPowerV1_interim_gait_data(GAIT_DATA, DEMO_DATA):
+def create_mPowerV1_interim_gait_data(GAIT_DATA, DEMO_DATA):
     """
     Function to format mpower version 1 data,
     list of formatting done:
@@ -48,7 +48,7 @@ def _create_mPowerV1_interim_gait_data(GAIT_DATA, DEMO_DATA):
     demo_data["age"] = demo_data["age"].apply(lambda x: float(x))                 ## convert age to float
     demo_data = demo_data[(demo_data["age"] <= 100) & (demo_data["age"] >= 10)]   ## subset to realistic age ranges
     demo_data["gender"] = demo_data["gender"].apply(lambda x: x.lower())          ## lowercase gender for consistencies
-    gait_data = get_file_entity(GAIT_DATA)
+    gait_data = get_file_entity(syn = syn, synid = GAIT_DATA)
     data = pd.merge(gait_data, demo_data, on = "healthCode", how = "inner")
     data_return   = data[[feature for feature in data.columns if "outbound" not in feature]]
     data_outbound = data[[feature for feature in data.columns if "return" not in feature]]
@@ -58,7 +58,7 @@ def _create_mPowerV1_interim_gait_data(GAIT_DATA, DEMO_DATA):
     return data
 
 
-def _create_mPowerV2_interim_gait_data(GAIT_DATA, DEMO_DATA):
+def create_mPowerV2_interim_gait_data(GAIT_DATA, DEMO_DATA):
     """
     Function to format mpower version 2 data,
     list of formatting done:
@@ -82,14 +82,14 @@ def _create_mPowerV2_interim_gait_data(GAIT_DATA, DEMO_DATA):
     demo_data["age"] = pd.to_datetime(demo_data["createdOn"], unit = "ms").dt.year - demo_data["birthYear"]
     demo_data = demo_data[(demo_data["age"] <= 100) & (demo_data["age"] >= 10)]
     demo_data = demo_data.drop(["birthYear", "createdOn"], axis = 1)                  
-    gait_data = get_file_entity(GAIT_DATA)
+    gait_data = get_file_entity(syn = syn, synid = GAIT_DATA)
     data      = pd.merge(gait_data, demo_data, how = "inner", on = "healthCode")
     data      = fix_column_name(data)
     data      = data.reset_index(drop = True)
     data      = data[[feat for feat in data.columns if ("." in feat) or (feat in METADATA_COLS)]]
     return data
 
-def _create_elevateMS_interim_gait_data(GAIT_DATA, DEMO_DATA):
+def create_elevateMS_interim_gait_data(GAIT_DATA, DEMO_DATA):
     """
     Function to format EMS data,
     list of formatting done:
@@ -109,14 +109,14 @@ def _create_elevateMS_interim_gait_data(GAIT_DATA, DEMO_DATA):
     demo_data["gender"] = demo_data["gender"].apply(lambda x: x.lower())
     demo_data = demo_data[(demo_data["age"] <= 100) & (demo_data["age"] >= 10)]
     demo_data["MS"] = demo_data["MS"].map({"ms_patient":1, "control":0})
-    gait_data    = get_file_entity(GAIT_DATA)
+    gait_data    = get_file_entity(syn = syn, synid = GAIT_DATA)
     data         = pd.merge(gait_data, demo_data, how = "inner", on = "healthCode")
     data         = fix_column_name(data)
     data         = data.reset_index(drop = True)
     data         = data[[feat for feat in data.columns if ("." in feat) or (feat in METADATA_COLS)]]
     return data
 
-def annotate_classes(PD_status, MS_status, version):
+def _annotate_classes(PD_status, MS_status, version):
     if (version == "mpower_v1"  and PD_status == 1):
         return "mpower_v1_case"
     elif (version == "mpower_v1" and PD_status == 0):
@@ -148,11 +148,12 @@ def combine_gait_data(*dataframes):
     data["MS"] = data["MS"].fillna(0)
     data = data[(data != "#ERROR").all(axis = 1)]
     data["is_control"] = data.apply(lambda x: 1 if (x["PD"] == 0 and x["MS"] ==0) else 0, axis = 1)
-    data["class"] = data.apply(lambda x: annotate_classes(x["PD"], x["MS"], x["version"]), axis = 1)
+    data["class"] = data.apply(lambda x: _annotate_classes(x["PD"], x["MS"], x["version"]), axis = 1)
     data[[_ for _ in data.columns if "." in _]] = data[[_ for _ in data.columns if "." in _]].apply(pd.to_numeric)
     data.drop(["y.duration", "z.duration", "AA.duration"], axis = 1, inplace = True) 
     data.rename({"x.duration": "duration"}, axis = 1, inplace = True)
-    save_data_to_synapse(data = data.reset_index(drop = True), 
+    save_data_to_synapse(syn = syn,
+                        data = data.reset_index(drop = True), 
                         output_filename = "combined_gait_data.csv",
                         data_parent_id  = "syn21267355",
                         source_table_id = [MPOWER_GAIT_DATA_V1, MPOWER_DEMO_DATA_V1, MPOWER_GAIT_DATA_V2, 
@@ -163,13 +164,13 @@ def combine_gait_data(*dataframes):
 Main Function
 """
 def main():
-    dataV1                    = _create_mPowerV1_interim_gait_data(GAIT_DATA = MPOWER_GAIT_DATA_V1, DEMO_DATA = MPOWER_DEMO_DATA_V1)
+    dataV1                    = create_mPowerV1_interim_gait_data(GAIT_DATA = MPOWER_GAIT_DATA_V1, DEMO_DATA = MPOWER_DEMO_DATA_V1)
     dataV1["version"]         = "mpower_v1"
-    dataV2                    = _create_mPowerV2_interim_gait_data(GAIT_DATA = MPOWER_GAIT_DATA_V2, DEMO_DATA = MPOWER_DEMO_DATA_V2)
+    dataV2                    = create_mPowerV2_interim_gait_data(GAIT_DATA = MPOWER_GAIT_DATA_V2, DEMO_DATA = MPOWER_DEMO_DATA_V2)
     dataV2["version"]         = "mpower_v2"
-    dataPassive               = _create_mPowerV2_interim_gait_data(GAIT_DATA = MPOWER_GAIT_DATA_PASSIVE, DEMO_DATA = MPOWER_DEMO_DATA_V2)
+    dataPassive               = create_mPowerV2_interim_gait_data(GAIT_DATA = MPOWER_GAIT_DATA_PASSIVE, DEMO_DATA = MPOWER_DEMO_DATA_V2)
     dataPassive["version"]    = "mpower_passive"
-    dataEMS_active            = _create_elevateMS_interim_gait_data(GAIT_DATA = EMS_GAIT_DATA, DEMO_DATA = EMS_PROF_DATA)
+    dataEMS_active            = create_elevateMS_interim_gait_data(GAIT_DATA = EMS_GAIT_DATA, DEMO_DATA = EMS_PROF_DATA)
     dataEMS_active["version"] = "ems_active"
     combine_gait_data(dataV1, dataV2, dataPassive, dataEMS_active)
 

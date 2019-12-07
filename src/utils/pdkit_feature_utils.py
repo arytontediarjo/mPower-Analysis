@@ -6,7 +6,7 @@ import numpy as np
 import pdkit
 from pdkit.gait_time_series import GaitTimeSeries
 from pdkit.gait_processor import GaitProcessor
-from utils.munging_utils import get_acceleration_ts, normalize_feature
+from utils.query_utils import get_acceleration_ts, normalize_dict_features
 
 """
 Applicable to walking motions
@@ -83,5 +83,5 @@ Function to normalize the pdkit feature
 """
 def pdkit_normalize(data):
     for feature in [feat for feat in data.columns if "features" in feat]:
-        data = normalize_feature(data, feature)
+        data = normalize_dict_features(data, feature)
     return data
