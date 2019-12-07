@@ -5,7 +5,7 @@ import scipy.fftpack
 import json
 import statsmodels as stats
 from sklearn.metrics import auc
-from utils.munging_utils import get_acceleration_ts
+from utils.query_utils import get_acceleration_ts
 
 def get_spectrum(signal):
     ## Number of samplepoints
