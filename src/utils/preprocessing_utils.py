@@ -55,16 +55,19 @@ class collapseFeatures(BaseEstimator, TransformerMixin):
         return self
     def transform(self, X):
         X = X.copy()
+
+        record_count = ((X.groupby("healthCode").count()["recordId"]).rename("nrecords").reset_index())
         ## take most recent date
         metadata = X[['MS', 'PD', 'age', 'appVersion', 'createdOn', 
                     'gender', 'healthCode', 'phoneInfo', 'recordId', 
-                    'version', 'duration', "is_control"]].sort_values("createdOn", ascending = True).\
+                    'version', 'duration', "is_control", "class"]].sort_values("createdOn", ascending = True).\
                         drop_duplicates(subset = "healthCode", keep = "last")
-        feat_columns = [feat for feat in X.columns if ("." in feat) or ("healthCode" in feat)]
-        X = X[feat_columns].groupby("healthCode").agg(self.aggregation_type)
+        feat_columns = [feat for feat in X.columns if ("." in feat) or ("healthCode" in feat) or ("version" in feat)]
+        X = X[feat_columns].groupby(["healthCode", "version"]).agg(self.aggregation_type)
         for feature in filter(lambda feature: ("." in feature), X.columns): 
             X  = X.rename({feature: "{}_{}".format(self.aggregation_type.upper(), feature)}, axis = 1)
         X = pd.merge(X, metadata, on = "healthCode", how = "left").reset_index(drop = True)
+        X = pd.merge(X, record_count, on = "healthCode", how = "left").reset_index(drop = True)
         return X
 
 

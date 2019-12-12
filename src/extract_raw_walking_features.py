@@ -91,6 +91,7 @@ def main():
                                                             data_parent_id = RAW_DATA_PARENT_ID, 
                                                             output_filename = args.filename)
         data = data[~data["recordId"].isin(prev_recordId_list)]
+        print(data.shape)
     if args.featurize == "sfm":
         print("processing spectral-flatness")
         data = parallel_func_apply(data, sfm_featurize, int(args.num_cores), int(args.num_chunks))
@@ -99,7 +100,7 @@ def main():
         data = parallel_func_apply(data, pdkit_featurize, int(args.num_cores), int(args.num_chunks))
         data = pdkit_normalize(data)
     print("parallelization process finished")
-    data = data[[feat for feat in data.columns if ("path" not in feat)]].reset_index(drop = True)
+    data = data[[feat for feat in data.columns if ("path" not in feat) and ("0" not in feat)]].reset_index(drop = True)
     data = pd.concat([prev_stored_data, data]).reset_index(drop = True)
     data = data.loc[:,~data.columns.duplicated()]
     save_data_to_synapse(syn = syn, 

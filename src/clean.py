@@ -116,7 +116,7 @@ def create_elevateMS_interim_gait_data(GAIT_DATA, DEMO_DATA):
     data         = data[[feat for feat in data.columns if ("." in feat) or (feat in METADATA_COLS)]]
     return data
 
-def _annotate_classes(PD_status, MS_status, version):
+def annotate_classes(PD_status, MS_status, version):
     if (version == "mpower_v1"  and PD_status == 1):
         return "mpower_v1_case"
     elif (version == "mpower_v1" and PD_status == 0):
@@ -148,7 +148,7 @@ def combine_gait_data(*dataframes):
     data["MS"] = data["MS"].fillna(0)
     data = data[(data != "#ERROR").all(axis = 1)]
     data["is_control"] = data.apply(lambda x: 1 if (x["PD"] == 0 and x["MS"] ==0) else 0, axis = 1)
-    data["class"] = data.apply(lambda x: _annotate_classes(x["PD"], x["MS"], x["version"]), axis = 1)
+    data["class"] = data.apply(lambda x: annotate_classes(x["PD"], x["MS"], x["version"]), axis = 1)
     data[[_ for _ in data.columns if "." in _]] = data[[_ for _ in data.columns if "." in _]].apply(pd.to_numeric)
     data.drop(["y.duration", "z.duration", "AA.duration"], axis = 1, inplace = True) 
     data.rename({"x.duration": "duration"}, axis = 1, inplace = True)
