@@ -89,7 +89,7 @@ def main():
         print("\n#########  UPDATING DATA  ################\n")
         prev_stored_data, prev_recordId_list = check_children(syn = syn,
                                                             data_parent_id = RAW_DATA_PARENT_ID, 
-                                                            output_filename = args.filename)
+                                                            filename = args.filename)
         data = data[~data["recordId"].isin(prev_recordId_list)]
         print(data.shape)
     if args.featurize == "sfm":
