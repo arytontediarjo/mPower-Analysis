@@ -103,6 +103,7 @@ def main():
     data = data[[feat for feat in data.columns if ("path" not in feat) and ("0" not in feat)]].reset_index(drop = True)
     data = pd.concat([prev_stored_data, data]).reset_index(drop = True)
     data = data.loc[:,~data.columns.duplicated()]
+    data = data[[feat for feat in data.columns if ("0" not in feat)]]
     save_data_to_synapse(syn = syn, 
                         data = data, 
                         output_filename = args.filename, 
