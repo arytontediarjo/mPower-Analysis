@@ -55,47 +55,23 @@ class collapseFeatures(BaseEstimator, TransformerMixin):
         return self
     def transform(self, X):
         X = X.copy()
-
         record_count = ((X.groupby("healthCode").count()["recordId"]).rename("nrecords").reset_index())
-        ## take most recent date
+        
+        ## take most recent date on metadata
         metadata = X[['MS', 'PD', 'age', 'appVersion', 'createdOn', 
                     'gender', 'healthCode', 'phoneInfo', 'recordId', 
                     'version', 'duration', "is_control", "class"]].sort_values("createdOn", ascending = True).\
                         drop_duplicates(subset = "healthCode", keep = "last")
         feat_columns = [feat for feat in X.columns if ("." in feat) or ("healthCode" in feat) or ("version" in feat)]
+
+        ## groupby the features based on aggregation given by user
         X = X[feat_columns].groupby(["healthCode", "version"]).agg(self.aggregation_type)
         for feature in filter(lambda feature: ("." in feature), X.columns): 
             X  = X.rename({feature: "{}_{}".format(self.aggregation_type.upper(), feature)}, axis = 1)
+
+        ## merge the dataset with metadata and nrecords
         X = pd.merge(X, metadata, on = "healthCode", how = "left").reset_index(drop = True)
         X = pd.merge(X, record_count, on = "healthCode", how = "left").reset_index(drop = True)
-        return X
-
-
-class addAdditionalFeatures(BaseEstimator, TransformerMixin):
-    def __init__(self):
-        pass
-    def fit(self, X, y=None):
-        return self
-    def transform(self, X):
-        X = X.copy()
-        ## number of steps that is based on resultant steps, not based on the resultant signals ##
-        X["FC.no_of_steps"] = np.sqrt(X["x.no_of_steps"] ** 2 + \
-                                        X["y.no_of_steps"] ** 2 + \
-                                        X["z.no_of_steps"] ** 2)
-
-
-        ## the speed of gait based on the resultant speed of gait of X,Y,and Z not based on the speed of 
-        ## gait assessed from the resultant signals ##
-        X["FC.speed_of_gait"] = np.sqrt(X["x.speed_of_gait"] ** 2 + \
-                                        X["y.speed_of_gait"] ** 2 + \
-                                        X["z.speed_of_gait"] ** 2)
-        
-        ## per second basis features as mPower previous versions have discrepancies in recording data ##
-        X["FC.no_of_steps_per_sec"] = X["FC.no_of_steps"]/X["duration"]
-        X["x.freeze_occurences_per_sec"] = X["x.freeze_occurences"]/X["duration"]
-        X["y.freeze_occurences_per_sec"] = X["y.freeze_occurences"]/X["duration"]
-        X["z.freeze_occurences_per_sec"] = X["z.freeze_occurences"]/X["duration"]
-        X["AA.freeze_occurences_per_sec"] = X["AA.freeze_occurences"]/X["duration"]
         return X
 
 
@@ -106,12 +82,14 @@ class addFeatures(BaseEstimator, TransformerMixin):
         return self
     def transform(self, X):
         X = X.copy()
+        
+        ## log transform the frequency of peaks 
         X = logTransformer(variables = [feat for feat in X.columns if ("frequency_of_peaks" in feat) and ("log" not in feat)]).transform(X)
+        
         ## number of steps that is based on resultant steps, not based on the resultant signals ##
         X["FC.Number_of_steps"] = np.sqrt(X["x.no_of_steps"] ** 2 + \
                                         X["y.no_of_steps"] ** 2 + \
                                         X["z.no_of_steps"] ** 2)
-
 
         ## the speed of gait based on the resultant speed of gait of X,Y,and Z not based on the speed of 
         ## gait assessed from the resultant signals ##
