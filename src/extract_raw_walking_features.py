@@ -17,7 +17,7 @@ import warnings
 import argparse
 from utils.query_utils import get_walking_synapse_table, get_healthcodes, \
                                 check_children, parallel_func_apply, save_data_to_synapse
-from utils.pdkit_feature_utils import pdkit_featurize, pdkit_normalize
+from utils.pdkit_feature_utils import pdkit_featurize, normalize_pdkit_features
 from utils.sfm_feature_utils import sfm_featurize 
 warnings.simplefilter("ignore")                               
 
@@ -98,12 +98,11 @@ def main():
     elif args.featurize == "pdkit":
         print("processing pdkit")
         data = parallel_func_apply(data, pdkit_featurize, int(args.num_cores), int(args.num_chunks))
-        data = pdkit_normalize(data)
+        data = normalize_pdkit_features(data)
     print("parallelization process finished")
     data = data[[feat for feat in data.columns if ("path" not in feat) and ("0" not in feat)]].reset_index(drop = True)
     data = pd.concat([prev_stored_data, data]).reset_index(drop = True)
     data = data.loc[:,~data.columns.duplicated()]
-    data = data[[feat for feat in data.columns if ("0" not in feat)]]
     save_data_to_synapse(syn = syn, 
                         data = data, 
                         output_filename = args.filename, 

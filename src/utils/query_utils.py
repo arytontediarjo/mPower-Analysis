@@ -248,14 +248,14 @@ def save_data_to_synapse(syn,
     os.remove(path_to_output_filename)
 
 
-def map_to_json(params):
-    """
-    Function to check json 
-    """
-    if isinstance(params, dict):
-        return params
-    else:
-        return "#ERROR"
+# def map_to_json(params):
+#     """
+#     Function to check json 
+#     """
+#     if isinstance(params, dict):
+#         return params
+#     else:
+#         return "#ERROR"
 
   
 def normalize_dict_features(data, feature):
@@ -265,7 +265,7 @@ def normalize_dict_features(data, feature):
                feature : the target feature
     returns a normalized dataframe with column containing dictionary normalized
     """    
-    normalized_data = data[feature].map(map_to_json) \
+    normalized_data = data[feature].map(lambda x: x if isinstance(x, dict) else "#ERROR") \
                                 .apply(pd.Series) \
                                 .fillna("#ERROR").add_prefix('{}.'.format(feature))
     data = pd.concat([data, normalized_data], 
@@ -315,11 +315,19 @@ def parallel_func_apply(df, func, no_of_processors, chunksize):
     pool.join()
     return df
 
-def check_children(syn, data_parent_id, output_filename):
+def check_children(syn, data_parent_id, filename):
+    """
+    Function to check if file is already available
+    if file is available, get all the recordIds and all the file
+    parameter: syn = syn object
+               data_parent_id = the parent folder
+               output_filename = the filename
+    returns dataframe, and list of recordIds
+    """
     prev_stored_data = pd.DataFrame()
     prev_recordId_list = []
     for children in syn.getChildren(parent = data_parent_id):
-            if children["name"] == output_filename:
+            if children["name"] == filename:
                 prev_stored_data_id = children["id"]
                 prev_stored_data = get_file_entity(syn, prev_stored_data_id)
                 prev_recordId_list = prev_stored_data["recordId"].unique()

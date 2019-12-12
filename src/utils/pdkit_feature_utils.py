@@ -8,10 +8,15 @@ from pdkit.gait_time_series import GaitTimeSeries
 from pdkit.gait_processor import GaitProcessor
 from utils.query_utils import get_acceleration_ts, normalize_dict_features
 
-"""
-Applicable to walking motions
-"""
+
 def pdkit_pipeline(filepath, var):
+    """
+    Function to run pdkit package, it captures the duration of longitudinal data and the longitudinal data itself
+    measure gait features like number of steps, symmetry measurement, regularity and freeze occurences
+    parameter: filepath = filepath in .synapseCache
+               var = which coordinate orientation to run pdkit pipeline on
+    returns dictionary of pdkit gait features
+    """
     ### Process data to be usable by pdkit ###
     data = get_acceleration_ts(filepath)
     ### parse through gait processor to retrieve resampled signal
@@ -66,10 +71,16 @@ def pdkit_pipeline(filepath, var):
         feature_dict["speed_of_gait"]           = 0
     return feature_dict
 
-"""
-Function to featurize the data
-"""
+
 def pdkit_featurize(data):
+    """
+    Function to featurize the filepath data with pdkit features,
+    loops through xyz and AA(resultant) signal coordinate orientation
+    and run pdkit package on each data in given coordinate orientations
+    
+    parameter: filepath dataframe
+    returns: featurized data
+    """
     for coord in ["x", "y", "z", "AA"]:
         for feature in [_ for _ in data.columns if ("pathfile" in _) 
                                                     and ("balance" not in _)
@@ -78,10 +89,13 @@ def pdkit_featurize(data):
             data["{}_features_{}".format(feature[:-8], coord)] = data[feature].apply(pdkit_pipeline, var = coord)
     return data
 
-"""
-Function to normalize the pdkit feature
-"""
-def pdkit_normalize(data):
+
+def normalize_pdkit_features(data):
+    """
+    Function to normalize dictionary into several key columns
+    parameter: dataframe
+    returns a normalized dataframe given a dictionary inside columns
+    """
     for feature in [feat for feat in data.columns if "features" in feat]:
         data = normalize_dict_features(data, feature)
     return data
