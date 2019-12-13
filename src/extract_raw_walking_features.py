@@ -84,13 +84,12 @@ def main():
                                     version = args.version, 
                                     healthCodes = get_healthcodes(syn = syn, table_id = source_table_id))
     prev_stored_data   = pd.DataFrame()
-    prev_recordId_list = []
     if args.update:
         print("\n#########  UPDATING DATA  ################\n")
-        prev_stored_data, prev_recordId_list = check_children(syn = syn,
-                                                            data_parent_id = RAW_DATA_PARENT_ID, 
-                                                            filename = args.filename)
-        data = data[~data["recordId"].isin(prev_recordId_list)]
+        prev_stored_data = check_children(syn = syn,
+                                        data_parent_id = RAW_DATA_PARENT_ID, 
+                                        filename = args.filename)
+        data = data[~data["recordId"].isin(prev_stored_data["recordId"].unique())]
         print(data.shape)
     if args.featurize == "sfm":
         print("processing spectral-flatness")

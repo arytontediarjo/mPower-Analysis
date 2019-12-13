@@ -17,11 +17,13 @@ def get_walking_synapse_table(syn,
                             recordIds = None):
     """
     Query synapse walking table entity 
-    parameter:  syn         : synapse object, 
-                table_id    : id of table entity,
-                version     : version number
-                healthcodes : list of healthcodes
-                recordIDs   : list of recordIds
+    parameters:  
+    `syn`         : synapse object,             
+    `table_id`    : id of table entity,
+    `version`     : version number
+    `healthcodes` : list of healthcodes
+    `recordIDs`   : list of recordIds
+    
     returns: a dataframe of recordIds and their respective metadata, alongside their filehandleids and filepaths
              empty filepath will be annotated as "#ERROR" on the dataframe
     """
@@ -78,10 +80,11 @@ def get_acceleration_ts(filepath):
     extracting specific keys in json pattern. 
     Empty filepaths will be annotated with "#ERROR"
 
-    parameter : filepath: filepaths of given data
+    parameters : 
+    `filepath` : filepaths of given data
 
-    return    : a tidied version of the dataframe that contains a time-index dataframe (timestamp), 
-                time differences (td), (x, y, z, AA) user acceleration (non-g)
+    return a tidied version of the dataframe that contains a time-index dataframe (timestamp), 
+    time differences (td), (x, y, z, AA) user acceleration (non-g)
     """
 
     ## if empty filepaths return it back
@@ -120,11 +123,12 @@ def clean_accelerometer_data(data):
     Generalized function to clean accelerometer data to
     a desirable format 
 
-    parameter: time-series dataset
+    parameter: 
+    `data`: time-series dataset
 
-    returns  : index (datetimeindex), td (float64), 
+    returns index (datetimeindex), td (float64), 
             x (float64), y (float64), z (float64),
-            AA (float64)
+            AA (float64) dataframe
         
     """
     data = data.dropna(subset = ["x", "y", "z"])
@@ -215,14 +219,15 @@ def save_data_to_synapse(syn,
     """
     Function to save data to synapse given a parent id, used script, 
     and source table where the query was sourced
-    params: syn              = synapse object
-            data             = tabular data, script or notebook 
-            output_filename  = the name of the output file 
-            data_parent_id   = the parent synid where data will be stored 
-            used_script      = git repo url that produces this data (if available)
-            source_table_id  = the source of where this data is produced (if available)   
+    params: 
+    `syn`              = synapse object        
+    `data`             = tabular data, script or notebook 
+    `output_filename`  = the name of the output file 
+    `data_parent_id`   = the parent synid where data will be stored 
+    `used_script`      = git repo url that produces this data (if available)
+    `source_table_id`  = the source of where this data is produced (if available)   
 
-    return: Stored entity in Synapse Database
+    returns stored file entity in Synapse Database
     """
     ## path to output filename for reference ##
     path_to_output_filename = os.path.join(os.getcwd(), output_filename)
@@ -247,22 +252,14 @@ def save_data_to_synapse(syn,
     ## remove the file ##
     os.remove(path_to_output_filename)
 
-
-# def map_to_json(params):
-#     """
-#     Function to check json 
-#     """
-#     if isinstance(params, dict):
-#         return params
-#     else:
-#         return "#ERROR"
-
   
 def normalize_dict_features(data, feature):
     """
     Function to normalize column that conatins dictionaries different columns
-    parameter: data    : the data itself
-               feature : the target feature
+    parameter: 
+    `data`    : the data itself           
+    `feature` : the target feature
+    
     returns a normalized dataframe with column containing dictionary normalized
     """    
     normalized_data = data[feature].map(lambda x: x if isinstance(x, dict) else "#ERROR") \
@@ -285,6 +282,11 @@ def get_file_entity(syn, synid):
     """
     Get file entity and turn it into pandas csv
     returns pandas dataframe 
+    parameters:
+    `syn`: a syn object
+    `synid`: synid of file entity
+
+    returns pandas dataframe
     """
     entity = syn.get(synid)
     if (".tsv" in entity["name"]):
@@ -299,10 +301,11 @@ def get_file_entity(syn, synid):
 def parallel_func_apply(df, func, no_of_processors, chunksize):
     """
     Function for parallelization
-    parameter: df               = dataset
-               func             = function for data transformation
-               no_of_processors = number of processors to transform the data
-               chunksize        = number of chunk partition 
+    parameter: 
+    `df`               = dataset           
+    `func`             = function for data transformation
+    `no_of_processors` = number of processors to transform the data
+    `chunksize`        = number of chunk partition 
     
     return: featurized dataframes
     """
@@ -319,10 +322,12 @@ def check_children(syn, data_parent_id, filename):
     """
     Function to check if file is already available
     if file is available, get all the recordIds and all the file
-    parameter: syn = syn object
-               data_parent_id = the parent folder
-               output_filename = the filename
-    returns dataframe, and list of recordIds
+    parameter: 
+    `syn` = syn object           
+    `data_parent_id` = the parent folder
+    `output_filename` = the filename
+    
+    returns previously stored dataframe
     """
     prev_stored_data = pd.DataFrame()
     prev_recordId_list = []
@@ -330,8 +335,7 @@ def check_children(syn, data_parent_id, filename):
             if children["name"] == filename:
                 prev_stored_data_id = children["id"]
                 prev_stored_data = get_file_entity(syn, prev_stored_data_id)
-                prev_recordId_list = prev_stored_data["recordId"].unique()
-    return prev_stored_data, prev_recordId_list
+    return prev_stored_data
 
 
     

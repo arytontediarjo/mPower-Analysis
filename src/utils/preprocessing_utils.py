@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 
 
+
 """"
 class for log transformation
 returns if value is lower than 1 or zero, 
@@ -50,7 +51,7 @@ class dropFeatures(BaseEstimator, TransformerMixin):
    
 class collapseFeatures(BaseEstimator, TransformerMixin):
     def __init__(self, aggregation_type = None):
-        self.aggregation_type = aggregation_type
+        pass
     def fit(self, X, y=None):
         return self
     def transform(self, X):
@@ -65,10 +66,15 @@ class collapseFeatures(BaseEstimator, TransformerMixin):
         feat_columns = [feat for feat in X.columns if ("." in feat) or ("healthCode" in feat) or ("version" in feat)]
 
         ## groupby the features based on aggregation given by user
-        X = X[feat_columns].groupby(["healthCode", "version"]).agg(self.aggregation_type)
-        for feature in filter(lambda feature: ("." in feature), X.columns): 
-            X  = X.rename({feature: "{}_{}".format(self.aggregation_type.upper(), feature)}, axis = 1)
+        X = X[feat_columns].groupby("healthCode").agg(["mean", "median", "max", "std", iqr, q25, q75, valrange, kurtosis, skew]).fillna(0)
+        new_cols = []
+        for feat, agg in X.columns:
+            new_cols_name = "{}_{}".format(agg, feat)
+            new_cols.append(new_cols_name)
+        X.columns = new_cols
 
+        # for feature in filter(lambda feature: ("." in feature), X.columns): 
+        #     X  = X.rename({feature: "{}_{}".format(self.aggregation_type.upper(), feature)}, axis = 1)
         ## merge the dataset with metadata and nrecords
         X = pd.merge(X, metadata, on = "healthCode", how = "left").reset_index(drop = True)
         X = pd.merge(X, record_count, on = "healthCode", how = "left").reset_index(drop = True)
@@ -133,3 +139,17 @@ def preprocess(X, aggregator, is_feature_engineered):
                                               "%s_AA.frequency_of_peaks" %aggregator.upper(),
                                               ]).transform(X)
         return X
+
+
+def iqr(x):
+    return q75(x) - q25(x)
+def q25(x):
+    return x.quantile(0.25)
+def q75(x):
+    return x.quantile(0.75)
+def valrange(x):
+    return x.max() - x.min()
+def kurtosis(x):
+    return x.kurt()
+def skew(x):
+    return x.skew()
