@@ -40,7 +40,7 @@ def create_mPowerV1_interim_gait_data(GAIT_DATA, DEMO_DATA):
     DEMO_DATA = Takes in demographic data (synapse table entity)
     returns a formatized dataset of featurized gait data with its respective demographic data
     """
-    demo_data = syn.tableQuery("SELECT age, healthCode, inferred_diagnosis as PD, gender FROM {} where dataGroups\
+    demo_data = syn.tableQuery("SELECT age, healthCode, inferred_diagnosis as PD, gender FROM {} \ where dataGroups\
                                NOT LIKE '%test_user%'".format(DEMO_DATA)).asDataFrame()
     demo_data = demo_data[(demo_data["gender"] == "Female") | (demo_data["gender"] == "Male")]
     demo_data = demo_data.dropna(subset = ["PD"], thresh = 1)                     ## drop if no diagnosis
@@ -80,13 +80,13 @@ def create_mPowerV2_interim_gait_data(GAIT_DATA, DEMO_DATA):
     demo_data        = demo_data[demo_data["PD"] != "no_answer"]               
     demo_data["PD"]  = demo_data["PD"].map({"parkinsons":1, "control":0})
     demo_data["age"] = pd.to_datetime(demo_data["createdOn"], unit = "ms").dt.year - demo_data["birthYear"]
-    demo_data = demo_data[(demo_data["age"] <= 100) & (demo_data["age"] >= 10)]
-    demo_data = demo_data.drop(["birthYear", "createdOn"], axis = 1)                  
-    gait_data = get_file_entity(syn = syn, synid = GAIT_DATA)
-    data      = pd.merge(gait_data, demo_data, how = "inner", on = "healthCode")
-    data      = fix_column_name(data)
-    data      = data.reset_index(drop = True)
-    data      = data[[feat for feat in data.columns if ("." in feat) or (feat in METADATA_COLS)]]
+    demo_data        = demo_data[(demo_data["age"] <= 100) & (demo_data["age"] >= 10)]
+    demo_data        = demo_data.drop(["birthYear", "createdOn"], axis = 1)                  
+    gait_data        = get_file_entity(syn = syn, synid = GAIT_DATA)
+    data             = pd.merge(gait_data, demo_data, how = "inner", on = "healthCode")
+    data             = fix_column_name(data)
+    data             = data.reset_index(drop = True)
+    data             = data[[feat for feat in data.columns if ("." in feat) or (feat in METADATA_COLS)]]
     return data
 
 def create_elevateMS_interim_gait_data(GAIT_DATA, DEMO_DATA):

@@ -5,7 +5,7 @@ import ast
 import pandas as pd
 import numpy as np
 import synapseclient as sc
-from synapseclient import Entity, Project, Folder, File, Link, Activity
+from synapseclient import (Entity, Project, Folder, File, Link, Activity)
 import multiprocessing as mp
 from multiprocessing import Pool
 
@@ -20,7 +20,7 @@ def get_walking_synapse_table(syn,
     parameters:  
     `syn`         : synapse object,             
     `table_id`    : id of table entity,
-    `version`     : version number
+    `version`     : version number (args (string) = ["V1", "V2", "EMS", "Passive"])
     `healthcodes` : list of healthcodes
     `recordIDs`   : list of recordIds
     
@@ -56,7 +56,9 @@ def get_walking_synapse_table(syn,
         dict_["file_handle_id"].append(k)
         dict_["file_path"].append(v)
     filepath_data = pd.DataFrame(dict_)
-    data = data[["recordId", "healthCode", "appVersion", "phoneInfo", "createdOn"] + feature_list]
+    data = data[["recordId", "healthCode", 
+                "appVersion", "phoneInfo", 
+                "createdOn"] + feature_list]
     filepath_data["file_handle_id"] = filepath_data["file_handle_id"].astype(float)
     
     ### Join the filehandles with each acceleration files ###
@@ -214,7 +216,8 @@ def save_data_to_synapse(syn,
                         output_filename,
                         data_parent_id, 
                         used_script = None,
-                        source_table_id = None): 
+                        source_table_id = None,
+                        remove = True): 
 
     """
     Function to save data to synapse given a parent id, used script, 
@@ -225,7 +228,8 @@ def save_data_to_synapse(syn,
     `output_filename`  = the name of the output file 
     `data_parent_id`   = the parent synid where data will be stored 
     `used_script`      = git repo url that produces this data (if available)
-    `source_table_id`  = the source of where this data is produced (if available)   
+    `source_table_id`  = list of source of where this data is produced (if available) 
+    `remove`           = remove data after saving, generally used for csv data 
 
     returns stored file entity in Synapse Database
     """
@@ -250,7 +254,8 @@ def save_data_to_synapse(syn,
     new_file = syn.store(new_file, activity = act)           
         
     ## remove the file ##
-    os.remove(path_to_output_filename)
+    if remove:
+        os.remove(path_to_output_filename)
 
   
 def normalize_dict_features(data, feature):
