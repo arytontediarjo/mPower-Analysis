@@ -42,8 +42,8 @@ def read_args():
     returns argument parameter
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("--version", default= "V1", choices = ["MPOWER_V1", "MPOWER_V2", "MPOWER_PASSIVE", "MS_ACTIVE"],
-                        help = "query mpower version number (V1, V2, Passive or EMS active)")
+    parser.add_argument("--version", default= "MPOWER_V1", choices = ["MPOWER_V1", "MPOWER_V2", "MPOWER_PASSIVE", "MS_ACTIVE"],
+                        help = "query mpower version number (MPOWER_V1, MPOWER_V2, MPOWER_PASSIVE or MS_ACTIVE)")
     parser.add_argument("--filename", default= "data.csv",
                         help = "name of the output file per query")
     parser.add_argument("--num-cores", default= mp.cpu_count(),

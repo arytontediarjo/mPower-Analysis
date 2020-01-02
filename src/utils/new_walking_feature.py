@@ -221,31 +221,31 @@ def calculate_rotation(data, orientation):
     return data
 
 
-def get_rotational_features(data):
-    """
-    Function to retrieve rotational features
-    parameter:
-    `data`: pandas dataframe
-    return a dataframe containing rotational features
-    """
-    if isinstance(data, str):
-        data = query.open_filepath(data)
-        data = query.clean_accelerometer_data(data)
-        data = data[data["sensorType"] == "rotationRate"]
-    rotation_data = calculate_rotation(data)
-    rotation_data = rotation_data[rotation_data["aucXt"] > 2]
-    rotation_dict = {}
-    if rotation_data.shape[0] != 0:
-        rotation_dict["rotation.no_of_turns"]   = rotation_data.shape[0]
-        rotation_dict["rotation.mean_duration"] = rotation_data["turn_duration"].mean()
-        rotation_dict["rotation.min_duration"]  = rotation_data["turn_duration"].min()
-        rotation_dict["rotation.max_duration"]  = rotation_data["turn_duration"].max()
-    else:
-        rotation_dict["rotation.no_of_turns"]   = 0
-        rotation_dict["rotation.mean_duration"] = 0
-        rotation_dict["rotation.min_duration"]  = 0
-        rotation_dict["rotation.max_duration"]  = 0
-    return rotation_dict
+# def get_rotational_features(data):
+#     """
+#     Function to retrieve rotational features
+#     parameter:
+#     `data`: pandas dataframe
+#     return a dataframe containing rotational features
+#     """
+#     if isinstance(data, str):
+#         data = query.open_filepath(data)
+#         data = query.clean_accelerometer_data(data)
+#         data = data[data["sensorType"] == "rotationRate"]
+#     rotation_data = calculate_rotation(data)
+#     rotation_data = rotation_data[rotation_data["aucXt"] > 2]
+#     rotation_dict = {}
+#     if rotation_data.shape[0] != 0:
+#         rotation_dict["rotation.no_of_turns"]   = rotation_data.shape[0]
+#         rotation_dict["rotation.mean_duration"] = rotation_data["turn_duration"].mean()
+#         rotation_dict["rotation.min_duration"]  = rotation_data["turn_duration"].min()
+#         rotation_dict["rotation.max_duration"]  = rotation_data["turn_duration"].max()
+#     else:
+#         rotation_dict["rotation.no_of_turns"]   = 0
+#         rotation_dict["rotation.mean_duration"] = 0
+#         rotation_dict["rotation.min_duration"]  = 0
+#         rotation_dict["rotation.max_duration"]  = 0
+#     return rotation_dict
 
 
 
@@ -346,15 +346,15 @@ if __name__ ==  '__main__':
     start_time = time.time()
     matched_demographic = query.get_file_entity(syn, "syn21482502")
     hc_arr_v1 = (matched_demographic["healthCode"][matched_demographic["version"] == "mpower_v1"].unique())
-    query_data_v1 = query.get_walking_synapse_table(syn, 
-                                                "syn10308918", 
-                                                "V1", 
-                                                healthCodes = hc_arr_v1)
+    query_data_v1 = query.get_walking_synapse_table(syn         = syn, 
+                                                    table_id    = "syn10308918", 
+                                                    version     = "MPOWER_V1", 
+                                                    healthCodes = hc_arr_v1)
 
     hc_arr_v2 = (matched_demographic["healthCode"][matched_demographic["version"] == "mpower_v2"].unique())
     query_data_v2 = query.get_walking_synapse_table(syn, 
                                                 "syn12514611", 
-                                                "V2", 
+                                                "MPOWER_V2", 
                                                 healthCodes = hc_arr_v2)
 
     path_data = query.parallel_func_apply(path_data, featurize, 16, 250)
