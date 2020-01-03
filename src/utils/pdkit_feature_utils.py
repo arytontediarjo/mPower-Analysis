@@ -6,7 +6,7 @@ import numpy as np
 import pdkit
 from pdkit.gait_time_series import GaitTimeSeries
 from pdkit.gait_processor import GaitProcessor
-from utils.query_utils import get_acceleration_ts, normalize_dict_features
+from utils.query_utils import get_sensor_ts, normalize_dict_features
 
 
 def pdkit_pipeline(filepath, var):
