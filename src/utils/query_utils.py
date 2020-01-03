@@ -90,9 +90,12 @@ def get_sensor_ts(filepath, sensor):
     """
 
     ## if empty filepaths return it back
-    if filepath == "#ERROR":
-        return filepath
+    if not isinstance(filepath, str):
+        raise Exception("Please insert a string pathfile to .SynapseCache reference")
     
+    if filepath == "#ERROR":
+        return filepath 
+
     ## open filepath
     data = open_filepath(filepath)
     
@@ -110,7 +113,7 @@ def get_sensor_ts(filepath, sensor):
         return data[["td","x", "y", "z", "AA"]]
         
     ## userAcceleration from mpowerV1
-    elif ("userAcceleration" in data.columns):
+    else:
         data = data[["timestamp", sensor]]
         data["x"] = data[sensor].apply(lambda x: x["x"])
         data["y"] = data[sensor].apply(lambda x: x["y"])
