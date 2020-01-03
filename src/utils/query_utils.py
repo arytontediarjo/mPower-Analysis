@@ -75,7 +75,7 @@ def get_walking_synapse_table(syn,
     return data
 
 
-def get_acceleration_ts(filepath, sensor): 
+def get_sensor_ts(filepath, sensor): 
     """
     Function to get accelerometer data given a filepath,
     will adjust to different table entity versions accordingly by 

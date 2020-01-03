@@ -18,7 +18,7 @@ def pdkit_pipeline(filepath, var):
     returns dictionary of pdkit gait features
     """
     ### Process data to be usable by pdkit ###
-    data = get_acceleration_ts(filepath = filepath, 
+    data = get_sensor_ts(filepath = filepath, 
                                 sensor = "userAcceleration")
     ### parse through gait processor to retrieve resampled signal
     try:

@@ -46,7 +46,7 @@ def sfm_preprocessing(data, hz_start = 0, hz_end = 10, gamma_range = np.arange(0
 def sfm_auc_pipeline(params, var):
     ## process acceleration
     try:
-        data = get_acceleration_ts(filepath = params, 
+        data = get_sensor_ts(filepath = params, 
                                     sensor =  "userAcceleration")
         # print(data)
     except:
