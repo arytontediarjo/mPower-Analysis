@@ -75,7 +75,7 @@ def get_walking_synapse_table(syn,
     return data
 
 
-def get_acceleration_ts(filepath): 
+def get_acceleration_ts(filepath, sensor): 
     """
     Function to get accelerometer data given a filepath,
     will adjust to different table entity versions accordingly by 
@@ -103,7 +103,7 @@ def get_acceleration_ts(filepath):
     ## get data from mpowerV2, annotated by the availability of sensorType
     if ("sensorType" in data.columns):
         try:
-            data = data[data["sensorType"] == "userAcceleration"]
+            data = data[data["sensorType"] == sensor]
             data = clean_accelerometer_data(data)
         except:
             return "#ERROR"
@@ -111,11 +111,11 @@ def get_acceleration_ts(filepath):
         
     ## userAcceleration from mpowerV1
     elif ("userAcceleration" in data.columns):
-        data = data[["timestamp", "userAcceleration"]]
-        data["x"] = data["userAcceleration"].apply(lambda x: x["x"])
-        data["y"] = data["userAcceleration"].apply(lambda x: x["y"])
-        data["z"] = data["userAcceleration"].apply(lambda x: x["z"])
-        data = data.drop(["userAcceleration"], axis = 1)
+        data = data[["timestamp", sensor]]
+        data["x"] = data[sensor].apply(lambda x: x["x"])
+        data["y"] = data[sensor].apply(lambda x: x["y"])
+        data["z"] = data[sensor].apply(lambda x: x["z"])
+        data = data.drop([sensor], axis = 1)
         data = clean_accelerometer_data(data)
         return data[["td","x", "y", "z", "AA"]]
     
