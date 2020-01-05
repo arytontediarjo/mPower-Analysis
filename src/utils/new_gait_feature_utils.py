@@ -156,6 +156,7 @@ def calculate_number_of_steps_per_window(data, orientation):
     ts = pd.DataFrame({"time":time, 
                         "heel_strikes":heel_strikes/(256/100), 
                         "variance": variances})
+    print(ts)
     
     old_data_size = ts.shape[0]
     print("old data size: %s"%old_data_size)
@@ -260,7 +261,7 @@ def separate_array_sequence(array):
     """
     seq2 = array
     groups = []
-    for k, g in groupby(enumerate(seq2), lambda x: x[0]-x[1]):
+    for _, g in groupby(enumerate(seq2), lambda x: x[0]-x[1]):
         groups.append(list(map(itemgetter(1), g)))
     groups = np.asarray(groups)
     return groups
@@ -337,6 +338,6 @@ def featurize_wrapper(data):
     `data`: takes in pd.DataFrame
     returns a json file featurized data
     """
-    data["walk_features"] = data["walk_motion.json_pathfile"].apply(gait_data_processor_pipeline, orientation = "y")
-    data["balance_features"] = data["balance_motion.json_pathfile"].apply(gait_data_processor_pipeline, orientation = "y")
+    data["walk_features"] = data["walk_motion.json_pathfile"].apply(gait_processor_pipeline, orientation = "y")
+    data["balance_features"] = data["balance_motion.json_pathfile"].apply(gait_processor_pipeline, orientation = "y")
     return data
