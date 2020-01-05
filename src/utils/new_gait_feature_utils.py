@@ -171,9 +171,8 @@ def calculate_number_of_steps_per_window(data, orientation):
     ## if 50% of the data is removed, we will consider the subject as not walking ##   
     if new_data_size < 0.5 * old_data_size:
         return 0
-    else:
-        mean_heel_strikes_per_chunk = ts["heel_strikes"].mean()
-        return mean_heel_strikes_per_chunk
+    mean_heel_strikes_per_chunk = ts["heel_strikes"].mean()
+    return mean_heel_strikes_per_chunk
     
     
 def calculate_rotation(data, orientation):
