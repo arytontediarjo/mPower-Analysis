@@ -163,6 +163,7 @@ def calculate_number_of_steps_per_window(data, orientation):
     
     ## store data size after consecutive zero subset
     new_data_size = ts.shape[0]
+    print(new_data_size)
     
     ## if 50% of the data is removed, we will consider the subject as not walking ##   
     if new_data_size == 0:
