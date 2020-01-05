@@ -156,23 +156,17 @@ def calculate_number_of_steps_per_window(data, orientation):
     ts = pd.DataFrame({"time":time, 
                         "heel_strikes":heel_strikes/(256/100), 
                         "variance": variances})
-    print(ts)
     
-    old_data_size = ts.shape[0]
-    print("old data size: %s"%old_data_size)
-
     ## subset data, removing data that has 5 consecutive zero runs ##
     ts = subset_data_non_zero_runs(data = ts, zero_runs_cutoff = 5)
     
     ## store data size after consecutive zero subset
     new_data_size = ts.shape[0]
-    print("new data size: %s"%new_data_size)
-    
-    ## if 50% of the data is removed, we will consider the subject as not walking ##   
-    if new_data_size < 0.5 * old_data_size:
+    if new_data_size == 0:
         return 0
-    mean_heel_strikes_per_chunk = ts["heel_strikes"].mean()
-    return mean_heel_strikes_per_chunk
+    else:
+        mean_heel_strikes_per_chunk = ts["heel_strikes"].mean()
+        return mean_heel_strikes_per_chunk
     
     
 def calculate_rotation(data, orientation):
