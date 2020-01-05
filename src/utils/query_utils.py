@@ -14,41 +14,47 @@ def get_walking_synapse_table(syn,
                             table_id, 
                             version, 
                             healthCodes = None, 
-                            recordIds = None):
+                            recordIds = None, 
+                            retrieveAll = False):
     """
     Query synapse walking table entity 
     parameters:  
     `syn`         : synapse object,             
     `table_id`    : id of table entity,
-    `version`     : version number (args (string) = ["V1", "V2", "EMS", "Passive"])
-    `healthcodes` : list of healthcodes
-    `recordIDs`   : list of recordIds
+    `version`     : version number (args (string) = ["MPOWER_V1", "MPOWER_V2", "MS_ACTIVE", "PASSIVE"])
+    `healthcodes` : list or array of healthcodes
+    `recordIDs`   : list or of recordIds
     
     returns: a dataframe of recordIds and their respective metadata, alongside their filehandleids and filepaths
              empty filepath will be annotated as "#ERROR" on the dataframe
     """
     print("Querying %s Data" %version)
-    if not isinstance(recordIds, type(None)):
-        if not isinstance(recordIds, list):
-            recordIds = list(recordIds)
-        recordId_subset = "({})".format([i for i in recordIds]).replace("[", "").replace("]", "")
-        query = syn.tableQuery("select * from {} WHERE recordId in {}".format(table_id, recordId_subset))
-    else:
-        if not isinstance(healthCodes, list):
-            healthCodes = list(healthCodes)
-        healthCode_subset = "({})".format([i for i in healthCodes]).replace("[", "").replace("]", "")
-        query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthCode_subset))
-    data = query.asDataFrame()
 
+    if not retrieveAll:
+        if not isinstance(recordIds, type(None)):
+            recordId_subset = "({})".format([i for i in recordIds]).replace("[", "").replace("]", "")
+            query = syn.tableQuery("select * from {} WHERE recordId in {}".format(table_id, recordId_subset))
+        else:
+            healthCode_subset = "({})".format([i for i in healthCodes]).replace("[", "").replace("]", "")
+            query = syn.tableQuery("select * from {} WHERE healthCode in {}".format(table_id, healthCode_subset))
+    else:
+        query = syn.tableQuery("select * from {}".format(table_id))
+    data = query.asDataFrame()
+    
     ## unique table identifier in mpowerV1 and EMS synapse table
     if (version == "MPOWER_V1") or (version == "MS_ACTIVE"):
-        feature_list = [_ for _ in data.columns if ("deviceMotion" in _) and ("rest" not in _)]
+        column_list = [_ for _ in data.columns if ("deviceMotion" in _)]
     ## unique table identifier in mpowerV2 and passive data
+    elif (version == "MPOWER_V2") or (version == "PASSIVE") :
+        column_list = [_ for _ in data.columns if ("json" in _)]
+    ## raise error if version is not recognized
     else:
-        feature_list = [_ for _ in data.columns if ("json" in _)]
-    ## download columns that contains walking data based on the logical condition
-    file_map = syn.downloadTableColumns(query, feature_list)
+        raise Exception("version type is not recgonized, \
+                        please use either of these choices:\
+                        (MPOWER_V1, MS_ACTIVE, MPOWER_V2, PASSIVE)")
     
+    ## download columns that contains walking data based on the logical condition
+    file_map = syn.downloadTableColumns(query, column_list)
     dict_ = {}
     dict_["file_handle_id"] = []
     dict_["file_path"] = []
@@ -58,24 +64,25 @@ def get_walking_synapse_table(syn,
     filepath_data = pd.DataFrame(dict_)
     data = data[["recordId", "healthCode", 
                 "appVersion", "phoneInfo", 
-                "createdOn"] + feature_list]
+                "createdOn"] + column_list]
     filepath_data["file_handle_id"] = filepath_data["file_handle_id"].astype(float)
     
     ### Join the filehandles with each acceleration files ###
-    for feat in feature_list:
+    for feat in column_list:
         data[feat] = data[feat].astype(float)
         data = pd.merge(data, filepath_data, 
                         left_on = feat, 
                         right_on = "file_handle_id", 
                         how = "left")
         data = data.rename(columns = {feat: "{}_path_id".format(feat), 
-                                    "file_path": "{}_pathfile".format(feat)}).drop(["file_handle_id"], axis = 1)
+                                    "file_path": "{}_pathfile".format(feat)})\
+                                        .drop(["file_handle_id"], axis = 1)
     ## Empty Filepaths on synapseTable ##
     data = data.fillna("#ERROR") 
     return data
 
 
-def get_sensor_ts(filepath, sensor): 
+def get_sensor_ts_from_filepath(filepath, sensor): 
     """
     Function to get accelerometer data given a filepath,
     will adjust to different table entity versions accordingly by 
@@ -83,7 +90,10 @@ def get_sensor_ts(filepath, sensor):
     Empty filepaths will be annotated with "#ERROR"
 
     parameters : 
-    `filepath` : filepaths of given data
+    `filepath` : string of filepath
+    `sensor`   : the sensor type (userAcceleration, 
+                acceleration with gravity, 
+                gyroscope etc)
 
     return a tidied version of the dataframe that contains a time-index dataframe (timestamp), 
     time differences (td), (x, y, z, AA) user acceleration (non-g)
@@ -103,7 +113,7 @@ def get_sensor_ts(filepath, sensor):
     if data.shape[0] == 0 or data.empty: 
         return "#ERROR"
     
-    ## get data from mpowerV2, annotated by the availability of sensorType
+    ## get data from mpowerV2
     if ("sensorType" in data.columns):
         try:
             data = data[data["sensorType"] == sensor]
@@ -112,7 +122,7 @@ def get_sensor_ts(filepath, sensor):
             return "#ERROR"
         return data[["td","x", "y", "z", "AA"]]
         
-    ## userAcceleration from mpowerV1
+    ## get data from mpowerV1
     else:
         data = data[["timestamp", sensor]]
         data["x"] = data[sensor].apply(lambda x: x["x"])
@@ -125,16 +135,12 @@ def get_sensor_ts(filepath, sensor):
 
 def clean_accelerometer_data(data):
     """
-    Generalized function to clean accelerometer data to
-    a desirable format 
-
+    Generalized function to clean accelerometer data to a desirable format 
     parameter: 
-    `data`: time-series dataset
-
+    `data`: pandas dataframe of time series
     returns index (datetimeindex), td (float64), 
             x (float64), y (float64), z (float64),
-            AA (float64) dataframe
-        
+            AA (float64) dataframe    
     """
     data = data.dropna(subset = ["x", "y", "z"])
     date_series = pd.to_datetime(data["timestamp"], unit = "s")
@@ -156,7 +162,8 @@ def clean_accelerometer_data(data):
 def open_filepath(filepath):
     """
     General Function to open a filepath 
-    parameter: a filepath
+    parameter: 
+    `filepath`: filepath to designated synapsecache
     return: pandas dataframe of the respective filepath
     """
     with open(filepath) as f:
@@ -165,53 +172,17 @@ def open_filepath(filepath):
     return data
 
 
-def get_healthcodes(syn, table_id):
+def get_all_healthcodes_from_synTable(syn, table_id):
     """
     Function to get healthCodes in python list format
-    parameter:  syn: syn object,
-                synId: table that user want to query from,    
+    parameter:  
+    `syn`      : syn object,            
+    `table_id` : table that user want to query from,    
     returns list of healthcodes
     """
     healthcode_list = list(syn.tableQuery("select distinct(healthCode) as healthCode from {}".format(table_id))
                                    .asDataFrame()["healthCode"])
     return healthcode_list
-    
-    
-""" 
-function to retrieve sensors 
-"""
-def get_sensor_types(filepath):
-    if filepath == "#ERROR":
-        return filepath
-    data = open_filepath(filepath)
-    if "sensorType" in data.columns:
-        return data["sensorType"].dropna().unique()
-    else:
-        return "#ERROR"
-
-"""
-function to retrieve unit of measurements 
-"""
-def get_units(filepath):
-    if filepath == "#ERROR":
-        return filepath
-    data = open_filepath(filepath)
-    if "unit" in data.columns:
-        return data["unit"].dropna().unique()
-    else:
-        return "#ERROR"
-    
-"""
-function for retrieving specs (if available)
-"""
-def get_sensor_specs(filepath):
-    if filepath == "#ERROR":
-        return filepath
-    data = open_filepath(filepath)
-    if "sensor" in data.columns:
-        return data["sensor"].iloc[0]
-    else:
-        return "#ERROR"
     
     
 def save_data_to_synapse(syn,
@@ -261,24 +232,31 @@ def save_data_to_synapse(syn,
         os.remove(path_to_output_filename)
 
   
-def normalize_dict_features(data, feature):
+def normalize_dict_features(data, features):
     """
-    Function to normalize column that conatins dictionaries different columns
+    Function to normalize column that conatins dictionaries into separate columns
+    in the dataframe
     parameter: 
-    `data`    : the data itself           
-    `feature` : the target feature
-    
+    `data`    : pandas DataFrame       
+    `feature` : list of dict target features for normalization 
     returns a normalized dataframe with column containing dictionary normalized
-    """    
-    normalized_data = data[feature].map(lambda x: x if isinstance(x, dict) else "#ERROR") \
-                                .apply(pd.Series) \
-                                .fillna("#ERROR").add_prefix('{}.'.format(feature))
-    data = pd.concat([data, normalized_data], 
-                     axis = 1).drop(feature, axis = 1)
+    """
+    for feature in features:
+        normalized_data = data[feature].map(lambda x: x if isinstance(x, dict) else "#ERROR") \
+                                    .apply(pd.Series) \
+                                    .fillna("#ERROR") \
+                                    .add_prefix('{}.'.format(feature))
+        data = pd.concat([data, normalized_data], axis = 1).drop([feature, "%s.0"%feature], axis = 1)
     return data
 
 
 def fix_column_name(data):
+    """
+    Function to fix column names to be consistent accross differnt tables
+    parameter:
+    `data`: pandas DataFrame
+    returns a dataframe with fixed column feature naming conventions
+    """
     for feature in filter(lambda x: "feature" in x, data.columns): 
         data  = data.rename({feature: "%s"\
                             %(feature.split("features_")[1])}, axis = 1)
@@ -288,12 +266,11 @@ def fix_column_name(data):
 
 def get_file_entity(syn, synid):
     """
-    Get file entity and turn it into pandas csv
+    Get data (csv,tsv) file entity and turn it into pandas csv
     returns pandas dataframe 
     parameters:
     `syn`: a syn object
-    `synid`: synid of file entity
-
+    `synid`: syn id of file entity
     returns pandas dataframe
     """
     entity = syn.get(synid)
@@ -308,13 +285,12 @@ def get_file_entity(syn, synid):
 
 def parallel_func_apply(df, func, no_of_processors, chunksize):
     """
-    Function for parallelization
+    Function for parallelizing pandas dataframe processing
     parameter: 
-    `df`               = dataset           
-    `func`             = function for data transformation
+    `df`               = pandas dataframe         
+    `func`             = wrapper function for data processing
     `no_of_processors` = number of processors to transform the data
-    `chunksize`        = number of chunk partition 
-    
+    `chunksize`        = number of partition 
     return: featurized dataframes
     """
     df_split = np.array_split(df, chunksize)
@@ -334,11 +310,9 @@ def check_children(syn, data_parent_id, filename):
     `syn` = syn object           
     `data_parent_id` = the parent folder
     `output_filename` = the filename
-    
-    returns previously stored dataframe
+    returns previously stored dataframe that has the same filename
     """
     prev_stored_data = pd.DataFrame()
-    prev_recordId_list = []
     for children in syn.getChildren(parent = data_parent_id):
             if children["name"] == filename:
                 prev_stored_data_id = children["id"]
