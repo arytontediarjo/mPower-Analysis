@@ -274,9 +274,9 @@ def gait_processor_pipeline(filepath, orientation):
     
     returns a featurized dataframe of rotational features and number of steps per window sizes
     """    
-    accel_ts    = query.get_sensor_ts(filepath = filepath, 
+    accel_ts    = query.get_sensor_ts_from_filepath(filepath = filepath, 
                                         sensor = "userAcceleration")
-    rotation_ts = query.get_sensor_ts(filepath = filepath, 
+    rotation_ts = query.get_sensor_ts_from_filepath(filepath = filepath, 
                                         sensor = "rotationRate")
     
     # return errors # 
@@ -334,6 +334,6 @@ def featurize_wrapper(data):
     `data`: takes in pd.DataFrame
     returns a json file featurized data
     """
-    data["walk_features"] = data["walk_motion.json_pathfile"].apply(walking_data_processor_pipeline, orientation = "y")
-    data["balance_features"] = data["balance_motion.json_pathfile"].apply(walking_data_processor_pipeline, orientation = "y")
+    data["walk_features"] = data["walk_motion.json_pathfile"].apply(gait_data_processor_pipeline, orientation = "y")
+    data["balance_features"] = data["balance_motion.json_pathfile"].apply(gait_data_processor_pipeline, orientation = "y")
     return data
