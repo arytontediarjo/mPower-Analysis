@@ -1,7 +1,7 @@
 ## package imports ##
 import sys
 import pdkit
-import query_utils as query
+import utils.query_utils as query
 import synapseclient as sc
 import matplotlib.pyplot as plt
 from scipy import signal
