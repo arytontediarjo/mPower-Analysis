@@ -20,7 +20,7 @@ warnings.simplefilter("ignore")
 
 """
 TODO:
-consolidate low pass filters parameter into this particular class
+consolidate low pass filters parameter into classes
 """
 
 
@@ -71,9 +71,9 @@ def zero_runs(array):
     """
     Function to search zero runs in an np.array
     parameter:
-    `array`      : np array
+        `array`  : np array
     returns N x 2 np array matrix containing zero runs
-    format returned data: ([start index, end index], ...)
+    format of returned data: np.array([start index of zero occurence, end index of zero occurence], ...) 
     """
     # Create an array that is 1 where a is 0, and pad each end with an extra 0.
     iszero = np.concatenate(([0], np.equal(array, 0).view(np.int8), [0]))
@@ -84,10 +84,10 @@ def zero_runs(array):
 
 def detect_zero_crossing(array):
     """
-    function to detect zero crossing rate
+    Function to detect zero crossings in a time series signal data
     parameter:
         `array`: numpy array
-    returns indexes before sign changes
+    returns index location before sign change 
     """
     zero_crossings = np.where(np.diff(np.sign(array)))[0]
     return zero_crossings
@@ -97,9 +97,9 @@ def subset_data_non_zero_runs(data, zero_runs_cutoff):
     Function to subset data from zero runs heel strikes 
     that exceeded the cutoff threshold (consecutive zeros)
     parameter:
-    `data`             : dataframe containing columns of chunk time and heel strikes per chunk
-    `zero_runs_cutoff` : threshold of how many zeros that is eligible in each runs
-    returns a non-consecutive zero runs subsetted dataframe
+        `data`             : dataframe containing columns of chunk time and heel strikes per chunk
+        `zero_runs_cutoff` : threshold of how many consecutive row of zeros that will be remove from the dataframe
+    returns a subset of non-zero runs pd.DataFrame
     """
     z_runs_threshold = []
     for value in zero_runs(data["heel_strikes"]):
@@ -324,7 +324,7 @@ def gait_processor_pipeline(filepath, orientation):
             no_of_steps_per_secs_no_wchunk = 0
 
         """added all pdkit features"""
-        #######
+        ####### TODO: fix freeze occurences before running the whole data pipeline  #####
         try:
             gait_step_regularity = gp.gait_regularity_symmetry(data_seqs[orientation])[0]
         except:
@@ -378,6 +378,7 @@ def gait_processor_pipeline(filepath, orientation):
     feature_dict["mean_max_freeze_index"] = np.mean(np.array(mean_arr_max_freeze_index))
     feature_dict["mean_freeze_occ_per_secs"] = np.mean(np.array(mean_arr_freeze_occ_per_secs))
     feature_dict["mean_gait_speed"] = np.mean(np.array(mean_arr_speed_of_gait))
+    feature_dict["freeze_indices"] = gp.freeze_of_gait(data_seqs[orientation])
     if rotation_occurences.shape[0] != 0:
         feature_dict["rotation.no_of_turns"]   = rotation_occurences.shape[0]
         feature_dict["rotation.mean_duration"] = rotation_occurences["turn_duration"].mean()
