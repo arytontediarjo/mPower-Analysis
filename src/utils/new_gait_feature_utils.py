@@ -124,10 +124,14 @@ def calculate_number_of_steps_per_window(data, orientation):
     variances = []
     
     sample_rate = ts.shape[0]/ts["td"][-1]
-    ts["filtered_%s" %orientation] = butter_lowpass_filter(ts[orientation], 
+
+    try:
+        ts["filtered_%s" %orientation] = butter_lowpass_filter(ts[orientation], 
                                                             sample_rate = sample_rate, 
                                                             cutoff = 5, 
                                                             order = 4)
+    except:
+        ts["filtered_%s" %orientation] = 0
     time = []
     heel_strikes = []
     while jPos < len(ts):
@@ -183,10 +187,13 @@ def calculate_rotation(data, orientation):
     dict_list["auc"] = []
     dict_list["turn_duration"] = []
     dict_list["aucXt"] = []
-    data[orientation] = butter_lowpass_filter(data = data[orientation], 
-                                            sample_rate = 100, 
-                                            cutoff=2, 
-                                            order=2)
+    try:
+        ts["filtered_%s" %orientation] = butter_lowpass_filter(ts[orientation], 
+                                                            sample_rate = sample_rate, 
+                                                            cutoff = 5, 
+                                                            order = 4)
+    except:
+        ts["filtered_%s" %orientation] = 0
     zcr_list = detect_zero_crossing(data[orientation].values)
     for i in zcr_list: 
         x = data["td"].iloc[start:i+1].values
@@ -261,6 +268,7 @@ def separate_array_sequence(array):
 
 
 def gait_processor_pipeline(filepath, orientation):
+    print(filepath)
     """
     Function of data pipeline for subsetting data from rotational movements, retrieving rotational features, 
     removing low-variance longitudinal data and PDKIT estimation of heel strikes based on 2.5 secs window chunks
