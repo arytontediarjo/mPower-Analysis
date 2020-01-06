@@ -332,5 +332,4 @@ def featurize_wrapper(data):
     returns a json file featurized data
     """
     data["walk_features"] = data["walk_motion.json_pathfile"].apply(gait_processor_pipeline, orientation = "y")
-    data["balance_features"] = data["balance_motion.json_pathfile"].apply(gait_processor_pipeline, orientation = "y")
     return data
