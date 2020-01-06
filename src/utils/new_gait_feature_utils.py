@@ -116,7 +116,7 @@ def calculate_number_of_steps_per_window(data, orientation):
     """
     
     ts = data.copy()
-    window_size = 256
+    window_size = 512
     step_size = 50
     jPos = window_size + 1
     i = 0
