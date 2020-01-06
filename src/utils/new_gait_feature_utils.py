@@ -282,6 +282,9 @@ def gait_processor_pipeline(filepath, orientation):
     
     if not isinstance(rotation_ts, pd.DataFrame):
         return "#ERROR"
+
+    acceleration_fs = accel_ts.shape[0]/accel_ts["td"][-1]
+    rotation_fs = rotation_ts.shape[0]/rotation_ts["td"][-1]
     
     rotation_ts = calculate_rotation(rotation_ts, "y")
     rotation_occurences = rotation_ts[rotation_ts["aucXt"] > 2]
@@ -310,6 +313,8 @@ def gait_processor_pipeline(filepath, orientation):
     wchunk_mean_no_of_steps_per_secs = np.mean(np.array(mean_arr_wchunk))
     no_wchunk_mean_no_of_steps_per_secs = np.mean(np.array(mean_arr_no_wchunk))
     feature_dict = {}
+    feature_dict["acceleration_fs"] = acceleration_fs
+    feature_dict["rotation_fs"] = rotation_fs
     feature_dict["wchunk.mean_no_of_steps_per_secs"] = wchunk_mean_no_of_steps_per_secs
     feature_dict["no_wchunk.mean_no_of_steps_per_secs"] = no_wchunk_mean_no_of_steps_per_secs
     if rotation_occurences.shape[0] != 0:
