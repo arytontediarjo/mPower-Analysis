@@ -15,10 +15,9 @@ import time
 import multiprocessing as mp
 import warnings
 import argparse
-from utils.query_utils import (get_walking_synapse_table, get_healthcodes, \
-                                check_children, parallel_func_apply, save_data_to_synapse)
-from utils.pdkit_feature_utils import (pdkit_featurize, normalize_pdkit_features)
-from utils.sfm_feature_utils import sfm_featurize 
+import utils.query_utils as query
+import utils.pdkit_feature_utils as pdkit_utils
+import utils.sfm_feature_utils as sfm_utils
 warnings.simplefilter("ignore")                               
 
 
@@ -79,35 +78,37 @@ def main():
         source_table_id = WALK_TABLE_PASSIVE
     elif args.version == "MS_ACTIVE":
         source_table_id = ELEVATE_MS_ACTIVE
-    data = get_walking_synapse_table(syn = syn, 
+    data = query.get_walking_synapse_table(syn = syn, 
                                     table_id = source_table_id, 
                                     version = args.version, 
-                                    healthCodes = get_healthcodes(syn = syn, table_id = source_table_id))
+                                    healthCodes = query.get_all_healthcodes_from_synTable(syn = syn, table_id = source_table_id))
     prev_stored_data   = pd.DataFrame()
     if args.update:
         print("\n#########  UPDATING DATA  ################\n")
-        prev_stored_data = check_children(syn = syn,
+        prev_stored_data = query.check_children(syn = syn,
                                         data_parent_id = RAW_DATA_PARENT_ID, 
                                         filename = args.filename)
         data = data[~data["recordId"].isin(prev_stored_data["recordId"].unique())]
         print(data.shape)
     if args.featurize == "sfm":
         print("processing spectral-flatness")
-        data = parallel_func_apply(data, sfm_featurize, int(args.num_cores), int(args.num_chunks))
+        data = query.parallel_func_apply(data, sfm_utils.sfm_featurize, 
+                                            int(args.num_cores), int(args.num_chunks))
     elif args.featurize == "pdkit":
         print("processing pdkit")
-        data = parallel_func_apply(data, pdkit_featurize, int(args.num_cores), int(args.num_chunks))
-        data = normalize_pdkit_features(data)
+        data = query.parallel_func_apply(data, pdkit_utils.pdkit_featurize, 
+                                            int(args.num_cores), int(args.num_chunks))
+        data = pdkit_utils.normalize_pdkit_features(data)
     print("parallelization process finished")
     data = data[[feat for feat in data.columns if ("path" not in feat) and ("0" not in feat)]].reset_index(drop = True)
     data = pd.concat([prev_stored_data, data]).reset_index(drop = True)
     data = data.loc[:,~data.columns.duplicated()]
-    save_data_to_synapse(syn = syn, 
-                        data = data, 
-                        output_filename = args.filename, 
-                        data_parent_id  = RAW_DATA_PARENT_ID,
-                        used_script     = GIT_URL,
-                        source_table_id = source_table_id) 
+    query.save_data_to_synapse(syn = syn, 
+                            data = data, 
+                            output_filename = args.filename, 
+                            data_parent_id  = RAW_DATA_PARENT_ID,
+                            used_script     = GIT_URL,
+                            source_table_id = source_table_id) 
                          
 """
 Run main function and record runtime for each version query
