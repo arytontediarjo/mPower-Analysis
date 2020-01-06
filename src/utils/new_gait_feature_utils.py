@@ -378,7 +378,7 @@ def gait_processor_pipeline(filepath, orientation):
     feature_dict["mean_max_freeze_index"] = np.mean(np.array(mean_arr_max_freeze_index))
     feature_dict["mean_freeze_occ_per_secs"] = np.mean(np.array(mean_arr_freeze_occ_per_secs))
     feature_dict["mean_gait_speed"] = np.mean(np.array(mean_arr_speed_of_gait))
-    feature_dict["freeze_indices"] = gp.freeze_of_gait(data_seqs[orientation])
+    feature_dict["freeze_indices"] = gp.freeze_of_gait(data_seqs.set_index("time")[orientation])
     if rotation_occurences.shape[0] != 0:
         feature_dict["rotation.no_of_turns"]   = rotation_occurences.shape[0]
         feature_dict["rotation.mean_duration"] = rotation_occurences["turn_duration"].mean()
