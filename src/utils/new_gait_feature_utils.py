@@ -18,6 +18,12 @@ from itertools import *
 warnings.simplefilter("ignore")
 
 
+"""
+TODO:
+consolidate low pass filters parameter into this particular class
+"""
+
+
 ## helper functions ##
 def butter_lowpass_filter(data, sample_rate, cutoff=10, order=4, plot=False):
     """
@@ -292,6 +298,13 @@ def gait_processor_pipeline(filepath, orientation):
     data = data.reset_index()
     mean_arr_wchunk = []
     mean_arr_no_wchunk = []
+    mean_arr_gait_step_regularity = []
+    mean_arr_gait_stride_regularity = []
+    mean_arr_gait_symmetry = []
+    mean_arr_freq_of_peaks = []
+    mean_arr_max_freeze_index = []
+    mean_arr_freeze_occ_per_secs = []
+    mean_arr_speed_of_gait = []
     walking_seqs = separate_array_sequence(np.where(data["aucXt"]<2)[0])
     for seqs in walking_seqs:
         data_seqs = data.loc[seqs[0]:seqs[-1]]
@@ -306,17 +319,65 @@ def gait_processor_pipeline(filepath, orientation):
                                 filter_order = 4,
                                 delta = 0.5)  
         try:
-            no_of_steps_per_secs_no_wchunk = len(gp.heel_strikes(data_seqs["y"])[0])/duration
+            no_of_steps_per_secs_no_wchunk = len(gp.heel_strikes(data_seqs[orientation])[0])/duration
         except:
             no_of_steps_per_secs_no_wchunk = 0
+
+        """added all pdkit features"""
+        #######
+        try:
+            gait_step_regularity = gp.gait_regularity_symmetry(data_seqs[orientation])[0]
+        except:
+            gait_step_regularity = 0
+        try:
+            gait_stride_regularity = gp.gait_regularity_symmetry(data_seqs[orientation])[1]
+        except:
+            gait_stride_regularity = 0
+        try:
+            gait_symmetry = gp.gait_regularity_symmetry(data_seqs[orientation])[2]
+        except:
+            gait_symmetry = 0
+        try:
+            frequency_of_peaks = gp.frequency_of_peaks(data_seqs[orientation])
+        except:
+            frequency_of_peaks = 0
+        try:
+            max_freeze_index = np.max(gp.freeze_of_gait(data_seqs[orientation])[1])
+        except:
+            max_freeze_index= 0
+        try:
+            freeze_occurences_per_secs = \
+                (sum(i > 2.5 for i in gp.freeze_of_gait(data_seqs[orientation])[1]))/duration
+        except:
+            freeze_occurences_per_secs = 0
+        try:
+            speed_of_gait = gp.speed_of_gait(data_seqs[orientation], wavelet_level = 6)
+        except:
+            speed_of_gait = 0
+        #######
         mean_arr_no_wchunk.append(no_of_steps_per_secs_no_wchunk)
-    wchunk_mean_no_of_steps_per_secs = np.mean(np.array(mean_arr_wchunk))
-    no_wchunk_mean_no_of_steps_per_secs = np.mean(np.array(mean_arr_no_wchunk))
+        mean_arr_gait_step_regularity.append(gait_step_regularity)
+        mean_arr_gait_stride_regularity.append(gait_stride_regularity)
+        mean_arr_gait_symmetry.append(gait_symmetry)
+        mean_arr_freq_of_peaks.append(frequency_of_peaks)
+        mean_arr_max_freeze_index.append(max_freeze_index)
+        mean_arr_freeze_occ_per_secs.append(freeze_occurences_per_secs)
+        mean_arr_speed_of_gait.append(speed_of_gait)
+    # wchunk_mean_no_of_steps_per_secs = np.mean(np.array(mean_arr_wchunk))
+    # no_wchunk_mean_no_of_steps_per_secs = np.mean(np.array(mean_arr_no_wchunk))
+
     feature_dict = {}
     feature_dict["acceleration_fs"] = acceleration_fs
     feature_dict["rotation_fs"] = rotation_fs
-    feature_dict["wchunk.mean_no_of_steps_per_secs"] = wchunk_mean_no_of_steps_per_secs
-    feature_dict["no_wchunk.mean_no_of_steps_per_secs"] = no_wchunk_mean_no_of_steps_per_secs
+    feature_dict["wchunk.mean_no_of_steps_per_secs"] = np.mean(np.array(mean_arr_wchunk))
+    feature_dict["no_wchunk.mean_no_of_steps_per_secs"] = np.mean(np.array(mean_arr_no_wchunk))
+    feature_dict["mean_gait_step_regularity"] = np.mean(np.array(mean_arr_gait_step_regularity))
+    feature_dict["mean_gait_stride_regularity"] = np.mean(np.array(mean_arr_gait_stride_regularity))
+    feature_dict["mean_gait_symmetry"] = np.mean(np.array(mean_arr_gait_symmetry))
+    feature_dict["mean_freq_of_peaks"] = np.mean(np.array(mean_arr_freq_of_peaks))
+    feature_dict["mean_max_freeze_index"] = np.mean(np.array(mean_arr_max_freeze_index))
+    feature_dict["mean_freeze_occ_per_secs"] = np.mean(np.array(mean_arr_freeze_occ_per_secs))
+    feature_dict["mean_gait_speed"] = np.mean(np.array(mean_arr_speed_of_gait))
     if rotation_occurences.shape[0] != 0:
         feature_dict["rotation.no_of_turns"]   = rotation_occurences.shape[0]
         feature_dict["rotation.mean_duration"] = rotation_occurences["turn_duration"].mean()
