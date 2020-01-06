@@ -125,7 +125,7 @@ def calculate_number_of_steps_per_window(data, orientation):
     
     sample_rate = ts.shape[0]/ts["td"][-1]
     ts["filtered_%s" %orientation] = butter_lowpass_filter(ts[orientation], 
-                                                            sample_rate = sample_rate, 
+                                                            sample_rate = 100, 
                                                             cutoff = 5, 
                                                             order = 4)
     time = []
