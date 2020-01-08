@@ -1,0 +1,33 @@
+def main():
+    syn = sc.login()
+    matched_demographic = query.get_file_entity(syn, "syn21482502")
+
+    ## healthcode from version 1 ##
+    hc_arr_v1 = (matched_demographic["healthCode"][matched_demographic["version"] == "mpower_v1"].unique())
+    query_data_v1 = query.get_walking_synapse_table(syn, 
+                                                    "syn10308918", 
+                                                    "MPOWER_V1", 
+                                                    healthCodes = hc_arr_v1)
+    data_return   = query_data_v1[[feature for feature in query_data_v1.columns if "outbound" not in feature]]
+    data_outbound = query_data_v1[[feature for feature in query_data_v1.columns if "return" not in feature]]
+    query_data_v1 = pd.concat([data_outbound, data_return])## combine return and outbound                   
+    arr_outbound = query_data_v1["deviceMotion_walking_outbound.json.items_pathfile"].dropna()
+    arr_return = query_data_v1["deviceMotion_walking_return.json.items_pathfile"].dropna()
+    query_data_v1["walk_motion.json_pathfile"] = pd.concat([arr_outbound, arr_return])
+
+    ## healthcode from version 2 ## 
+    hc_arr_v2 = (matched_demographic["healthCode"][matched_demographic["version"] == "mpower_v2"].unique())
+    query_data_v2 = query.get_walking_synapse_table(syn, 
+                                                    "syn12514611", 
+                                                    "MPOWER_V2", 
+                                                    healthCodes = hc_arr_v2)
+    path_data = pd.concat([query_data_v1, query_data_v2]).reset_index(drop = True)                                             
+    path_data = query.parallel_func_apply(path_data, featurize_wrapper, 16, 250)
+    query.save_data_to_synapse(syn = syn, data = data, 
+                            output_filename = "new_gait_features_matched2.csv",
+                            data_parent_id = "syn20816722")
+
+if __name__ ==  '__main__': 
+    start_time = time.time()
+    main()
+    print("--- %s seconds ---" % (time.time() - start_time))
