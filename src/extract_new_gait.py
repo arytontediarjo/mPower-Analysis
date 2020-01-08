@@ -1,3 +1,18 @@
+import pdkit
+import synapseclient as sc
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import warnings
+import utils.query_utils as query
+import utils.gait_feature_prototype_utils as gproc
+import synapseclient as sc
+from sklearn import metrics
+import time
+warnings.simplefilter("ignore")
+
+
 def main():
     syn = sc.login()
     matched_demographic = query.get_file_entity(syn, "syn21482502")
@@ -22,7 +37,7 @@ def main():
                                                     "MPOWER_V2", 
                                                     healthCodes = hc_arr_v2)
     path_data = pd.concat([query_data_v1, query_data_v2]).reset_index(drop = True)                                             
-    path_data = query.parallel_func_apply(path_data, featurize_wrapper, 16, 250)
+    path_data = query.parallel_func_apply(path_data, gproc.featurize_wrapper, 16, 250)
     query.save_data_to_synapse(syn = syn, data = data, 
                             output_filename = "new_gait_features_matched2.csv",
                             data_parent_id = "syn20816722")

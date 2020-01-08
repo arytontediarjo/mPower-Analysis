@@ -8,9 +8,85 @@ import seaborn as sns
 import warnings
 import query_utils as query
 import new_gait_feature_utils as gproc
+from scipy import signal
+import warnings
+from scipy.fftpack import (rfft, fftfreq)
+from scipy.signal import (butter, lfilter, correlate, freqz)
+from sklearn import metrics
+from operator import itemgetter
+import time
+from itertools import *
 from sklearn import metrics
 import time
 warnings.simplefilter("ignore")
+
+
+def separate_array_sequence(array):
+    """
+    function to separate array sequence
+    parameter:
+    `array`: np.array, or a list
+    returns a numpy array groupings of sequences
+    """
+    seq2 = array
+    groups = []
+    for _, g in groupby(enumerate(seq2), lambda x: x[0]-x[1]):
+        groups.append(list(map(itemgetter(1), g)))
+    groups = np.asarray(groups)
+    return groups
+
+def create_overlay_data(accel_data, rotation_data):
+    """
+    Function to overlay acceleration data and rotational data
+    """
+    test = pd.merge(accel_data, rotation_data, on = "td", how = "left")
+    test["time"] = test["td"]
+    test = test.set_index("time")
+    test.index = pd.to_datetime(test.index, unit = "s")
+    test["aucXt"] = test["aucXt"].fillna(method = "bfill").fillna(0)
+    test["turn_duration"] = test["turn_duration"].fillna(method = "bfill").fillna(0)
+    return test
+
+def butter_lowpass_filter(data, sample_rate, cutoff=10, order=4, plot=False):
+    """
+        `Low-pass filter <http://stackoverflow.com/questions/25191620/
+        creating-lowpass-filter-in-scipy-understanding-methods-and-units>`_ data by the [order]th order zero lag Butterworth filter
+        whose cut frequency is set to [cutoff] Hz.
+        :param data: time-series data,
+        :type data: numpy array of floats
+        :param: sample_rate: data sample rate
+        :type sample_rate: integer
+        :param cutoff: filter cutoff
+        :type cutoff: float
+        :param order: order
+        :type order: integer
+        :return y: low-pass-filtered data
+        :rtype y: numpy array of floats
+        :Examples:
+        >>> from mhealthx.signals import butter_lowpass_filter
+        >>> data = np.random.random(100)
+        >>> sample_rate = 10
+        >>> cutoff = 5
+        >>> order = 4
+        >>> y = butter_lowpass_filter(data, sample_rate, cutoff, order)
+    """
+    nyquist = 0.5 * sample_rate
+    normal_cutoff = cutoff / nyquist
+    b, a = butter(order, normal_cutoff, btype='low', analog=False)
+
+    if plot:
+        w, h = freqz(b, a, worN=8000)
+        plt.subplot(2, 1, 1)
+        plt.plot(0.5*sample_rate*w/np.pi, np.abs(h), 'b')
+        plt.plot(cutoff, 0.5*np.sqrt(2), 'ko')
+        plt.axvline(cutoff, color='k')
+        plt.xlim(0, 0.5*sample_rate)
+        plt.title("Lowpass Filter Frequency Response")
+        plt.xlabel('Frequency [Hz]')
+        plt.grid()
+        plt.show()
+    y = lfilter(b, a, data)
+    return y
 
 
 
@@ -166,15 +242,25 @@ def gait_processor_pipeline(filepath, orientation):
     rotation_fs = rotation_ts.shape[0]/rotation_ts["td"][-1]
     rotation_ts = calculate_rotation(rotation_ts, "y")
     rotation_occurences = rotation_ts[rotation_ts["aucXt"] > 2]
-    data = gproc.create_overlay_data(accel_ts, rotation_ts)
+    data = create_overlay_data(accel_ts, rotation_ts)
     data = data.reset_index()
-    walking_seqs = gproc.separate_array_sequence(np.where(data["aucXt"]<2)[0])
+    walking_seqs = separate_array_sequence(np.where(data["aucXt"]<2)[0])
     gait_feature_arr = []
     for seqs in walking_seqs:
         data_seqs = data.loc[seqs[0]:seqs[-1]].set_index("time")
         gait_feature_arr.append(compute_gait_feature_per_window(data = data_seqs, 
                                                                      orientation = orientation))
     return [j for i in gait_feature_arr for j in i]
+
+def detect_zero_crossing(array):
+    """
+    Function to detect zero crossings in a time series signal data
+    parameter:
+        `array`: numpy array
+    returns index location before sign change 
+    """
+    zero_crossings = np.where(np.diff(np.sign(array)))[0]
+    return zero_crossings
 
 def calculate_rotation(data, orientation):
     """
@@ -190,11 +276,11 @@ def calculate_rotation(data, orientation):
     dict_list["auc"] = []
     dict_list["turn_duration"] = []
     dict_list["aucXt"] = []
-    data[orientation] = gproc.butter_lowpass_filter(data = data[orientation], 
+    data[orientation] = butter_lowpass_filter(data = data[orientation], 
                                             sample_rate = 100, 
                                             cutoff=2, 
                                             order=2)
-    zcr_list = gproc.detect_zero_crossing(data[orientation].values)
+    zcr_list = detect_zero_crossing(data[orientation].values)
     for i in zcr_list: 
         x = data["td"].iloc[start:i+1].values
         y = data[orientation].iloc[start:i+1].values
