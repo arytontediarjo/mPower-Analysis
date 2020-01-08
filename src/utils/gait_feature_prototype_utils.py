@@ -105,7 +105,6 @@ def compute_gait_feature_per_window(data, orientation):
     i = 0
     ts_arr = []
     while jPos < len(ts):
-        time = jPos
         jStart = jPos - window_size
         subset = ts.iloc[jStart:jPos]
         window_duration = subset.td[-1] - subset.td[0]
@@ -215,41 +214,6 @@ def zero_runs(array):
     return ranges
 
 
-def gait_processor_pipeline(filepath, orientation):
-    """
-    Function of data pipeline for subsetting data from rotational movements, retrieving rotational features, 
-    removing low-variance longitudinal data and PDKIT estimation of heel strikes based on 2.5 secs window chunks
-    parameters:
-    
-        `data`: string of pathfile, or pandas dataframe
-        `orientation`: orientation of featurized data
-    
-    returns a featurized dataframe of rotational features and number of steps per window sizes
-    """    
-    accel_ts    = query.get_sensor_ts_from_filepath(filepath = filepath, 
-                                        sensor = "userAcceleration")
-    rotation_ts = query.get_sensor_ts_from_filepath(filepath = filepath, 
-                                        sensor = "rotationRate")
-    
-    # return errors # 
-    if not isinstance(accel_ts, pd.DataFrame):
-        return "#ERROR"
-    
-    if not isinstance(rotation_ts, pd.DataFrame):
-        return "#ERROR"
-
-    rotation_ts = calculate_rotation(rotation_ts, "y")
-    data = create_overlay_data(accel_ts, rotation_ts)
-    data = data.reset_index()
-    walking_seqs = separate_array_sequence(np.where(data["aucXt"]<2)[0])
-    gait_feature_arr = []
-    for seqs in walking_seqs:
-        data_seqs = data.loc[seqs[0]:seqs[-1]].set_index("time")
-        gait_feature_arr.append(compute_gait_feature_per_window(data = data_seqs, 
-                                                                orientation = orientation))
-    return [j for i in gait_feature_arr for j in i]
-
-
 def detect_zero_crossing(array):
     """
     Function to detect zero crossings in a time series signal data
@@ -260,7 +224,7 @@ def detect_zero_crossing(array):
     zero_crossings = np.where(np.diff(np.sign(array)))[0]
     return zero_crossings
 
-def calculate_rotation(data, orientation):
+def compute_rotational_features(data, orientation):
     """
     function to calculate rotational movement gyroscope AUC * period of zero crossing
     note: filter order of 2 is used based on research paper (common butterworth filter), 
@@ -310,26 +274,61 @@ def calculate_rotation(data, orientation):
         return "#ERROR"
     return list_rotation
 
-def compute_rotational_features(filepath, orientation):
+def pdkit_features_pipeline(filepath, orientation):
+    """
+    Function of data pipeline for subsetting data from rotational movements, retrieving rotational features, 
+    removing low-variance longitudinal data and PDKIT estimation of heel strikes based on 2.5 secs window chunks
+    parameters:
+    
+        `data`: string of pathfile, or pandas dataframe
+        `orientation`: orientation of featurized data
+    
+    returns a featurized dataframe of rotational features and number of steps per window sizes
+    """    
+    accel_ts    = query.get_sensor_ts_from_filepath(filepath = filepath, 
+                                        sensor = "userAcceleration")
+    rotation_ts = query.get_sensor_ts_from_filepath(filepath = filepath, 
+                                        sensor = "rotationRate")
+    
+    # return errors # 
+    if not isinstance(accel_ts, pd.DataFrame):
+        return "#ERROR"
+    
+    if not isinstance(rotation_ts, pd.DataFrame):
+        return "#ERROR"
+
+    rotation_ts = compute_rotational_features(rotation_ts, "y")
+    data = create_overlay_data(accel_ts, rotation_ts)
+    data = data.reset_index()
+    walking_seqs = separate_array_sequence(np.where(data["aucXt"]<2)[0])
+    gait_feature_arr = []
+    for seqs in walking_seqs:
+        data_seqs = data.loc[seqs[0]:seqs[-1]].set_index("time")
+        gait_feature_arr.append(compute_gait_feature_per_window(data = data_seqs, 
+                                                                orientation = orientation))
+    return [j for i in gait_feature_arr for j in i]
+
+
+def rotation_feature_pipeline(filepath, orientation):
     rotation_ts = query.get_sensor_ts_from_filepath(filepath = filepath, 
                                                     sensor = "rotationRate")
     if not isinstance(rotation_ts, pd.DataFrame):
         return "#ERROR"
-    rotation_ts = calculate_rotation(rotation_ts, "y")
+    rotation_ts = compute_rotational_features(rotation_ts, orientation)
     return rotation_ts
 
-def pdkit_gait_featurize_wrapper(data):
+def pdkit_featurize_wrapper(data):
     """
     wrapper function for multiprocessing jobs
     parameter:
     `data`: takes in pd.DataFrame
     returns a json file featurized data
     """
-    data["gait.pdkit_features"] = data["walk_motion.json_pathfile"].apply(gait_processor_pipeline, orientation = "y")
+    data["gait.pdkit_features"] = data["walk_motion.json_pathfile"].apply(pdkit_features_pipeline, orientation = "y")
     return data
 
-def rotation_gait_featurize_wrapper(data):
-    data["gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(compute_rotational_features, orientation = "y")
+def rotation_featurize_wrapper(data):
+    data["gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(rotation_feature_pipeline, orientation = "y")
     return data
 
 

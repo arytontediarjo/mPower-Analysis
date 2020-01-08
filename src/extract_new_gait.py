@@ -48,8 +48,8 @@ def main():
     # query.save_data_to_synapse(syn = syn, data = pdkit_data, 
     #                         output_filename = "new_gait_features_matched2.csv",
     #                         data_parent_id = "syn20816722")                                                        
-
-    rotation_data = query.normalize_list_dicts_to_dataframe_rows(data, ["gait.rotational_features"])    
+    rotation_data = query.parallel_func_apply(data, gproc.rotation_featurize_wrapper, 16, 250)
+    rotation_data = query.normalize_list_dicts_to_dataframe_rows(rotation_data, ["gait.rotational_features"])    
     ## save data to synapse ##
     query.save_data_to_synapse(syn = syn, data = rotation_data, 
                                 output_filename = "new_rotational_features_matched2.csv",
