@@ -172,7 +172,7 @@ def gait_processor_pipeline(filepath, orientation):
     gait_feature_arr = []
     for seqs in walking_seqs:
         data_seqs = data.loc[seqs[0]:seqs[-1]].set_index("time")
-        gait_feature_arr.append(calculate_number_of_steps_per_window(data = data_seqs, 
+        gait_feature_arr.append(calculate_gait_feature_per_window(data = data_seqs, 
                                                                      orientation = orientation))
     return [j for i in gait_feature_arr for j in i]
 
