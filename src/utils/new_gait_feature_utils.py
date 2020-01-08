@@ -324,7 +324,7 @@ def gait_processor_pipeline(filepath, orientation):
             no_of_steps_per_secs_no_wchunk = 0
 
         """added all pdkit features"""
-        ####### TODO: fix freeze occurences before running the whole data pipeline  #####
+        ###### TODO: fix freeze occurences before running the whole data pipeline  #####
         try:
             gait_step_regularity = gp.gait_regularity_symmetry(data_seqs[orientation])[0]
         except:
