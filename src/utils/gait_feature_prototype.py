@@ -6,8 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import warnings
-import utils.query_utils as query
-import utils.new_gait_feature_utils as gproc
+import query_utils as query
+import new_gait_feature_utils as gproc
 from sklearn import metrics
 import time
 warnings.simplefilter("ignore")
