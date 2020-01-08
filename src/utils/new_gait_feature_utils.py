@@ -116,8 +116,9 @@ def calculate_number_of_steps_per_window(data, orientation):
     """
     A modified function to calculate number of steps per 2.5 seconds window chunk
     parameter: 
-    `filepath`    : time-series (filepath)
-    `orientation` : coordinate orientation of the time series
+        `filepath`    : time-series (filepath)
+        `orientation` : coordinate orientation of the time series
+    
     returns number of steps per chunk based on each recordIds
     """
     
@@ -175,46 +176,12 @@ def calculate_number_of_steps_per_window(data, orientation):
         return mean_heel_strikes_per_chunk
     
     
-def calculate_rotation(data, orientation):
-    """
-    function to calculate rotational movement gyroscope AUC * period of zero crossing
-    parameter:
-    `data`  : pandas dataframe
-    `orient`: orientation (string)
-    returns dataframe of calculation of auc and aucXt
-    """
-    start = 0
-    dict_list = {}
-    dict_list["td"] = []
-    dict_list["auc"] = []
-    dict_list["turn_duration"] = []
-    dict_list["aucXt"] = []
-    data[orientation] = butter_lowpass_filter(data = data[orientation], 
-                                            sample_rate = 100, 
-                                            cutoff=2, 
-                                            order=2)
-    zcr_list = detect_zero_crossing(data[orientation].values)
-    for i in zcr_list: 
-        x = data["td"].iloc[start:i+1].values
-        y = data[orientation].iloc[start:i+1].values
-        turn_duration = data["td"].iloc[i+1] - data["td"].iloc[start]
-        start  = i + 1
-        if (len(y) >= 2):
-            auc   = np.abs(metrics.auc(x,y)) 
-            aucXt = auc * turn_duration
-            dict_list["td"].append(x[-1])
-            dict_list["turn_duration"].append(turn_duration)
-            dict_list["auc"].append(auc)
-            dict_list["aucXt"].append(aucXt)
-    data = pd.DataFrame(dict_list)
-    return data
-
-
 def get_rotational_features(data, orientation):
     """
     Function to retrieve rotational features
     parameter:
-    `data`: pandas dataframe
+        `data`: pandas dataframe
+    
     return a dataframe containing rotational features
     """
     if isinstance(data, str):
@@ -255,7 +222,8 @@ def separate_array_sequence(array):
     """
     function to separate array sequence
     parameter:
-    `array`: np.array, or a list
+        `array`: np.array, or a list
+    
     returns a numpy array groupings of sequences
     """
     seq2 = array
@@ -266,14 +234,71 @@ def separate_array_sequence(array):
     return groups
 
 
+def calculate_rotation(data, orientation):
+    """
+    function to calculate rotational movement gyroscope AUC * period of zero crossing
+    note: filter order of 2 is used based on research paper (common butterworth filter), 
+            cutoff frequency of 2 is used to smoothen the signal for recognizing 
+            area under the curve more
+    parameter:
+        `data`       : pandas dataframe
+        `orientation`: orientation (string)
+    
+    returns dataframe of calculation of auc and aucXt
+    """
+    start = 0
+    dict_list = {}
+    dict_list["td"] = []
+    dict_list["auc"] = []
+    dict_list["turn_duration"] = []
+    dict_list["aucXt"] = []
+    data[orientation] = butter_lowpass_filter(data = data[orientation], 
+                                                    sample_rate = 100, 
+                                                    cutoff=2, 
+                                                    order=2)
+    zcr_list = detect_zero_crossing(data[orientation].values)
+    list_rotation = []
+    turn_window = 0
+    for i in zcr_list: 
+        x = data["td"].iloc[start:i+1].values
+        y = data[orientation].iloc[start:i+1].values
+        turn_duration = data["td"].iloc[i+1] - data["td"].iloc[start]
+        start  = i + 1
+        if (len(y) >= 2):
+            auc   = np.abs(metrics.auc(x,y)) 
+            aucXt = auc * turn_duration
+            omega = auc / turn_duration
+            if aucXt > 2:
+                turn_window += 1
+                list_rotation.append({
+                    "turn_start": x[0],
+                    "turn_end":  x[-1],
+                    "turn_duration": turn_duration,
+                    "auc": auc, ## radian
+                    "omega": omega, ## radian/secs 
+                    "aucXt":aucXt, ## radian . secs (based on research paper)
+                    "turn_window": turn_window
+                })
+    if len(list_rotation) == 0:
+        return "#ERROR"
+    return list_rotation
+
+def compute_rotational_features(filepath, orientation):
+    rotation_ts = query.get_sensor_ts_from_filepath(filepath = filepath, 
+                                                    sensor = "rotationRate")
+    if not isinstance(rotation_ts, pd.DataFrame):
+        return "#ERROR"
+    rotation_ts = calculate_rotation(rotation_ts, "y")
+    return rotation_ts
+
+
 def gait_processor_pipeline(filepath, orientation):
     """
     Function of data pipeline for subsetting data from rotational movements, retrieving rotational features, 
     removing low-variance longitudinal data and PDKIT estimation of heel strikes based on 2.5 secs window chunks
     parameters:
-    
-    `data`: string of pathfile, or pandas dataframe
-    `orientation`: orientation of featurized data
+        `data`       : string of pathfile, or pandas dataframe
+        `orientation`: orientation of featurized data
     
     returns a featurized dataframe of rotational features and number of steps per window sizes
     """    
@@ -391,12 +416,16 @@ def gait_processor_pipeline(filepath, orientation):
         feature_dict["rotation.max_duration"]  = 0
     return feature_dict
 
-def featurize_wrapper(data):
+def pdkit_gait_featurize_wrapper(data):
     """
     wrapper function for multiprocessing jobs
     parameter:
     `data`: takes in pd.DataFrame
     returns a json file featurized data
     """
-    data["walk_features"] = data["walk_motion.json_pathfile"].apply(gait_processor_pipeline, orientation = "y")
+    data["gait.pdkit_features"] = data["walk_motion.json_pathfile"].apply(gait_processor_pipeline, orientation = "y")
+    return data
+
+def rotation_gait_featurize_wrapper(data):
+    data["gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(compute_rotational_features, orientation = "y")
     return data

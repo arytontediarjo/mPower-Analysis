@@ -15,6 +15,8 @@ warnings.simplefilter("ignore")
 
 def main():
     syn = sc.login()
+
+    ## gather matched demographics ## 
     matched_demographic = query.get_file_entity(syn, "syn21482502")
 
     ## healthcode from version 1 ##
@@ -36,11 +38,23 @@ def main():
                                                     "syn12514611", 
                                                     "MPOWER_V2", 
                                                     healthCodes = hc_arr_v2)
-    path_data = pd.concat([query_data_v1, query_data_v2]).reset_index(drop = True)                                             
-    path_data = query.parallel_func_apply(path_data, gproc.featurize_wrapper, 16, 250)
-    query.save_data_to_synapse(syn = syn, data = path_data, 
-                            output_filename = "new_gait_features_matched2.csv",
-                            data_parent_id = "syn20816722")
+    data = pd.concat([query_data_v1, query_data_v2]).reset_index(drop = True)                                             
+    data = query.parallel_func_apply(data, gproc.rotation_gait_featurize_wrapper, 16, 250)
+
+
+    # pdkit_data = query.normalize_list_dicts_to_dataframe_rows(data, ["gait.pdkit_features"]) 
+
+    # ## save data to synapse ##
+    # query.save_data_to_synapse(syn = syn, data = pdkit_data, 
+    #                         output_filename = "new_gait_features_matched2.csv",
+    #                         data_parent_id = "syn20816722")                                                        
+
+    rotation_data = query.normalize_list_dicts_to_dataframe_rows(data, ["gait.rotational_features"])    
+    ## save data to synapse ##
+    query.save_data_to_synapse(syn = syn, data = rotation_data, 
+                                output_filename = "new_rotational_features_matched2.csv",
+                                data_parent_id = "syn20816722")
+
 
 if __name__ ==  '__main__': 
     start_time = time.time()

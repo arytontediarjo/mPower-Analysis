@@ -160,7 +160,7 @@ def compute_gait_feature_per_window(data, orientation):
         i = i + 1
 
     ## on each time-window chunk collect data into numpy array
-        ts_arr.append({"time": time, 
+        ts_arr.append({"axis": orientation, 
                     "steps": heel_strikes, 
                     "cadence": heel_strikes/(window_size/100),
                     "variance": var,
@@ -238,10 +238,7 @@ def gait_processor_pipeline(filepath, orientation):
     if not isinstance(rotation_ts, pd.DataFrame):
         return "#ERROR"
 
-    acceleration_fs = accel_ts.shape[0]/accel_ts["td"][-1]
-    rotation_fs = rotation_ts.shape[0]/rotation_ts["td"][-1]
     rotation_ts = calculate_rotation(rotation_ts, "y")
-    rotation_occurences = rotation_ts[rotation_ts["aucXt"] > 2]
     data = create_overlay_data(accel_ts, rotation_ts)
     data = data.reset_index()
     walking_seqs = separate_array_sequence(np.where(data["aucXt"]<2)[0])
@@ -249,8 +246,9 @@ def gait_processor_pipeline(filepath, orientation):
     for seqs in walking_seqs:
         data_seqs = data.loc[seqs[0]:seqs[-1]].set_index("time")
         gait_feature_arr.append(compute_gait_feature_per_window(data = data_seqs, 
-                                                                     orientation = orientation))
+                                                                orientation = orientation))
     return [j for i in gait_feature_arr for j in i]
+
 
 def detect_zero_crossing(array):
     """
@@ -265,9 +263,13 @@ def detect_zero_crossing(array):
 def calculate_rotation(data, orientation):
     """
     function to calculate rotational movement gyroscope AUC * period of zero crossing
+    note: filter order of 2 is used based on research paper (common butterworth filter), 
+            cutoff frequency of 2 is used to smoothen the signal for recognizing 
+            area under the curve more
     parameter:
-    `data`  : pandas dataframe
-    `orient`: orientation (string)
+        `data`       : pandas dataframe
+        `orientation`: orientation (string)
+    
     returns dataframe of calculation of auc and aucXt
     """
     start = 0
@@ -277,10 +279,12 @@ def calculate_rotation(data, orientation):
     dict_list["turn_duration"] = []
     dict_list["aucXt"] = []
     data[orientation] = butter_lowpass_filter(data = data[orientation], 
-                                            sample_rate = 100, 
-                                            cutoff=2, 
-                                            order=2)
+                                                    sample_rate = 100, 
+                                                    cutoff=2, 
+                                                    order=2)
     zcr_list = detect_zero_crossing(data[orientation].values)
+    list_rotation = []
+    turn_window = 0
     for i in zcr_list: 
         x = data["td"].iloc[start:i+1].values
         y = data[orientation].iloc[start:i+1].values
@@ -289,22 +293,43 @@ def calculate_rotation(data, orientation):
         if (len(y) >= 2):
             auc   = np.abs(metrics.auc(x,y)) 
             aucXt = auc * turn_duration
-            dict_list["td"].append(x[-1])
-            dict_list["turn_duration"].append(turn_duration)
-            dict_list["auc"].append(auc)
-            dict_list["aucXt"].append(aucXt)
-    data = pd.DataFrame(dict_list)
-    return data
+            omega = auc / turn_duration
+            if aucXt > 2:
+                turn_window += 1
+                list_rotation.append({
+                    "turn_start": x[0],
+                    "turn_end":  x[-1],
+                    "axis": orientation,
+                    "turn_duration": turn_duration,
+                    "auc": auc, ## radian
+                    "omega": omega, ## radian/secs 
+                    "aucXt":aucXt, ## radian . secs (based on research paper)
+                    "turn_window": turn_window
+                })
+    if len(list_rotation) == 0:
+        return "#ERROR"
+    return list_rotation
 
-def featurize_wrapper(data):
+def compute_rotational_features(filepath, orientation):
+    rotation_ts = query.get_sensor_ts_from_filepath(filepath = filepath, 
+                                                    sensor = "rotationRate")
+    if not isinstance(rotation_ts, pd.DataFrame):
+        return "#ERROR"
+    rotation_ts = calculate_rotation(rotation_ts, "y")
+    return rotation_ts
+
+def pdkit_gait_featurize_wrapper(data):
     """
     wrapper function for multiprocessing jobs
     parameter:
     `data`: takes in pd.DataFrame
     returns a json file featurized data
     """
-    data["walk_features"] = data["walk_motion.json_pathfile"].apply(gait_processor_pipeline, orientation = "y")
+    data["gait.pdkit_features"] = data["walk_motion.json_pathfile"].apply(gait_processor_pipeline, orientation = "y")
     return data
 
+def rotation_gait_featurize_wrapper(data):
+    data["gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(compute_rotational_features, orientation = "y")
+    return data
 
 

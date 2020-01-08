@@ -232,13 +232,13 @@ def save_data_to_synapse(syn,
         os.remove(path_to_output_filename)
 
   
-def normalize_dict_features(data, features):
+def normalize_dict_to_column_features(data, features):
     """
     Function to normalize column that conatins dictionaries into separate columns
     in the dataframe
     parameter: 
     `data`    : pandas DataFrame       
-    `feature` : list of dict target features for normalization 
+    `features` : list of dict target features for normalization 
     returns a normalized dataframe with column containing dictionary normalized
     """
     for feature in features:
@@ -249,7 +249,23 @@ def normalize_dict_features(data, features):
         data = pd.concat([data, normalized_data], axis = 1).drop([feature, "%s.0"%feature], axis = 1)
     return data
 
+def normalize_list_dicts_to_dataframe_rows(data, features):
+    """
+    Function to normalize list of dicts into dataframe of rows
+    parameter:
+        `data`: pandas DataFrame
+        `features`: a list of features for normalization to rows
+    return a normalized dataframe with new rows from normalize list of dicts
+    """
+    for feature in features:
+        data = (pd.concat({i: pd.DataFrame(x) for i, x in data[feature].items()})
+                 .reset_index(level=1, drop=True)
+                 .join(data).drop([feature], axis = 1)
+                 .reset_index(drop = True)
+                 .add_prefix("{}.".format(feature)))
+    return data
 
+ 
 def fix_column_name(data):
     """
     Function to fix column names to be consistent accross differnt tables
