@@ -38,7 +38,7 @@ def main():
                                                     healthCodes = hc_arr_v2)
     path_data = pd.concat([query_data_v1, query_data_v2]).reset_index(drop = True)                                             
     path_data = query.parallel_func_apply(path_data, gproc.featurize_wrapper, 16, 250)
-    query.save_data_to_synapse(syn = syn, data = data, 
+    query.save_data_to_synapse(syn = syn, data = path_data, 
                             output_filename = "new_gait_features_matched2.csv",
                             data_parent_id = "syn20816722")
 
