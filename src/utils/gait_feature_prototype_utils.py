@@ -159,14 +159,14 @@ def compute_rotational_features(data, orientation):
             turn_window += 1
             if aucXt > 2:
                 list_rotation.append({
-                        "rotation_start": x[0],
-                        "rotation_end":  x[-1],
                         "axis": orientation,
                         "turn_duration": turn_duration,
                         "auc": auc, ## radian
                         "omega": omega, ## radian/secs 
                         "aucXt":aucXt, ## radian . secs (based on research paper)
-                        "rotation_window": turn_window
+                        "window_start": x[0],
+                        "window_end":  x[-1],
+                        "window_duration": turn_window
                 })
     return list_rotation
 
@@ -181,7 +181,7 @@ def separate_dataframe_by_rotation(accel_data, rotation_data):
         data_chunk["chunk1"] = accel_data
         return data_chunk
     rotation_data = pd.DataFrame(rotation_data)
-    for start, end in rotation_data[["turn_start", "turn_end"]].values:
+    for start, end in rotation_data[["window_start", "window_end"]].values:
         if last_stop > start:
             raise Exception("Rotational sequence is overlapping or distorted")  
         ## edge case -> rotation starts at zero ##
