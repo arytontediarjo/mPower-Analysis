@@ -168,8 +168,6 @@ def compute_rotational_features(data, orientation):
                         "window_end":  x[-1],
                         "window_duration": turn_window
                 })
-        if len(list_rotation) == 0:
-            list_rotation = "#ERROR"
     return list_rotation
 
 def separate_dataframe_by_rotation(accel_data, rotation_data):
@@ -341,6 +339,8 @@ def rotation_feature_pipeline(filepath, orientation):
     if not isinstance(rotation_ts, pd.DataFrame):
         return "#ERROR"
     rotation_ts = compute_rotational_features(rotation_ts, orientation)
+    if len(rotation_ts) == 0:
+        return "#ERROR"
     return rotation_ts
 
 def pdkit_featurize_wrapper(data):
