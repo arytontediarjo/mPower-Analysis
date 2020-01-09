@@ -39,8 +39,11 @@ def create_overlay_data(accel_data, rotation_data):
     """
     Function to overlay acceleration data and rotational data
     """
-    test = pd.merge(accel_data, rotation_data, 
-                    left_on = "td", how = "left")
+    test = pd.merge(accel_data, 
+                    rotation_data, 
+                    left_on = "td", 
+                    right_on = "turn_end",
+                    how = "left")
     test["time"] = test["td"]
     test = test.set_index("time")
     test.index = pd.to_datetime(test.index, unit = "s")
