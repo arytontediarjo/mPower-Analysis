@@ -168,6 +168,8 @@ def compute_rotational_features(data, orientation):
                         "window_end":  x[-1],
                         "window_duration": turn_window
                 })
+        if len(list_rotation) == 0:
+            list_rotation = "#ERROR"
     return list_rotation
 
 def separate_dataframe_by_rotation(accel_data, rotation_data):
@@ -177,7 +179,7 @@ def separate_dataframe_by_rotation(accel_data, rotation_data):
     window = 1 
     last_stop = 0
     #if no rotation#
-    if len(rotation_data) == 0:
+    if rotation_data == "#ERROR" :
         data_chunk["chunk1"] = accel_data
         return data_chunk
     rotation_data = pd.DataFrame(rotation_data)
