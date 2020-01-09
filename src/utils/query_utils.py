@@ -262,7 +262,7 @@ def normalize_list_dicts_to_dataframe_rows(data, features):
                  .reset_index(level=1, drop=True)
                  .join(data).drop([feature], axis = 1)
                  .reset_index(drop = True)
-                 .add_prefix("{}.".format(feature)))
+                )
     return data
 
  
