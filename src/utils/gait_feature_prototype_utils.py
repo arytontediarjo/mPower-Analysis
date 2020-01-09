@@ -274,7 +274,7 @@ def compute_rotational_features(data, orientation):
         return "#ERROR"
     return list_rotation
 
-def pdkit_features_pipeline(filepath, orientation):
+def pdkit_feature_pipeline(filepath, orientation):
     """
     Function of data pipeline for subsetting data from rotational movements, retrieving rotational features, 
     removing low-variance longitudinal data and PDKIT estimation of heel strikes based on 2.5 secs window chunks
@@ -297,8 +297,8 @@ def pdkit_features_pipeline(filepath, orientation):
     if not isinstance(rotation_ts, pd.DataFrame):
         return "#ERROR"
 
-    rotation_ts = compute_rotational_features(rotation_ts, "y")
-    data = create_overlay_data(accel_ts, rotation_ts)
+    rotation_occurence = pd.DataFrame(compute_rotational_features(rotation_ts, "y"))
+    data = create_overlay_data(accel_ts, rotation_occurence)
     data = data.reset_index()
     walking_seqs = separate_array_sequence(np.where(data["aucXt"]<2)[0])
     gait_feature_arr = []
