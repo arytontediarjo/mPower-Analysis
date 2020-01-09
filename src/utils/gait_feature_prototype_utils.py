@@ -177,7 +177,7 @@ def separate_dataframe_by_rotation(accel_data, rotation_data):
     window = 1 
     last_stop = 0
     #if no rotation#
-    if rotation_data == "#ERROR" :
+    if len(rotation_data) == 0 :
         data_chunk["chunk1"] = accel_data
         return data_chunk
     rotation_data = pd.DataFrame(rotation_data)
