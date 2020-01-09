@@ -93,6 +93,7 @@ def subset_data_non_zero_runs(data, zero_runs_cutoff):
             z_runs_threshold.append(value)
     z_runs_threshold = np.array(z_runs_threshold)
     for i in z_runs_threshold:
+        print(z_runs_threshold)
         data = data.loc[~data.index.isin(range(i[0],i[1]))]
     return data.reset_index(drop = True)
 
