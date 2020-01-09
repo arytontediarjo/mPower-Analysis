@@ -35,22 +35,6 @@ def separate_array_sequence(array):
     groups = np.asarray(groups)
     return groups
 
-def create_overlay_data(accel_data, rotation_data):
-    """
-    Function to overlay acceleration data and rotational data
-    """
-    test = pd.merge(accel_data, 
-                    rotation_data, 
-                    left_on = "td", 
-                    right_on = "turn_end",
-                    how = "left")
-    test["time"] = test["td"]
-    test = test.set_index("time")
-    test.index = pd.to_datetime(test.index, unit = "s")
-    test["aucXt"] = test["aucXt"].fillna(method = "bfill").fillna(0)
-    test["turn_duration"] = test["turn_duration"].fillna(method = "bfill").fillna(0)
-    return test
-
 def butter_lowpass_filter(data, sample_rate, cutoff=10, order=4, plot=False):
     """
         `Low-pass filter <http://stackoverflow.com/questions/25191620/
@@ -91,96 +75,6 @@ def butter_lowpass_filter(data, sample_rate, cutoff=10, order=4, plot=False):
         plt.show()
     y = lfilter(b, a, data)
     return y
-
-
-
-def compute_gait_feature_per_window(data, orientation):
-    """
-    A modified function to calculate feature per 5 seconds window chunk
-    parameter: 
-    `filepath`    : time-series (filepath)
-    `orientation` : coordinate orientation of the time series
-    returns number of steps per chunk based on each recordIds
-    """
-    ts = data.copy()
-    window_size = 512
-    step_size = 100
-    jPos = window_size + 1
-    i = 0
-    ts_arr = []
-    while jPos < len(ts):
-        jStart = jPos - window_size
-        subset = ts.iloc[jStart:jPos]
-        window_duration = subset.td[-1] - subset.td[0]
-        sample_rate = subset.shape[0]/window_duration
-        print(sample_rate)
-        gp = pdkit.GaitProcessor(duration = window_duration,
-                                    cutoff_frequency = 5,
-                                    filter_order = 4,
-                                    delta = 0.5, 
-                                    sampling_frequency = 100)
-        var = subset[orientation].var()
-        try:
-            if (var) < 1e-2:
-                heel_strikes = 0
-            else:
-                heel_strikes = len(gp.heel_strikes(subset[orientation])[1])
-        except:
-            heel_strikes = 0  
-        try:
-            gait_step_regularity = gp.gait_regularity_symmetry(subset[orientation])[0]
-        except:
-            gait_step_regularity = 0
-        try:
-            gait_stride_regularity = gp.gait_regularity_symmetry(subset[orientation])[1]
-        except:
-            gait_stride_regularity = 0
-        try:
-            gait_symmetry = gp.gait_regularity_symmetry(subset[orientation])[2]
-        except:
-            gait_symmetry = 0
-        try:
-            frequency_of_peaks = gp.frequency_of_peaks(subset[orientation])
-        except:
-            frequency_of_peaks = 0
-        try:
-            freeze_index_arr = gp.freeze_of_gait(subset[orientation])[1]
-            min_freeze_index = np.min(freeze_index_arr)
-            max_freeze_index = np.max(freeze_index_arr)
-            mean_freeze_index = np.mean(freeze_index_arr)
-            freeze_occurences = \
-                (sum(i > 2.5 for i in gp.freeze_of_gait(subset[orientation])[1]))
-        except:
-            min_freeze_index = 0
-            max_freeze_index = 0
-            mean_freeze_index = 0
-            freeze_occurences = 0
-        try:
-            speed_of_gait = gp.speed_of_gait(subset[orientation], wavelet_level = 6)
-        except:
-            speed_of_gait = 0
-        jPos = jPos + step_size
-        i = i + 1
-
-    ## on each time-window chunk collect data into numpy array
-        ts_arr.append({"axis": orientation, 
-                    "steps": heel_strikes, 
-                    "cadence": heel_strikes/(window_size/100),
-                    "variance": var,
-                    "gait_step_regularity":gait_step_regularity,
-                    "gait_stride_regularity":gait_stride_regularity,
-                    "gait_symmetry":gait_symmetry,
-                    "frequency_of_peaks":frequency_of_peaks,
-                    "max_energy_freeze_index":max_freeze_index,
-                    "mean_energy_freeze_index":mean_freeze_index,
-                    "min_energy_freeze_index":min_freeze_index,
-                    "freeze_occurences": freeze_occurences,
-                    "freeze_occurences_per_sec": freeze_occurences/(window_size/100),
-                    "speed_of_gait": speed_of_gait,
-                    "window_duration": window_duration,                    
-                    "window_end": subset.td[-1],
-                    "window_start": subset.td[0]})
-    return ts_arr
 
 
 def subset_data_non_zero_runs(data, zero_runs_cutoff):
@@ -263,19 +157,152 @@ def compute_rotational_features(data, orientation):
             aucXt = auc * turn_duration
             omega = auc / turn_duration
             turn_window += 1
-            list_rotation.append({
-                    "turn_start": x[0],
-                    "turn_end":  x[-1],
-                    "axis": orientation,
-                    "turn_duration": turn_duration,
-                    "auc": auc, ## radian
-                    "omega": omega, ## radian/secs 
-                    "aucXt":aucXt, ## radian . secs (based on research paper)
-                    "turn_window": turn_window
+            if aucXt > 2:
+                list_rotation.append({
+                        "rotation_start": x[0],
+                        "rotation_end":  x[-1],
+                        "axis": orientation,
+                        "turn_duration": turn_duration,
+                        "auc": auc, ## radian
+                        "omega": omega, ## radian/secs 
+                        "aucXt":aucXt, ## radian . secs (based on research paper)
+                        "rotation_window": turn_window
                 })
-    if len(list_rotation) == 0:
-        return "#ERROR"
     return list_rotation
+
+def separate_dataframe_by_rotation(accel_data, rotation_data):
+    if (not isinstance(accel_data, pd.DataFrame)):
+        raise Exception("please use dataframe for acceleration")
+    data_chunk = {}
+    window = 1 
+    last_stop = 0
+    #if no rotation#
+    if len(rotation_data) == 0:
+        data_chunk["chunk1"] = accel_data
+        return data_chunk
+    rotation_data = pd.DataFrame(rotation_data)
+    for start, end in rotation_data[["turn_start", "turn_end"]].values:
+        if last_stop > start:
+            raise Exception("Rotational sequence is overlapping or distorted")  
+        ## edge case -> rotation starts at zero ##
+        if start <= 0:
+            last_stop = end
+            continue
+        ## edge case -> if rotation is overlapping ##
+        if last_stop == start:
+            last_stop = end
+            continue
+        ## ideal case ## 
+        data_chunk["chunk%s"%window] = accel_data[(accel_data["td"]<=start) & (accel_data["td"]>=last_stop)]
+        last_stop = end
+        window += 1
+    ## edge case -> after the last rotation ## 
+    if last_stop < accel_data["td"][-1]:
+        data_chunk["chunk%s"%str(window)] = accel_data[(accel_data["td"]>=end)]
+    return data_chunk
+
+def compute_pdkit_feature_per_window(data, orientation):
+    """
+    A modified function to calculate feature per 5 seconds window chunk
+    parameter: 
+    `filepath`    : time-series (filepath)
+    `orientation` : coordinate orientation of the time series
+    returns number of steps per chunk based on each recordIds
+    """
+    ts = data.copy()
+    window_size = 512
+    step_size   = 50
+    jPos        = window_size + 1
+    ts_arr      = []
+    i           = 0
+    if len(ts) < jPos:
+        print(ts.shape[0]/ts["td"][-1])
+        ts_arr.append(generate_pdkit_features_in_dict(ts, "y"))
+        return ts_arr
+    while jPos < len(ts):
+        jStart = jPos - window_size
+        subset = ts.iloc[jStart:jPos]
+        ts_arr.append(generate_pdkit_features_in_dict(subset, "y"))
+        jPos += step_size
+        i = i + 1
+    return ts_arr
+
+def generate_pdkit_features_in_dict(data, orientation):
+    """
+    Function to generate pdkit features given orientation
+    """
+    window_duration = data.td[-1] - data.td[0]
+    sample_rate = data.shape[0]/window_duration
+    print(sample_rate)
+    var = data[orientation].var()
+    gp = pdkit.GaitProcessor(duration = window_duration,
+                                    cutoff_frequency = 5,
+                                    filter_order = 4,
+                                    delta = 0.5, 
+                                    sampling_frequency = 100)
+    
+    try:
+        if (var) < 1e-2:
+            heel_strikes = 0
+        else:
+            heel_strikes = len(gp.heel_strikes(data[orientation])[1])
+    except:
+        heel_strikes = 0  
+    try:
+        gait_step_regularity = gp.gait_regularity_symmetry(data[orientation])[0]
+    except:
+        gait_step_regularity = 0
+    try:
+        gait_stride_regularity = gp.gait_regularity_symmetry(data[orientation])[1]
+    except:
+        gait_stride_regularity = 0
+    try:
+        gait_symmetry = gp.gait_regularity_symmetry(data[orientation])[2]
+    except:
+        gait_symmetry = 0
+    try:
+        frequency_of_peaks = gp.frequency_of_peaks(data[orientation])
+    except:
+        frequency_of_peaks = 0
+    try:
+        freeze_index_arr = gp.freeze_of_gait(data[orientation])[1]
+        min_freeze_index = np.min(freeze_index_arr)
+        max_freeze_index = np.max(freeze_index_arr)
+        mean_freeze_index = np.mean(freeze_index_arr)
+        freeze_occurences = \
+            (sum(i > 2.5 for i in gp.freeze_of_gait(data[orientation])[1]))
+    except:
+        min_freeze_index  = 0
+        max_freeze_index  = 0
+        mean_freeze_index = 0
+        freeze_occurences = 0
+    try:
+        speed_of_gait = gp.speed_of_gait(data[orientation], wavelet_level = 6)
+    except:
+        speed_of_gait = 0
+
+## on each time-window chunk collect data into numpy array
+    pdkit_feat_dict = {"axis": orientation, 
+                        "steps": heel_strikes, 
+                        "cadence": heel_strikes/(window_duration),
+                        "variance": var,
+                        "gait_step_regularity":gait_step_regularity,
+                        "gait_stride_regularity":gait_stride_regularity,
+                        "gait_symmetry":gait_symmetry,
+                        "frequency_of_peaks":frequency_of_peaks,
+                        "max_energy_freeze_index":max_freeze_index,
+                        "mean_energy_freeze_index":mean_freeze_index,
+                        "min_energy_freeze_index":min_freeze_index,
+                        "freeze_occurences": freeze_occurences,
+                        "freeze_occurences_per_sec": freeze_occurences/(window_duration),
+                        "speed_of_gait": speed_of_gait,
+                        "window_duration": window_duration,                    
+                        "window_end": data.td[-1],
+                        "window_start": data.td[0]}
+    return pdkit_feat_dict
+    
+
+
 
 def pdkit_feature_pipeline(filepath, orientation):
     """
@@ -292,22 +319,16 @@ def pdkit_feature_pipeline(filepath, orientation):
                                         sensor = "userAcceleration")
     rotation_ts = query.get_sensor_ts_from_filepath(filepath = filepath, 
                                         sensor = "rotationRate")
-    
     # return errors # 
     if not isinstance(accel_ts, pd.DataFrame):
         return "#ERROR"
-    
     if not isinstance(rotation_ts, pd.DataFrame):
         return "#ERROR"
-
-    rotation_occurence = pd.DataFrame(compute_rotational_features(rotation_ts, "y"))
-    data = create_overlay_data(accel_ts, rotation_occurence)
-    data = data.reset_index()
-    walking_seqs = separate_array_sequence(np.where(data["aucXt"]<2)[0])
+    rotation_occurence = compute_rotational_features(rotation_ts, "y")
+    gait_dict = separate_dataframe_by_rotation(accel_ts, rotation_occurence)
     gait_feature_arr = []
-    for seqs in walking_seqs:
-        data_seqs = data.loc[seqs[0]:seqs[-1]].set_index("time")
-        gait_feature_arr.append(compute_gait_feature_per_window(data = data_seqs, 
+    for chunks in gait_dict.keys():
+        gait_feature_arr.append(compute_pdkit_feature_per_window(data = gait_dict[chunks], 
                                                                 orientation = orientation))
     return [j for i in gait_feature_arr for j in i]
 
@@ -328,7 +349,7 @@ def pdkit_featurize_wrapper(data):
     `data`: takes in pd.DataFrame
     returns a json file featurized data
     """
-    data["gait.pdkit_features"] = data["walk_motion.json_pathfile"].apply(pdkit_features_pipeline, 
+    data["gait.pdkit_features"] = data["walk_motion.json_pathfile"].apply(pdkit_feature_pipeline, 
                                                                             orientation = "y")
     return data
 
