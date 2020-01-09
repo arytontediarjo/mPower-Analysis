@@ -315,6 +315,7 @@ def rotation_feature_pipeline(filepath, orientation):
     if not isinstance(rotation_ts, pd.DataFrame):
         return "#ERROR"
     rotation_ts = compute_rotational_features(rotation_ts, orientation)
+    rotation_ts = list(filter(lambda d: d['aucXt'] > 2, rotation_ts))
     return rotation_ts
 
 def pdkit_featurize_wrapper(data):
@@ -324,11 +325,13 @@ def pdkit_featurize_wrapper(data):
     `data`: takes in pd.DataFrame
     returns a json file featurized data
     """
-    data["gait.pdkit_features"] = data["walk_motion.json_pathfile"].apply(pdkit_features_pipeline, orientation = "y")
+    data["gait.pdkit_features"] = data["walk_motion.json_pathfile"].apply(pdkit_features_pipeline, 
+                                                                            orientation = "y")
     return data
 
 def rotation_featurize_wrapper(data):
-    data["gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(rotation_feature_pipeline, orientation = "y")
+    data["gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(rotation_feature_pipeline, 
+                                                                                orientation = "y")
     return data
 
 

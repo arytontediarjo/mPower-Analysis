@@ -426,6 +426,6 @@ def pdkit_gait_featurize_wrapper(data):
     data["gait.pdkit_features"] = data["walk_motion.json_pathfile"].apply(gait_processor_pipeline, orientation = "y")
     return data
 
-def rotation_gait_featurize_wrapper(data):
-    data["gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(compute_rotational_features, orientation = "y")
+def rotation_featurize_wrapper(data):
+    data["rotational.gait_features"] = data["walk_motion.json_pathfile"].apply(compute_rotational_features, orientation = "y")
     return data
