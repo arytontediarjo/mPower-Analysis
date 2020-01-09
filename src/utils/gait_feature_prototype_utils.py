@@ -39,7 +39,8 @@ def create_overlay_data(accel_data, rotation_data):
     """
     Function to overlay acceleration data and rotational data
     """
-    test = pd.merge(accel_data, rotation_data, on = "td", how = "left")
+    test = pd.merge(accel_data, rotation_data, 
+                    left_on = "td", how = "left")
     test["time"] = test["td"]
     test = test.set_index("time")
     test.index = pd.to_datetime(test.index, unit = "s")
@@ -258,9 +259,8 @@ def compute_rotational_features(data, orientation):
             auc   = np.abs(metrics.auc(x,y)) 
             aucXt = auc * turn_duration
             omega = auc / turn_duration
-            if aucXt > 2:
-                turn_window += 1
-                list_rotation.append({
+            turn_window += 1
+            list_rotation.append({
                     "turn_start": x[0],
                     "turn_end":  x[-1],
                     "axis": orientation,
