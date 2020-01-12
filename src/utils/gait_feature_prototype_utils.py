@@ -123,7 +123,7 @@ def detect_zero_crossing(array):
     zero_crossings = np.where(np.diff(np.sign(array)))[0]
     return zero_crossings
 
-def compute_rotational_features(data, orientation):
+def compute_rotational_features(accel_data, rotation_data, orientation):
     """
     function to calculate rotational movement gyroscope AUC * period of zero crossing
     note: filter order of 2 is used based on research paper (common butterworth filter), 
@@ -135,13 +135,6 @@ def compute_rotational_features(data, orientation):
     
     returns dataframe of calculation of auc and aucXt
     """
-    rotation_data = query.get_sensor_ts_from_filepath(data, "rotationRate")
-    accel_data = query.get_sensor_ts_from_filepath(data, "userAcceleration")
-    
-    if not isinstance(rotation_data, pd.DataFrame):
-        return "#ERROR"
-    if not isinstance(accel_data, pd.DataFrame):
-        return "#ERROR"
     
     
     start = 0
@@ -154,12 +147,6 @@ def compute_rotational_features(data, orientation):
                                                         sample_rate = 100, 
                                                         cutoff=2, 
                                                         order=2)
-    
-    gp_accel = pdkit.GaitProcessor(duration = window_duration,
-                                cutoff_frequency = 5,
-                                filter_order = 4,
-                                delta = 0.5, 
-                                sampling_frequency = 100)
     
     zcr_list = detect_zero_crossing(rotation_data[orientation].values)
     list_rotation = []
@@ -325,6 +312,29 @@ def generate_pdkit_features_in_dict(data, orientation):
                         "window_end": data.td[-1],
                         "window_start": data.td[0]}
     return pdkit_feat_dict
+
+def calculate_freeze_index(data):
+    """modified pdkit FoG to run with window as it goes"""
+    loco_band=[0.5, 3]
+    freeze_band=[3, 8]
+    window_size = 256
+    sampling_frequency = 100
+    f_res = sampling_frequency / window_size
+    f_nr_LBs = int(loco_band[0] / f_res)
+    f_nr_LBe = int(loco_band[1] / f_res)
+    f_nr_FBs = int(freeze_band[0] / f_res)
+    f_nr_FBe = int(freeze_band[1] / f_res)
+    data = data.values - np.mean(data.values)
+    
+    Y = np.fft.fft(data, int(window_size))
+    Pyy = abs(Y*Y) / window_size
+    areaLocoBand = numerical_integration( Pyy[f_nr_LBs-1 : f_nr_LBe], sampling_frequency)
+    areaFreezeBand = numerical_integration( Pyy[f_nr_FBs-1 : f_nr_FBe], sampling_frequency)
+    
+    sumLocoFreeze = areaFreezeBand + areaLocoBand
+    freezeIndex = areaFreezeBand / areaLocoBand
+    
+    return freezeIndex, sumLocoFreeze
     
 
 
@@ -359,11 +369,11 @@ def pdkit_feature_pipeline(filepath, orientation):
 
 
 def rotation_feature_pipeline(filepath, orientation):
-    rotation_ts = query.get_sensor_ts_from_filepath(filepath = filepath, 
-                                                    sensor = "rotationRate")
+    rotation_ts = query.get_sensor_ts_from_filepath(data, "rotationRate")
+    accel_ts = query.get_sensor_ts_from_filepath(data, "userAcceleration")                                  
     if not isinstance(rotation_ts, pd.DataFrame):
         return "#ERROR"
-    rotation_ts = compute_rotational_features(rotation_ts, orientation)
+    rotation_ts = compute_rotational_features(accel_ts, rotation_ts, orientation)
     if len(rotation_ts) == 0:
         return "#ERROR"
     return rotation_ts
