@@ -18,6 +18,23 @@ import time
 from itertools import *
 from sklearn import metrics
 import time
+
+from scipy import interpolate, signal, fft
+from scipy.fftpack import rfft
+from pywt import wavedec
+
+from pdkit.utils import (load_data,
+                        numerical_integration, 
+                        autocorrelation,
+                        peakdet,
+                        compute_interpeak,
+                        butter_lowpass_filter,
+                        crossings_nonzero_pos2neg,
+                        autocorrelate,
+                        get_signal_peaks_and_prominences,
+                        BellmanKSegment)
+
+
 warnings.simplefilter("ignore")
 
 
@@ -359,7 +376,7 @@ def pdkit_feature_pipeline(filepath, orientation):
         return "#ERROR"
     if not isinstance(rotation_ts, pd.DataFrame):
         return "#ERROR"
-    rotation_occurence = compute_rotational_features(rotation_ts, "y")
+    rotation_occurence = compute_rotational_features(accel_ts, rotation_ts, "y")
     gait_dict = separate_dataframe_by_rotation(accel_ts, rotation_occurence)
     gait_feature_arr = []
     for chunks in gait_dict.keys():
@@ -369,8 +386,8 @@ def pdkit_feature_pipeline(filepath, orientation):
 
 
 def rotation_feature_pipeline(filepath, orientation):
-    rotation_ts = query.get_sensor_ts_from_filepath(data, "rotationRate")
-    accel_ts = query.get_sensor_ts_from_filepath(data, "userAcceleration")                                  
+    rotation_ts = query.get_sensor_ts_from_filepath(filepath, "rotationRate")
+    accel_ts = query.get_sensor_ts_from_filepath(filepath, "userAcceleration")                                  
     if not isinstance(rotation_ts, pd.DataFrame):
         return "#ERROR"
     rotation_ts = compute_rotational_features(accel_ts, rotation_ts, orientation)
