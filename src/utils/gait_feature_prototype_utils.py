@@ -135,39 +135,63 @@ def compute_rotational_features(data, orientation):
     
     returns dataframe of calculation of auc and aucXt
     """
+    rotation_data = query.get_sensor_ts_from_filepath(data, "rotationRate")
+    accel_data = query.get_sensor_ts_from_filepath(data, "userAcceleration")
+    
+    if not isinstance(rotation_data, pd.DataFrame):
+        return "#ERROR"
+    if not isinstance(accel_data, pd.DataFrame):
+        return "#ERROR"
+    
+    
     start = 0
     dict_list = {}
     dict_list["td"] = []
     dict_list["auc"] = []
     dict_list["turn_duration"] = []
     dict_list["aucXt"] = []
-    data[orientation] = butter_lowpass_filter(data = data[orientation], 
-                                                    sample_rate = 100, 
-                                                    cutoff=2, 
-                                                    order=2)
-    zcr_list = detect_zero_crossing(data[orientation].values)
+    rotation_data[orientation] = butter_lowpass_filter(data = rotation_data[orientation], 
+                                                        sample_rate = 100, 
+                                                        cutoff=2, 
+                                                        order=2)
+    
+    gp_accel = pdkit.GaitProcessor(duration = window_duration,
+                                cutoff_frequency = 5,
+                                filter_order = 4,
+                                delta = 0.5, 
+                                sampling_frequency = 100)
+    
+    zcr_list = detect_zero_crossing(rotation_data[orientation].values)
     list_rotation = []
     turn_window = 0
     for i in zcr_list: 
-        x = data["td"].iloc[start:i+1].values
-        y = data[orientation].iloc[start:i+1].values
-        turn_duration = data["td"].iloc[i+1] - data["td"].iloc[start]
+        x_rot = rotation_data["td"].iloc[start:i+1]
+        y_rot = rotation_data[orientation].iloc[start:i+1]
+        y_accel = accel_data[orientation].iloc[start:i+1]
+        turn_duration = rotation_data["td"].iloc[i+1] - rotation_data["td"].iloc[start]
         start  = i + 1
-        if (len(y) >= 2):
-            auc   = np.abs(metrics.auc(x,y)) 
+        if (len(y_rot) >= 2):
+            auc   = np.abs(metrics.auc(x_rot,y_rot)) 
             aucXt = auc * turn_duration
             omega = auc / turn_duration
-            turn_window += 1
             if aucXt > 2:
+                turn_window += 1
+                if calculate_freeze_index(y_accel)[0] >= 2.5:
+                    freeze_occ = 1
+                else:
+                    freeze_occ = 0
+                
                 list_rotation.append({
                         "axis": orientation,
+                        "freeze_occ": freeze_occ,
+                        "freeze_mean": np.mean(calculate_freeze_index(y_accel)[0]),
                         "turn_duration": turn_duration,
                         "auc": auc, ## radian
                         "omega": omega, ## radian/secs 
                         "aucXt":aucXt, ## radian . secs (based on research paper)
-                        "window_start": x[0],
-                        "window_end":  x[-1],
-                        "window_duration": turn_window
+                        "window_start": x_rot[0],
+                        "window_end":  x_rot[-1],
+                        "num_window": turn_window
                 })
     return list_rotation
 
