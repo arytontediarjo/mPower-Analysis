@@ -28,7 +28,6 @@ from pdkit.utils import (load_data,
                         autocorrelation,
                         peakdet,
                         compute_interpeak,
-                        butter_lowpass_filter,
                         crossings_nonzero_pos2neg,
                         autocorrelate,
                         get_signal_peaks_and_prominences,
@@ -187,12 +186,11 @@ def compute_rotational_features(accel_data, rotation_data, orientation):
                 
                 list_rotation.append({
                         "axis": orientation,
-                        "freeze_occ": freeze_occ,
-                        "freeze_mean": np.mean(calculate_freeze_index(y_accel)[0]),
+                        "energy_freeze_index": calculate_freeze_index(y_accel)[0][0],
                         "turn_duration": turn_duration,
-                        "auc": auc, ## radian
+                        "auc": auc,     ## radian
                         "omega": omega, ## radian/secs 
-                        "aucXt":aucXt, ## radian . secs (based on research paper)
+                        "aucXt":aucXt,  ## radian . secs (based on research paper)
                         "window_start": x_rot[0],
                         "window_end":  x_rot[-1],
                         "num_window": turn_window
@@ -265,13 +263,13 @@ def generate_pdkit_features_in_dict(data, orientation):
     print(sample_rate)
     var = data[orientation].var()
     gp = pdkit.GaitProcessor(duration = window_duration,
-                                    cutoff_frequency = 5,
-                                    filter_order = 4,
-                                    delta = 0.5, 
-                                    sampling_frequency = 100)
+                            cutoff_frequency = 5,
+                            filter_order = 4,
+                            delta = 0.5, 
+                            sampling_frequency = 100)
     
     try:
-        if (var) < 1e-2:
+        if (var) < 1e-3:
             heel_strikes = 0
         else:
             heel_strikes = len(gp.heel_strikes(data[orientation])[1])
@@ -294,17 +292,13 @@ def generate_pdkit_features_in_dict(data, orientation):
     except:
         frequency_of_peaks = 0
     try:
-        freeze_index_arr = gp.freeze_of_gait(data[orientation])[1]
-        min_freeze_index = np.min(freeze_index_arr)
-        max_freeze_index = np.max(freeze_index_arr)
-        mean_freeze_index = np.mean(freeze_index_arr)
-        freeze_occurences = \
-            (sum(i > 2.5 for i in gp.freeze_of_gait(data[orientation])[1]))
+        energy_freeze_index = calculate_freeze_index(data[orientation])[0][0]
     except:
-        min_freeze_index  = 0
-        max_freeze_index  = 0
-        mean_freeze_index = 0
-        freeze_occurences = 0
+        energy_freeze_index = 0
+    try:
+        energy_sum_loco_freeze = calculate_freeze_index(data[orientation])[1][0]
+    except:
+        energy_sum_loco_freeze = 0
     try:
         speed_of_gait = gp.speed_of_gait(data[orientation], wavelet_level = 6)
     except:
@@ -319,11 +313,8 @@ def generate_pdkit_features_in_dict(data, orientation):
                         "gait_stride_regularity":gait_stride_regularity,
                         "gait_symmetry":gait_symmetry,
                         "frequency_of_peaks":frequency_of_peaks,
-                        "max_energy_freeze_index":max_freeze_index,
-                        "mean_energy_freeze_index":mean_freeze_index,
-                        "min_energy_freeze_index":min_freeze_index,
-                        "freeze_occurences": freeze_occurences,
-                        "freeze_occurences_per_sec": freeze_occurences/(window_duration),
+                        "energy_freeze_index":energy_freeze_index,
+                        "energy_sum_loco_freeze":energy_sum_loco_freeze,
                         "speed_of_gait": speed_of_gait,
                         "window_duration": window_duration,                    
                         "window_end": data.td[-1],
@@ -395,6 +386,12 @@ def rotation_feature_pipeline(filepath, orientation):
         return "#ERROR"
     return rotation_ts
 
+def annotate_consecutive_zeros(df, feature):
+    step_shift_measure = df[feature].ne(df[feature].shift()).cumsum()
+    counts = df.groupby(['recordId', step_shift_measure])[feature].transform('size')
+    df['consec_zero_steps_count'] = np.where(df[feature].eq(0), counts, 0)
+    return df
+
 def pdkit_featurize_wrapper(data):
     """
     wrapper function for multiprocessing jobs
@@ -404,11 +401,16 @@ def pdkit_featurize_wrapper(data):
     """
     data["gait.pdkit_features"] = data["walk_motion.json_pathfile"].apply(pdkit_feature_pipeline, 
                                                                             orientation = "y")
+    data = data[data["gait.pdkit_features"] != "#ERROR"]
+    data = query.normalize_list_dicts_to_dataframe_rows(data, ["gait.pdkit_features"])
+    data = annotate_consecutive_zero(data, "steps")
     return data
 
 def rotation_featurize_wrapper(data):
     data["gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(rotation_feature_pipeline, 
                                                                                 orientation = "y")
+    data = data[data["gait.rotational_features"] != "#ERROR"]
+    data = query.normalize_list_dicts_to_dataframe_rows(data, ["gait.rotational_features"])
     return data
 
 
