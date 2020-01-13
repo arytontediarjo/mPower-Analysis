@@ -415,11 +415,8 @@ def rotation_featurize_wrapper(data):
             'omega','turn_duration', 'window_end', 'window_start', 
             'recordId', 'healthCode','appVersion', 
             'phoneInfo', 'createdOn']
-
     data["gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(rotation_feature_pipeline, 
                                                                                 orientation = "y")
-    data = data[data["gait.rotational_features"] != "#ERROR"]
-    data = query.normalize_list_dicts_to_dataframe_rows(data, ["gait.rotational_features"])
     return data[feature_cols]
 
 
