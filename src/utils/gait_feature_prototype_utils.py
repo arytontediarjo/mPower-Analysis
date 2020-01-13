@@ -179,14 +179,9 @@ def compute_rotational_features(accel_data, rotation_data, orientation):
             omega = auc / turn_duration
             if aucXt > 2:
                 turn_window += 1
-                if calculate_freeze_index(y_accel)[0] >= 2.5:
-                    freeze_occ = 1
-                else:
-                    freeze_occ = 0
-                
                 list_rotation.append({
                         "axis": orientation,
-                        "energy_freeze_index": calculate_freeze_index(y_accel)[0][0],
+                        "energy_freeze_index": calculate_freeze_index(y_accel)[0],
                         "turn_duration": turn_duration,
                         "auc": auc,     ## radian
                         "omega": omega, ## radian/secs 
@@ -292,11 +287,11 @@ def generate_pdkit_features_in_dict(data, orientation):
     except:
         frequency_of_peaks = 0
     try:
-        energy_freeze_index = calculate_freeze_index(data[orientation])[0][0]
+        energy_freeze_index = calculate_freeze_index(data[orientation])[0]
     except:
         energy_freeze_index = 0
     try:
-        energy_sum_loco_freeze = calculate_freeze_index(data[orientation])[1][0]
+        energy_sum_loco_freeze = calculate_freeze_index(data[orientation])[1]
     except:
         energy_sum_loco_freeze = 0
     try:
