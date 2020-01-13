@@ -394,18 +394,32 @@ def pdkit_featurize_wrapper(data):
     `data`: takes in pd.DataFrame
     returns a json file featurized data
     """
+
+    feature_cols = ['axis', 'cadence', 'energy_freeze_index', 'energy_sum_loco_freeze',
+                    'frequency_of_peaks', 'gait_step_regularity', 'gait_stride_regularity',
+                    'gait_symmetry', 'speed_of_gait', 'steps', 'variance',
+                    'window_duration', 'window_end', 'window_start', 'recordId',
+                    'healthCode', 'appVersion', 'phoneInfo', 'createdOn', 'consec_zero_steps_count']
+
     data["gait.pdkit_features"] = data["walk_motion.json_pathfile"].apply(pdkit_feature_pipeline, 
                                                                             orientation = "y")
     data = data[data["gait.pdkit_features"] != "#ERROR"]
     data = query.normalize_list_dicts_to_dataframe_rows(data, ["gait.pdkit_features"])
     data = annotate_consecutive_zeros(data, "steps")
-    return data
+    return data[feature_cols]
 
 def rotation_featurize_wrapper(data):
+
+    feature_cols = ['auc', 'aucXt', 'axis', 
+            'energy_freeze_index', 'num_window', 
+            'omega','turn_duration', 'window_end', 'window_start', 
+            'recordId', 'healthCode','appVersion', 
+            'phoneInfo', 'createdOn']
+
     data["gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(rotation_feature_pipeline, 
                                                                                 orientation = "y")
     data = data[data["gait.rotational_features"] != "#ERROR"]
     data = query.normalize_list_dicts_to_dataframe_rows(data, ["gait.rotational_features"])
-    return data
+    return data[feature_cols]
 
 
