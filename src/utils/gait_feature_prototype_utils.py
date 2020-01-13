@@ -403,7 +403,7 @@ def pdkit_featurize_wrapper(data):
                                                                             orientation = "y")
     data = data[data["gait.pdkit_features"] != "#ERROR"]
     data = query.normalize_list_dicts_to_dataframe_rows(data, ["gait.pdkit_features"])
-    data = annotate_consecutive_zero(data, "steps")
+    data = annotate_consecutive_zeros(data, "steps")
     return data
 
 def rotation_featurize_wrapper(data):
