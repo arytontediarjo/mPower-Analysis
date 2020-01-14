@@ -371,12 +371,13 @@ def pdkit_feature_pipeline(filepath, orientation):
     return [j for i in gait_feature_arr for j in i]
 
 
-def rotation_feature_pipeline(filepath, orientation):
+def rotation_feature_pipeline(filepath):
     rotation_ts = query.get_sensor_ts_from_filepath(filepath, "rotationRate")
     accel_ts = query.get_sensor_ts_from_filepath(filepath, "userAcceleration")                                  
     if not isinstance(rotation_ts, pd.DataFrame):
         return "#ERROR"
-    rotation_ts = compute_rotational_features(accel_ts, rotation_ts, orientation)
+    for orientation in ["x", "y", "z", "AA"]:
+        rotation_ts = compute_rotational_features(accel_ts, rotation_ts, orientation)
     if len(rotation_ts) == 0:
         return "#ERROR"
     return rotation_ts
@@ -410,8 +411,7 @@ def pdkit_featurize_wrapper(data):
 
 def rotation_featurize_wrapper(data):
 
-    data["gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(rotation_feature_pipeline, 
-                                                                                orientation = "y")
+    data["gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(rotation_feature_pipeline)
     return data
 
 
