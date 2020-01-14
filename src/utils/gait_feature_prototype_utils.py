@@ -177,18 +177,51 @@ def compute_rotational_features(accel_data, rotation_data):
                 omega = auc / turn_duration
                 if aucXt > 2:
                     turn_window += 1
+                    gp = pdkit.GaitProcessor(duration = turn_duration,
+                                            cutoff_frequency = 5,
+                                            filter_order = 4,
+                                            delta = 0.5)
+                    try:
+                        strikes, _ = gp.heel_strikes(y_accel)
+                        steps   = np.size(strikes) 
+                        cadence = steps/turn_duration
+                    except:
+                        steps = 0
+                        cadence = 0
+                    if steps >= 2:   # condition if steps are more than 2, during 2.5 seconds window 
+                        step_durations = []
+                        for i in range(1, np.size(strikes)):
+                            step_durations.append(strikes[i] - strikes[i-1])
+                        avg_step_duration = np.mean(step_durations)
+                        sd_step_duration = np.std(step_durations)
+                    else:
+                        avg_step_duration = 0
+                        sd_step_duration = 0
+                    try:
+                        peaks_data = y_accel.values
+                        maxtab, _ = peakdet(peaks_data, gp.delta)
+                        x = np.mean(peaks_data[maxtab[1:,0].astype(int)] - peaks_data[maxtab[:-1,0].astype(int)])
+                        frequency_of_peaks = abs(1/x)
+                    except:
+                        frequency_of_peaks = 0
                     list_rotation.append({
-                            "rotation-axis"       : orientation,
-                            "energy_freeze_index" : calculate_freeze_index(y_accel)[0],
-                            "turn_duration"       : turn_duration,
-                            "auc"                 : auc,      ## radian
-                            "omega"               : omega,    ## radian/secs 
-                            "aucXt"               : aucXt,    ## radian . secs (based on research paper)
-                            "window_start"        : x_rot[0],
-                            "window_end"          : x_rot[-1],
-                            "num_window"          : turn_window
+                            "rotation.axis"                : orientation,
+                            "rotation.energy_freeze_index" : calculate_freeze_index(y_accel)[0],
+                            "rotation.turn_duration"       : turn_duration,
+                            "rotation.auc"                 : auc,      ## radian
+                            "rotation.omega"               : omega,    ## radian/secs 
+                            "rotation.aucXt"               : aucXt,    ## radian . secs (based on research paper)
+                            "rotation.window_start"        : x_rot[0],
+                            "rotation.window_end"          : x_rot[-1],
+                            "rotation.num_window"          : turn_window,
+                            "rotation.avg_step_duration"   : avg_step_duration,
+                            "rotation.sd_step_duration"    : sd_step_duration,
+                            "rotation.steps"               : steps,
+                            "rotation.cadence"             : cadence,
+                            "rotation.frequency_of_peaks"  : frequency_of_peaks
                     })
     return list_rotation
+
 
 def separate_dataframe_by_rotation(accel_data, rotation_data):
     if (not isinstance(accel_data, pd.DataFrame)):
