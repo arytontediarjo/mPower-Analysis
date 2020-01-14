@@ -151,9 +151,8 @@ def compute_rotational_features(accel_data, rotation_data):
     
     returns dataframe of calculation of auc and aucXt
     """
-    
+    list_rotation = []
     for orientation in ["x", "y", "z", "AA"]:
-        list_rotation = []
         start = 0
         dict_list = {}
         dict_list["td"] = []
@@ -179,14 +178,15 @@ def compute_rotational_features(accel_data, rotation_data):
                 if aucXt > 2:
                     turn_window += 1
                     list_rotation.append({
-                            "%s.energy_freeze_index" %orientation: calculate_freeze_index(y_accel)[0],
-                            "%s.turn_duration" %orientation: turn_duration,
-                            "%s.auc" %orientation: auc,     ## radian
-                            "%s.omega" %orientation: omega, ## radian/secs 
-                            "%s.aucXt" %orientation:aucXt,  ## radian . secs (based on research paper)
-                            "%s.window_start" %orientation: x_rot[0],
-                            "%s.window_end" %orientation:  x_rot[-1],
-                            "%s.num_window" %orientation: turn_window
+                            "rotation-axis"       : orientation,
+                            "energy_freeze_index" : calculate_freeze_index(y_accel)[0],
+                            "turn_duration"       : turn_duration,
+                            "auc"                 : auc,      ## radian
+                            "omega"               : omega,    ## radian/secs 
+                            "aucXt"               : aucXt,    ## radian . secs (based on research paper)
+                            "window_start"        : x_rot[0],
+                            "window_end"          : x_rot[-1],
+                            "num_window"          : turn_window
                     })
     return list_rotation
 
