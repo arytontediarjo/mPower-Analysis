@@ -498,7 +498,6 @@ def rotation_featurize_wrapper(data):
     returns a json file featurized rotation data
     """
     data["gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(rotation_feature_pipeline)
-    data["gait.balance_features"] = 
     return data
 
 
