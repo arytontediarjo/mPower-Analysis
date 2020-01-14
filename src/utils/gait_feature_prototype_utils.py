@@ -37,6 +37,7 @@ from pdkit.utils import (load_data,
 warnings.simplefilter("ignore")
 
 
+### referenced from pdkit butter low pass filters ##
 def butter_lowpass_filter(data, sample_rate, cutoff=10, order=4, plot=False):
     """
         `Low-pass filter <http://stackoverflow.com/questions/25191620/
@@ -82,9 +83,11 @@ def subset_data_non_zero_runs(data, zero_runs_cutoff):
     """
     Function to subset data from zero runs heel strikes 
     that exceeded the cutoff threshold (consecutive zeros)
+    
     parameter:
         `data`             : dataframe containing columns of chunk time and heel strikes per chunk
         `zero_runs_cutoff` : threshold of how many consecutive row of zeros that will be remove from the dataframe
+    
     returns a subset of non-zero runs pd.DataFrame
     """
     z_runs_threshold = []
@@ -101,8 +104,10 @@ def subset_data_non_zero_runs(data, zero_runs_cutoff):
 def zero_runs(array):
     """
     Function to search zero runs in an np.array
+    
     parameter:
         `array`  : array of sequence (type: np.array or list)
+    
     returns:
          N x 2 np.array matrix containing zero runs
     format of returned data: np.array([start index of zero occurence, end index of zero occurence], ...) 
@@ -118,8 +123,10 @@ def zero_runs(array):
 def detect_zero_crossing(array):
     """
     Function to detect zero crossings in a time series signal data
+    
     parameter:
         `array`: array of number sequence (type = np.array or list)
+    
     returns: 
         index location before sign change in sequence (type = N x 2 np.array)
         format: [[index start, index_end], 
@@ -223,8 +230,10 @@ def split_dataframe_to_dict_chunk_by_interval(accel_data, rotation_data):
     parameter:
         `accel_data`   : accelerometer data (pd.DataFrame)
         `rotation_data`: rotation data (pd.DataFrame)
+    
     returns: 
         A dictionary mapping of data chunks of non-rotational motion
+    
     format: {"chunk1": pd.DataFrame, 
             "chunk2": pd.DataFrame, etc ......}
     """
@@ -264,8 +273,10 @@ def compute_pdkit_feature_per_window(data, orientation):
     parameter: 
         `data`        : data (type = pd.DataFrame)
         `orientation` : coordinate orientation of the time series (type = string)
+    
     returns:
          returns list of dict of walking features 
+    
     format: [{steps: some_value, ...}, 
             {steps: some_value, ...}, ...]
     
@@ -290,7 +301,20 @@ def compute_pdkit_feature_per_window(data, orientation):
 
 def generate_pdkit_features_in_dict(data, orientation):
     """
-    Function to generate pdkit features given orientation
+    Function to generate pdkit features given orientation and time-series dataframe
+    
+    -- Featurization side-note --
+    >> Low-variance data will be removed
+    >> TODO: sampling frequency will be capped at 100 as sometimes having >100Hz causes some issue in the package
+    >> It will try and catch every of the pdkit features, an error in the process will be catch as zero value
+
+    parameter:
+        `data`       : dataframe of time series (timeIndex, x, y, z, AA, td)
+        `orientation : axis oriention of walking (type: str)
+
+    returns:
+         a dictionary mapping of pdkit features 
+
     """
     window_duration = data.td[-1] - data.td[0]
     sample_rate = data.shape[0]/window_duration
@@ -356,7 +380,15 @@ def generate_pdkit_features_in_dict(data, orientation):
     return pdkit_feat_dict
 
 def calculate_freeze_index(data):
-    """modified pdkit FoG to run with window as it goes"""
+    """
+    modified pdkit FoG function, removed resampling the signal
+    
+    parameters: 
+        `data`: pd.Series of signal in one orientation
+    
+    returns:
+        array of [freeze index , sumLocoFreeze]
+    """
     loco_band=[0.5, 3]
     freeze_band=[3, 8]
     window_size = 256
@@ -387,10 +419,11 @@ def pdkit_feature_pipeline(filepath, orientation):
     removing low-variance longitudinal data and PDKIT estimation of heel strikes based on 2.5 secs window chunks
     parameters:
     
-        `data`: string of pathfile, or pandas dataframe
-        `orientation`: orientation of featurized data
+        `filepath`    : string of filepath to /.synapseCache (type = str)
+        `orientation` : orientation of featurized data (type = str)
     
-    returns a featurized dataframe of rotational features and number of steps per window sizes
+    returns: 
+        gait feature as a series in the dataframe
     """    
     accel_ts    = query.get_sensor_ts_from_filepath(filepath = filepath, 
                                         sensor = "userAcceleration")
@@ -402,7 +435,7 @@ def pdkit_feature_pipeline(filepath, orientation):
     if not isinstance(rotation_ts, pd.DataFrame):
         return "#ERROR"
     rotation_occurence = compute_rotational_features(accel_ts, rotation_ts)
-    gait_dict = separate_dataframe_by_rotation(accel_ts, rotation_occurence)
+    gait_dict = split_dataframe_to_dict_chunk_by_interval(accel_ts, rotation_occurence)
     gait_feature_arr = []
     for chunks in gait_dict.keys():
         gait_feature_arr.append(compute_pdkit_feature_per_window(data = gait_dict[chunks], 
@@ -420,18 +453,28 @@ def rotation_feature_pipeline(filepath):
         return "#ERROR"
     return rotation_ts
 
-def annotate_consecutive_zeros(df, feature):
-    step_shift_measure = df[feature].ne(df[feature].shift()).cumsum()
-    counts = df.groupby(['recordId', step_shift_measure])[feature].transform('size')
-    df['consec_zero_steps_count'] = np.where(df[feature].eq(0), counts, 0)
+def annotate_consecutive_zeros(data, feature):
+    """
+    Function to annotate consecutive zeros in a dataframe
+
+    parameter:
+        `data`    : dataframe
+        `feature` : feature to assess on counting consecutive zeros
+    
+    returns:
+        A new column-series of data with counted consecutive zeros (if available)
+    """
+    step_shift_measure = data[feature].ne(data[feature].shift()).cumsum()
+    counts = data.groupby(['recordId', step_shift_measure])[feature].transform('size')
+    data['consec_zero_steps_count'] = np.where(data[feature].eq(0), counts, 0)
     return df
 
 def pdkit_featurize_wrapper(data):
     """
-    wrapper function for multiprocessing jobs
+    wrapper function for walking multiprocessing jobs
     parameter:
-    `data`: takes in pd.DataFrame
-    returns a json file featurized data
+        `data`: takes in pd.DataFrame
+    returns a json file featurized walking data
     """
 
     feature_cols = ['axis', 'cadence', 'energy_freeze_index', 'energy_sum_loco_freeze',
@@ -448,7 +491,14 @@ def pdkit_featurize_wrapper(data):
     return data[feature_cols]
 
 def rotation_featurize_wrapper(data):
+    """
+    wrapper function for rotation multiprocessing jobs
+    parameter:
+        `data`: takes in pd.DataFrame
+    returns a json file featurized rotation data
+    """
     data["gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(rotation_feature_pipeline)
+    data["gait.balance_features"] = 
     return data
 
 

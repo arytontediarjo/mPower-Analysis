@@ -28,8 +28,8 @@ def main():
     data_return   = query_data_v1[[feature for feature in query_data_v1.columns if "outbound" not in feature]]
     data_outbound = query_data_v1[[feature for feature in query_data_v1.columns if "return" not in feature]]
     query_data_v1 = pd.concat([data_outbound, data_return])## combine return and outbound                   
-    arr_outbound = query_data_v1["deviceMotion_walking_outbound.json.items_pathfile"].dropna()
-    arr_return = query_data_v1["deviceMotion_walking_return.json.items_pathfile"].dropna()
+    arr_outbound  = query_data_v1["deviceMotion_walking_outbound.json.items_pathfile"].dropna()
+    arr_return    = query_data_v1["deviceMotion_walking_return.json.items_pathfile"].dropna()
     query_data_v1["walk_motion.json_pathfile"] = pd.concat([arr_outbound, arr_return])
 
     ## healthcode from version 2 ## 
@@ -60,12 +60,12 @@ def main():
     rotation_data = query.normalize_list_dicts_to_dataframe_rows(rotation_data, ["gait.rotational_features"])
     
     metadata_feature = ['recordId', 'healthCode','appVersion', 'phoneInfo', 'createdOn']
-    rotation_feature = [feat for feat in rotation_data.cols if "rotation." in feat]
-    feature_cols = metadata_feature + rotation_feature
+    rotation_feature = [feat for feat in rotation_data.columns if "rotation." in feat]
+    features = metadata_feature + rotation_feature
 
     ## save data to synapse ##
     query.save_data_to_synapse(syn = syn, 
-                            data = rotation_data[feature_cols], 
+                            data = rotation_data[features], 
                             output_filename = "new_rotational_features_matched.csv",
                             data_parent_id = "syn20816722")
 
