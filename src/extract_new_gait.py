@@ -59,9 +59,15 @@ def main():
     rotation_data = rotation_data[rotation_data["gait.rotational_features"] != "#ERROR"]
     rotation_data = query.normalize_list_dicts_to_dataframe_rows(rotation_data, ["gait.rotational_features"])
     
+    feature_cols = ['auc', 'aucXt', 'axis', 
+            'energy_freeze_index', 'num_window', 
+            'omega','turn_duration', 'window_end', 'window_start', 
+            'recordId', 'healthCode','appVersion', 
+            'phoneInfo', 'createdOn']
+
     ## save data to synapse ##
     query.save_data_to_synapse(syn = syn, 
-                            data = rotation_data, 
+                            data = rotation_data[feature_cols], 
                             output_filename = "new_rotational_features_matched.csv",
                             data_parent_id = "syn20816722")
 

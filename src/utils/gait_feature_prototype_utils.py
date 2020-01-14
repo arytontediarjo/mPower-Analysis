@@ -410,13 +410,8 @@ def pdkit_featurize_wrapper(data):
 
 def rotation_featurize_wrapper(data):
 
-    feature_cols = ['auc', 'aucXt', 'axis', 
-            'energy_freeze_index', 'num_window', 
-            'omega','turn_duration', 'window_end', 'window_start', 
-            'recordId', 'healthCode','appVersion', 
-            'phoneInfo', 'createdOn']
     data["gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(rotation_feature_pipeline, 
                                                                                 orientation = "y")
-    return data[feature_cols]
+    return data
 
 
