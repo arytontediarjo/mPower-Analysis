@@ -57,7 +57,10 @@ def main():
     ## create rotation file through multiprocessing jobs ## 
     rotation_data = query.parallel_func_apply(data, gproc.rotation_featurize_wrapper, 16, 250) 
     rotation_data = rotation_data[rotation_data["gait.rotational_features"] != "#ERROR"]
-    rotation_data = query.normalize_list_dicts_to_dataframe_rows(rotation_data, ["gait.rotational_features"])
+    rotation_data = query.normalize_list_dicts_to_dataframe_rows(rotation_data, ["x.gait.rotational_features",
+                                                                                "y.gait.rotational_features",
+                                                                                "z.gait.rotational_features",
+                                                                                "AA.gait.rotational_features"])
     
     feature_cols = ['auc', 'aucXt', 'axis', 
             'energy_freeze_index', 'num_window', 
