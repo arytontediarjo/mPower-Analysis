@@ -139,7 +139,7 @@ def detect_zero_crossing(array):
     zero_crossings = np.where(np.diff(np.sign(array)))[0]
     return zero_crossings
 
-def compute_rotational_features(accel_data, rotation_data, orientation):
+def compute_rotational_features(accel_data, rotation_data):
     """
     function to calculate rotational movement gyroscope AUC * period of zero crossing
     note: filter order of 2 is used based on research paper (common butterworth filter), 
@@ -152,41 +152,42 @@ def compute_rotational_features(accel_data, rotation_data, orientation):
     returns dataframe of calculation of auc and aucXt
     """
     
-    list_rotation = []
-    start = 0
-    dict_list = {}
-    dict_list["td"] = []
-    dict_list["auc"] = []
-    dict_list["turn_duration"] = []
-    dict_list["aucXt"] = []
-    rotation_data[orientation] = butter_lowpass_filter(data = rotation_data[orientation], 
-                                                        sample_rate = 100, 
-                                                        cutoff = 2, 
-                                                        order = 2) 
-    zcr_list = detect_zero_crossing(rotation_data[orientation].values)
-    turn_window = 0
-    for i in zcr_list: 
-        x_rot = rotation_data["td"].iloc[start:i+1]
-        y_rot = rotation_data[orientation].iloc[start:i+1]
-        y_accel = accel_data[orientation].iloc[start:i+1]
-        turn_duration = rotation_data["td"].iloc[i+1] - rotation_data["td"].iloc[start]
-        start  = i + 1
-        if (len(y_rot) >= 2):
-            auc   = np.abs(metrics.auc(x_rot,y_rot)) 
-            aucXt = auc * turn_duration
-            omega = auc / turn_duration
-            if aucXt > 2:
-                turn_window += 1
-                list_rotation.append({
-                        "%s.energy_freeze_index" %orientation: calculate_freeze_index(y_accel)[0],
-                        "%s.turn_duration" %orientation: turn_duration,
-                        "%s.auc" %orientation: auc,     ## radian
-                        "%s.omega" %orientation: omega, ## radian/secs 
-                        "%s.aucXt" %orientation:aucXt,  ## radian . secs (based on research paper)
-                        "%s.window_start" %orientation: x_rot[0],
-                        "%s.window_end" %orientation:  x_rot[-1],
-                        "%s.num_window" %orientation: turn_window
-                })
+    for orientation in ["x", "y", "z", "AA"]:
+        list_rotation = []
+        start = 0
+        dict_list = {}
+        dict_list["td"] = []
+        dict_list["auc"] = []
+        dict_list["turn_duration"] = []
+        dict_list["aucXt"] = []
+        rotation_data[orientation] = butter_lowpass_filter(data = rotation_data[orientation], 
+                                                            sample_rate = 100, 
+                                                            cutoff = 2, 
+                                                            order = 2) 
+        zcr_list = detect_zero_crossing(rotation_data[orientation].values)
+        turn_window = 0
+        for i in zcr_list: 
+            x_rot = rotation_data["td"].iloc[start:i+1]
+            y_rot = rotation_data[orientation].iloc[start:i+1]
+            y_accel = accel_data[orientation].iloc[start:i+1]
+            turn_duration = rotation_data["td"].iloc[i+1] - rotation_data["td"].iloc[start]
+            start  = i + 1
+            if (len(y_rot) >= 2):
+                auc   = np.abs(metrics.auc(x_rot,y_rot)) 
+                aucXt = auc * turn_duration
+                omega = auc / turn_duration
+                if aucXt > 2:
+                    turn_window += 1
+                    list_rotation.append({
+                            "%s.energy_freeze_index" %orientation: calculate_freeze_index(y_accel)[0],
+                            "%s.turn_duration" %orientation: turn_duration,
+                            "%s.auc" %orientation: auc,     ## radian
+                            "%s.omega" %orientation: omega, ## radian/secs 
+                            "%s.aucXt" %orientation:aucXt,  ## radian . secs (based on research paper)
+                            "%s.window_start" %orientation: x_rot[0],
+                            "%s.window_end" %orientation:  x_rot[-1],
+                            "%s.num_window" %orientation: turn_window
+                    })
     return list_rotation
 
 def separate_dataframe_by_rotation(accel_data, rotation_data):
@@ -359,7 +360,7 @@ def pdkit_feature_pipeline(filepath, orientation):
         return "#ERROR"
     if not isinstance(rotation_ts, pd.DataFrame):
         return "#ERROR"
-    rotation_occurence = compute_rotational_features(accel_ts, rotation_ts, "y")
+    rotation_occurence = compute_rotational_features(accel_ts, rotation_ts)
     gait_dict = separate_dataframe_by_rotation(accel_ts, rotation_occurence)
     gait_feature_arr = []
     for chunks in gait_dict.keys():
@@ -368,12 +369,12 @@ def pdkit_feature_pipeline(filepath, orientation):
     return [j for i in gait_feature_arr for j in i]
 
 
-def rotation_feature_pipeline(filepath, orientation):
+def rotation_feature_pipeline(filepath):
     rotation_ts = query.get_sensor_ts_from_filepath(filepath, "rotationRate")
     accel_ts = query.get_sensor_ts_from_filepath(filepath, "userAcceleration")                                  
     if not isinstance(rotation_ts, pd.DataFrame):
         return "#ERROR"
-    rotation_ts = compute_rotational_features(accel_ts, rotation_ts, orientation)
+    rotation_ts = compute_rotational_features(accel_ts, rotation_ts)
     if len(rotation_ts) == 0:
         return "#ERROR"
     return rotation_ts
@@ -406,10 +407,7 @@ def pdkit_featurize_wrapper(data):
     return data[feature_cols]
 
 def rotation_featurize_wrapper(data):
-    data["x.gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(rotation_feature_pipeline, orientation = "x")
-    data["y.gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(rotation_feature_pipeline, orientation = "x")
-    data["z.gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(rotation_feature_pipeline, orientation = "x")
-    data["AA.gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(rotation_feature_pipeline, orientation = "AA")
+    data["gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(rotation_feature_pipeline)
     return data
 
 
