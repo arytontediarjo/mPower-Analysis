@@ -37,20 +37,6 @@ from pdkit.utils import (load_data,
 warnings.simplefilter("ignore")
 
 
-def separate_array_sequence(array):
-    """
-    function to separate array sequence
-    parameter:
-    `array`: np.array, or a list
-    returns a numpy array groupings of sequences
-    """
-    seq2 = array
-    groups = []
-    for _, g in groupby(enumerate(seq2), lambda x: x[0]-x[1]):
-        groups.append(list(map(itemgetter(1), g)))
-    groups = np.asarray(groups)
-    return groups
-
 def butter_lowpass_filter(data, sample_rate, cutoff=10, order=4, plot=False):
     """
         `Low-pass filter <http://stackoverflow.com/questions/25191620/
@@ -92,7 +78,6 @@ def butter_lowpass_filter(data, sample_rate, cutoff=10, order=4, plot=False):
     y = lfilter(b, a, data)
     return y
 
-
 def subset_data_non_zero_runs(data, zero_runs_cutoff):
     """
     Function to subset data from zero runs heel strikes 
@@ -117,8 +102,9 @@ def zero_runs(array):
     """
     Function to search zero runs in an np.array
     parameter:
-        `array`  : np array
-    returns N x 2 np array matrix containing zero runs
+        `array`  : array of sequence (type: np.array or list)
+    returns:
+         N x 2 np.array matrix containing zero runs
     format of returned data: np.array([start index of zero occurence, end index of zero occurence], ...) 
     """
     # Create an array that is 1 where a is 0, and pad each end with an extra 0.
@@ -133,8 +119,11 @@ def detect_zero_crossing(array):
     """
     Function to detect zero crossings in a time series signal data
     parameter:
-        `array`: numpy array
-    returns index location before sign change 
+        `array`: array of number sequence (type = np.array or list)
+    returns: 
+        index location before sign change in sequence (type = N x 2 np.array)
+        format: [[index start, index_end], 
+                [[index start, index_end], .....]
     """
     zero_crossings = np.where(np.diff(np.sign(array)))[0]
     return zero_crossings
@@ -146,10 +135,14 @@ def compute_rotational_features(accel_data, rotation_data):
             cutoff frequency of 2 is used to smoothen the signal for recognizing 
             area under the curve more
     parameter:
-        `data`       : pandas dataframe
-        `orientation`: orientation (string)
+        `accel_data`   : (timeIndex(index), td (timeDifference), y, z, AA) accelerometer data (type = pd.DataFrame)
+        `rotation_data : (timeIndex(index), td (timeDifference), y, z, AA) gyroscope data (type = pd.DataFrame)
     
-    returns dataframe of calculation of auc and aucXt
+    returns: 
+        list of dictionary of gait features during rotational motions
+        format: [{omega: some_value, ....}, 
+                {omega: some_value, ....},....]
+        
     """
     list_rotation = []
     for orientation in ["x", "y", "z", "AA"]:
@@ -223,7 +216,18 @@ def compute_rotational_features(accel_data, rotation_data):
     return list_rotation
 
 
-def separate_dataframe_by_rotation(accel_data, rotation_data):
+def split_dataframe_to_dict_chunk_by_interval(accel_data, rotation_data):
+    """
+    A function to separate dataframe to several chunks separated by rotational motion
+    done by a subject. 
+    parameter:
+        `accel_data`   : accelerometer data (pd.DataFrame)
+        `rotation_data`: rotation data (pd.DataFrame)
+    returns: 
+        A dictionary mapping of data chunks of non-rotational motion
+    format: {"chunk1": pd.DataFrame, 
+            "chunk2": pd.DataFrame, etc ......}
+    """
     if (not isinstance(accel_data, pd.DataFrame)):
         raise Exception("please use dataframe for acceleration")
     data_chunk = {}
@@ -256,14 +260,18 @@ def separate_dataframe_by_rotation(accel_data, rotation_data):
 
 def compute_pdkit_feature_per_window(data, orientation):
     """
-    A modified function to calculate feature per 5 seconds window chunk
+    A modified function to calculate feature per smaller time window chunks
     parameter: 
-    `filepath`    : time-series (filepath)
-    `orientation` : coordinate orientation of the time series
-    returns number of steps per chunk based on each recordIds
+        `data`        : data (type = pd.DataFrame)
+        `orientation` : coordinate orientation of the time series (type = string)
+    returns:
+         returns list of dict of walking features 
+    format: [{steps: some_value, ...}, 
+            {steps: some_value, ...}, ...]
+    
     """
     ts = data.copy()
-    window_size = 512
+    window_size = 256
     step_size   = 50
     jPos        = window_size + 1
     ts_arr      = []

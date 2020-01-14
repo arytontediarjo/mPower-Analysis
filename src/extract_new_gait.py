@@ -59,11 +59,9 @@ def main():
     rotation_data = rotation_data[rotation_data["gait.rotational_features"] != "#ERROR"]
     rotation_data = query.normalize_list_dicts_to_dataframe_rows(rotation_data, ["gait.rotational_features"])
     
-    feature_cols = ['auc', 'aucXt', 'axis', 
-            'energy_freeze_index', 'num_window', 
-            'omega','turn_duration', 'window_end', 'window_start', 
-            'recordId', 'healthCode','appVersion', 
-            'phoneInfo', 'createdOn']
+    metadata_feature = ['recordId', 'healthCode','appVersion', 'phoneInfo', 'createdOn']
+    rotation_feature = [feat for feat in rotation_data.cols if "rotation." in feat]
+    feature_cols = metadata_feature + rotation_feature
 
     ## save data to synapse ##
     query.save_data_to_synapse(syn = syn, 
