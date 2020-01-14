@@ -152,7 +152,7 @@ def compute_rotational_features(accel_data, rotation_data):
     returns dataframe of calculation of auc and aucXt
     """
     
-    
+    list_rotation = []
     for orientation in ["x", "y", "z", "AA"]:
         start = 0
         dict_list = {}
@@ -165,7 +165,6 @@ def compute_rotational_features(accel_data, rotation_data):
                                                             cutoff = 2, 
                                                             order = 2) 
         zcr_list = detect_zero_crossing(rotation_data[orientation].values)
-        list_rotation = []
         turn_window = 0
         for i in zcr_list: 
             x_rot = rotation_data["td"].iloc[start:i+1]
