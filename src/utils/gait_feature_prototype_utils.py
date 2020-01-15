@@ -183,11 +183,18 @@ def compute_rotational_features(accel_data, rotation_data):
                                             delta = 0.5)
                     try:
                         strikes, _ = gp.heel_strikes(y_accel)
-                        steps   = np.size(strikes) 
-                        cadence = steps/turn_duration
+                        steps      = np.size(strikes) 
+                        cadence    = steps/turn_duration
                     except:
-                        steps = 0
+                        steps   = 0
                         cadence = 0
+                    try:
+                        peaks_data = y_accel.values
+                        maxtab, _ = peakdet(peaks_data, gp.delta)
+                        x = np.mean(peaks_data[maxtab[1:,0].astype(int)] - peaks_data[maxtab[:-1,0].astype(int)])
+                        frequency_of_peaks = abs(1/x)
+                    except:
+                        frequency_of_peaks = 0
                     if steps >= 2:   # condition if steps are more than 2, during 2.5 seconds window 
                         step_durations = []
                         for i in range(1, np.size(strikes)):
@@ -197,28 +204,46 @@ def compute_rotational_features(accel_data, rotation_data):
                     else:
                         avg_step_duration = 0
                         sd_step_duration = 0
-                    try:
-                        peaks_data = y_accel.values
-                        maxtab, _ = peakdet(peaks_data, gp.delta)
-                        x = np.mean(peaks_data[maxtab[1:,0].astype(int)] - peaks_data[maxtab[:-1,0].astype(int)])
-                        frequency_of_peaks = abs(1/x)
-                    except:
-                        frequency_of_peaks = 0
+
+                    if steps >= 4:
+                        strides1 = strikes[0::2]
+                        strides2 = strikes[1::2]
+                        stride_durations1 = []
+                        for i in range(1, np.size(strides1)):
+                            stride_durations1.append(strides1[i] - strides1[i-1])
+                        stride_durations2 = []
+                        for i in range(1, np.size(strides2)):
+                            stride_durations2.append(strides2[i] - strides2[i-1])
+                        strides = [strides1, strides2]
+                        stride_durations = [stride_durations1, stride_durations2]
+                        avg_number_of_strides = np.mean([np.size(strides1), np.size(strides2)])
+                        avg_stride_duration = np.mean((np.mean(stride_durations1),
+                                    np.mean(stride_durations2)))
+                        sd_stride_duration = np.mean((np.std(stride_durations1),
+                                    np.std(stride_durations2)))
+                    else:
+                        avg_number_of_strides = 0
+                        avg_stride_duration = 0
+                        sd_stride_duration = 0
+                    
                     list_rotation.append({
-                            "rotation.axis"                : orientation,
-                            "rotation.energy_freeze_index" : calculate_freeze_index(y_accel)[0],
-                            "rotation.turn_duration"       : turn_duration,
-                            "rotation.auc"                 : auc,      ## radian
-                            "rotation.omega"               : omega,    ## radian/secs 
-                            "rotation.aucXt"               : aucXt,    ## radian . secs (based on research paper)
-                            "rotation.window_start"        : x_rot[0],
-                            "rotation.window_end"          : x_rot[-1],
-                            "rotation.num_window"          : turn_window,
-                            "rotation.avg_step_duration"   : avg_step_duration,
-                            "rotation.sd_step_duration"    : sd_step_duration,
-                            "rotation.steps"               : steps,
-                            "rotation.cadence"             : cadence,
-                            "rotation.frequency_of_peaks"  : frequency_of_peaks
+                            "rotation.axis"                 : orientation,
+                            "rotation.energy_freeze_index"  : calculate_freeze_index(y_accel)[0],
+                            "rotation.turn_duration"        : turn_duration,
+                            "rotation.auc"                  : auc,      ## radian
+                            "rotation.omega"                : omega,    ## radian/secs 
+                            "rotation.aucXt"                : aucXt,    ## radian . secs (based on research paper)
+                            "rotation.window_start"         : x_rot[0],
+                            "rotation.window_end"           : x_rot[-1],
+                            "rotation.num_window"           : turn_window,
+                            "rotation.avg_step_duration"    : avg_step_duration,
+                            "rotation.sd_step_duration"     : sd_step_duration,
+                            "rotation.steps"                : steps,
+                            "rotation.cadence"              : cadence,
+                            "rotation.frequency_of_peaks"   : frequency_of_peaks,
+                            "rotation.avg_number_of_strides": avg_number_of_strides,
+                            "rotation.avg_stride_duration"  : avg_stride_duration,
+                            "rotation.sd_stride_duration"   : sd_stride_duration
                     })
     return list_rotation
 
