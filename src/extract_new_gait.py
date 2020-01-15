@@ -12,6 +12,17 @@ from sklearn import metrics
 import time
 warnings.simplefilter("ignore")
 
+def clean_gait_mpower_dataset(data, filepath_colname, test_type):
+    metadata = ["appVersion", "phoneInfo", "healthCode", "recordId", "createdOn"]
+    data = data[[feature for feature in data.columns if \
+                            (filepath_colname in feature) or \
+                            feature in metadata]]\
+                            .rename({filepath_colname: "gait.json_pathfile"}, 
+                                       axis = 1)
+    data["test_type"] = test_type
+    return data
+
+
 
 def main():
     syn = sc.login()
@@ -25,12 +36,6 @@ def main():
                                                     "syn10308918", 
                                                     "MPOWER_V1", 
                                                     healthCodes = hc_arr_v1)
-    data_return   = query_data_v1[[feature for feature in query_data_v1.columns if "outbound" not in feature]]
-    data_outbound = query_data_v1[[feature for feature in query_data_v1.columns if "return" not in feature]]
-    query_data_v1 = pd.concat([data_outbound, data_return])## combine return and outbound                   
-    arr_outbound  = query_data_v1["deviceMotion_walking_outbound.json.items_pathfile"].dropna()
-    arr_return    = query_data_v1["deviceMotion_walking_return.json.items_pathfile"].dropna()
-    query_data_v1["walk_motion.json_pathfile"] = pd.concat([arr_outbound, arr_return])
 
     ## healthcode from version 2 ## 
     hc_arr_v2 = (matched_demographic["healthCode"][matched_demographic["version"] == "mpower_v2"].unique())
@@ -38,8 +43,36 @@ def main():
                                                     "syn12514611", 
                                                     "MPOWER_V2", 
                                                     healthCodes = hc_arr_v2)
-    data = pd.concat([query_data_v1, query_data_v2]).reset_index(drop = True)                                             
     
+    data_outbound_v1 = clean_gait_mpower_dataset(query_data_v1, 
+                                                "deviceMotion_walking_outbound.json.items_pathfile",
+                                                "walking")
+    
+
+    data_return_v1 = clean_gait_mpower_dataset(query_data_v1, 
+                                                "deviceMotion_walking_return.json.items_pathfile",
+                                                "walking")
+
+    data_balance_v1 = clean_gait_mpower_dataset(query_data_v1, 
+                                                "deviceMotion_walking_rest.json.items_pathfile",
+                                                "balance")
+
+    data_walking_v2 = clean_gait_mpower_dataset(query_data_v2, 
+                                                "walk_motion.json_pathfile",
+                                                "walking")
+
+
+    data_balance_v2 = clean_gait_mpower_dataset(query_data_v2, 
+                                                "balance_motion.json_pathfile",
+                                                "balance")
+
+    data = pd.concat([data_outbound_v1, 
+                  data_return_v1, 
+                  data_balance_v1, 
+                  data_walking_v2, 
+                  data_balance_v2]).reset_index(drop = True)
+
+    print("dataset combined, total rows are %s" %data.shape[0])
     
     
     ## create pdkit ##
@@ -59,7 +92,7 @@ def main():
     rotation_data = rotation_data[rotation_data["gait.rotational_features"] != "#ERROR"]
     rotation_data = query.normalize_list_dicts_to_dataframe_rows(rotation_data, ["gait.rotational_features"])
     
-    metadata_feature = ['recordId', 'healthCode','appVersion', 'phoneInfo', 'createdOn']
+    metadata_feature = ['recordId', 'healthCode','appVersion', 'phoneInfo', 'createdOn', 'test_type']
     rotation_feature = [feat for feat in rotation_data.columns if "rotation." in feat]
     features = metadata_feature + rotation_feature
 

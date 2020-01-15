@@ -497,7 +497,7 @@ def rotation_featurize_wrapper(data):
         `data`: takes in pd.DataFrame
     returns a json file featurized rotation data
     """
-    data["gait.rotational_features"] = data["walk_motion.json_pathfile"].apply(rotation_feature_pipeline)
+    data["gait.rotational_features"] = data["gait.json_pathfile"].apply(rotation_feature_pipeline)
     return data
 
 
