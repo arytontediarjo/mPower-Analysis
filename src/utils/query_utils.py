@@ -79,7 +79,8 @@ def get_walking_synapse_table(syn,
                                         .drop(["file_handle_id"], axis = 1)
     ## Empty Filepaths on synapseTable ##
     data = data.fillna("#ERROR") 
-    return data
+    cols = [feat for feat in data.columns if "path_id" not in feat]
+    return data[cols]
 
 
 def get_sensor_ts_from_filepath(filepath, sensor): 

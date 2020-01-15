@@ -492,7 +492,7 @@ def annotate_consecutive_zeros(data, feature):
     step_shift_measure = data[feature].ne(data[feature].shift()).cumsum()
     counts = data.groupby(['recordId', step_shift_measure])[feature].transform('size')
     data['consec_zero_steps_count'] = np.where(data[feature].eq(0), counts, 0)
-    return df
+    return data
 
 def pdkit_featurize_wrapper(data):
     """
