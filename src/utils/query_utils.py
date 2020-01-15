@@ -54,6 +54,7 @@ def get_walking_synapse_table(syn,
                         (MPOWER_V1, MS_ACTIVE, MPOWER_V2, PASSIVE)")
     
     ## download columns that contains walking data based on the logical condition
+    print(column_list)
     file_map = syn.downloadTableColumns(query, column_list)
     dict_ = {}
     dict_["file_handle_id"] = []
