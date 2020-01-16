@@ -345,14 +345,12 @@ def generate_pdkit_features_in_dict(data):
     feature_list = []
     for orientation in ["x", "y", "z", "AA"]:
         window_duration = data.td[-1] - data.td[0]
-        sample_rate = data.shape[0]/window_duration
         y_accel = data[orientation]
         var = y_accel.var()
         gp = pdkit.GaitProcessor(duration = window_duration,
-                            cutoff_frequency = 5,
-                            filter_order = 4,
-                            delta = 0.5, 
-                            sampling_frequency = 100)
+                                cutoff_frequency = 5,
+                                filter_order = 4,
+                                delta = 0.5)
         try:
             if (var) < 1e-3:
                 steps = 0

@@ -75,14 +75,17 @@ def main():
     
     
     ## create pdkit ##
-    pdkit_data = query.parallel_func_apply(data, gproc.walk_featurize_wrapper, 16, 250)
-    pdkit_data = pdkit_data[pdkit_data["gait.walk_features"] != "#ERROR"]
-    pdkit_data = query.normalize_list_dicts_to_dataframe_rows(pdkit_data, ["gait.pdkit_features"])
-    pdkit_data = gproc.subset_data_non_zero_runs(data = pdkit_data, zero_runs_cutoff = 5)
+    walk_data = query.parallel_func_apply(data, gproc.walk_featurize_wrapper, 16, 250)
+    walk_data = walk_data[walk_data["gait.walk_features"] != "#ERROR"]
+    walk_data = query.normalize_list_dicts_to_dataframe_rows(walk_data, ["gait.walk_features"])
+    metadata_feature = ['recordId', 'healthCode','appVersion', 'phoneInfo', 'createdOn', 'test_type']
+    walking_feature = [feat for feat in walk_data.columns if "walking." in feat]
+    features = metadata_feature + walking_feature
+
     ### save data to synapse ##
     query.save_data_to_synapse(syn = syn, 
-                            data = pdkit_data, 
-                            output_filename = "new_pdkit_features_matched.csv",
+                            data = walk_data[features], 
+                            output_filename = "new_walk_features_matched.csv",
                             data_parent_id = "syn20816722")        
     print("Saved walking data")                                                
     
@@ -90,7 +93,6 @@ def main():
     rotation_data = query.parallel_func_apply(data, gproc.rotation_featurize_wrapper, 16, 250) 
     rotation_data = rotation_data[rotation_data["gait.rotational_features"] != "#ERROR"]
     rotation_data = query.normalize_list_dicts_to_dataframe_rows(rotation_data, ["gait.rotational_features"])
-    
     metadata_feature = ['recordId', 'healthCode','appVersion', 'phoneInfo', 'createdOn', 'test_type']
     rotation_feature = [feat for feat in rotation_data.columns if "rotation." in feat]
     features = metadata_feature + rotation_feature
