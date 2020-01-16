@@ -307,7 +307,7 @@ def compute_pdkit_feature_per_window(data):
     
     """
     ts = data.copy()
-    window_size = 256
+    window_size = 512
     step_size   = 50
     jPos        = window_size + 1
     ts_arr      = []
