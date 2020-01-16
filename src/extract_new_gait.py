@@ -75,16 +75,16 @@ def main():
     
     
     ## create pdkit ##
-    # pdkit_data = query.parallel_func_apply(data, gproc.pdkit_featurize_wrapper, 16, 250)
-    # pdkit_data = pdkit_data[pdkit_data["gait.pdkit_features"] != "#ERROR"]
-    # pdkit_data = query.normalize_list_dicts_to_dataframe_rows(pdkit_data, ["gait.pdkit_features"])
-    # pdkit_data = gproc.subset_data_non_zero_runs(data = pdkit_data, zero_runs_cutoff = 5)
-    # ### save data to synapse ##
-    # query.save_data_to_synapse(syn = syn, 
-    #                         data = pdkit_data, 
-    #                         output_filename = "new_pdkit_features_matched.csv",
-    #                         data_parent_id = "syn20816722")        
-    # print("Saved walking data")                                                
+    pdkit_data = query.parallel_func_apply(data, gproc.walk_featurize_wrapper, 16, 250)
+    pdkit_data = pdkit_data[pdkit_data["gait.walk_features"] != "#ERROR"]
+    pdkit_data = query.normalize_list_dicts_to_dataframe_rows(pdkit_data, ["gait.pdkit_features"])
+    pdkit_data = gproc.subset_data_non_zero_runs(data = pdkit_data, zero_runs_cutoff = 5)
+    ### save data to synapse ##
+    query.save_data_to_synapse(syn = syn, 
+                            data = pdkit_data, 
+                            output_filename = "new_pdkit_features_matched.csv",
+                            data_parent_id = "syn20816722")        
+    print("Saved walking data")                                                
     
     ## create rotation file through multiprocessing jobs ## 
     rotation_data = query.parallel_func_apply(data, gproc.rotation_featurize_wrapper, 16, 250) 

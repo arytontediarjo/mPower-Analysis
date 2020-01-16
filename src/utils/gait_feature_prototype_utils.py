@@ -272,7 +272,7 @@ def split_dataframe_to_dict_chunk_by_interval(accel_data, rotation_data):
         data_chunk["chunk1"] = accel_data
         return data_chunk
     rotation_data = pd.DataFrame(rotation_data)
-    for start, end in rotation_data[["window_start", "window_end"]].values:
+    for start, end in rotation_data[["rotation.window_start", "rotation.window_end"]].values:
         if last_stop > start:
             raise Exception("Rotational sequence is overlapping or distorted")  
         ## edge case -> rotation starts at zero ##
@@ -540,7 +540,7 @@ def walk_featurize_wrapper(data):
         `data`: takes in pd.DataFrame
     returns a json file featurized walking data
     """
-    data["gait.walking_features"] = data["gait.json_pathfile"].apply(walk_feature_pipeline)
+    data["gait.walk_features"] = data["gait.json_pathfile"].apply(walk_feature_pipeline)
     return data
 
 def rotation_featurize_wrapper(data):
@@ -550,7 +550,7 @@ def rotation_featurize_wrapper(data):
         `data`: takes in pd.DataFrame
     returns a json file featurized rotation data
     """
-    data["gait.rotational_features"] = data["gait.json_pathfile"].apply(rotation_feature_pipeline)
+    data["gait.rotation_features"] = data["gait.json_pathfile"].apply(rotation_feature_pipeline)
     return data
 
 
