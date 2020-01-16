@@ -292,7 +292,7 @@ def split_dataframe_to_dict_chunk_by_interval(accel_data, rotation_data):
         data_chunk["chunk%s"%str(window)] = accel_data[(accel_data["td"]>=end)]
     return data_chunk
 
-def compute_pdkit_feature_per_window(data, orientation):
+def compute_pdkit_feature_per_window(data):
     """
     A modified function to calculate feature per smaller time window chunks
     parameter: 
@@ -474,8 +474,7 @@ def walk_feature_pipeline(filepath):
     gait_dict = split_dataframe_to_dict_chunk_by_interval(accel_ts, rotation_occurence)
     gait_feature_arr = []
     for chunks in gait_dict.keys():
-        gait_feature_arr.append(compute_pdkit_feature_per_window(data = gait_dict[chunks], 
-                                                                orientation = orientation))
+        gait_feature_arr.append(compute_pdkit_feature_per_window(data = gait_dict[chunks]))
     return [j for i in gait_feature_arr for j in i]
 
 
