@@ -314,15 +314,15 @@ def compute_pdkit_feature_per_window(data):
     i           = 0
     if len(ts) < jPos:
         print(ts.shape[0]/ts["td"][-1])
-        ts_arr = generate_pdkit_features_in_dict(ts)
+        ts_arr.append(generate_pdkit_features_in_dict(ts))
         return ts_arr
     while jPos < len(ts):
         jStart = jPos - window_size
         subset = ts.iloc[jStart:jPos]
-        ts_arr = generate_pdkit_features_in_dict(subset)
+        ts_arr.append(generate_pdkit_features_in_dict(subset)) 
         jPos += step_size
         i = i + 1
-    return ts_arr
+    return [j for i in ts_arr for j in i]
 
 def generate_pdkit_features_in_dict(data):
     """
