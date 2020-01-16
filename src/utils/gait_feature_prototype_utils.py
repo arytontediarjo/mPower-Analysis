@@ -356,6 +356,7 @@ def generate_pdkit_features_in_dict(data):
         try:
             if (var) < 1e-3:
                 steps = 0
+                cadence = 0
             else:
                 strikes, _ = gp.heel_strikes(y_accel)
                 steps      = np.size(strikes) 
