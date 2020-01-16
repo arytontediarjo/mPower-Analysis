@@ -274,7 +274,7 @@ def split_dataframe_to_dict_chunk_by_interval(accel_data, rotation_data):
     rotation_data = pd.DataFrame(rotation_data)
     for start, end in rotation_data[["rotation.window_start", "rotation.window_end"]].values:
         if last_stop > start:
-            raise Exception("Rotational sequence is overlapping or distorted")  
+            break
         ## edge case -> rotation starts at zero ##
         if start <= 0:
             last_stop = end
@@ -313,7 +313,7 @@ def compute_pdkit_feature_per_window(data):
     ts_arr      = []
     i           = 0
     if len(ts) < jPos:
-        print(ts.shape[0]/ts["td"][-1])
+        # print(ts.shape[0]/ts["td"][-1])
         ts_arr.append(generate_pdkit_features_in_dict(ts))
         return ts_arr
     while jPos < len(ts):
