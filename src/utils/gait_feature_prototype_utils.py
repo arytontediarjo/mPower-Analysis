@@ -406,8 +406,25 @@ def generate_pdkit_features_in_dict(data):
             avg_number_of_strides = 0
             avg_stride_duration = 0
             sd_stride_duration = 0
-        step_regularity, stride_regularity, symmetry = gp.gait_regularity_symmetry(y_accel,average_step_duration=avg_step_duration, 
-                                                                                   average_stride_duration=avg_stride_duration)
+
+        try:
+            step_regularity   = gp.gait_regularity_symmetry(y_accel,average_step_duration=avg_step_duration, 
+                                                        average_stride_duration=avg_stride_duration)[0]
+        except:
+            step_regularity   = 0
+        
+        try:
+            stride_regularity = gp.gait_regularity_symmetry(y_accel,average_step_duration=avg_step_duration, 
+                                                        average_stride_duration=avg_stride_duration)[1]
+        except:
+            stride_regularity = 0     
+
+        try:
+            symmetry          =  gp.gait_regularity_symmetry(y_accel,average_step_duration=avg_step_duration, 
+                                                        average_stride_duration=avg_stride_duration)[2]       
+        except:
+            symmetry          = 0                                                                                                             
+        
         feature_list.append({
                 "walking.window_duration"      : window_duration,
                 "walking.axis"                 : orientation,
