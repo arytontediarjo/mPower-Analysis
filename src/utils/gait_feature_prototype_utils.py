@@ -344,9 +344,9 @@ def generate_pdkit_features_in_dict(data):
 
     feature_list = []
     for orientation in ["x", "y", "z", "AA"]:
+        window_duration = data.td[-1] - data.td[0]
+        sample_rate = data.shape[0]/window_duration
         y_accel = data[orientation]
-        window_duration = y_accel.td[-1] - y_accel.td[0]
-        sample_rate = y_accel.shape[0]/window_duration
         var = y_accel.var()
         gp = pdkit.GaitProcessor(duration = window_duration,
                             cutoff_frequency = 5,
@@ -449,7 +449,7 @@ def calculate_freeze_index(data):
 
 
 
-def walk_feature_pipeline(filepath, orientation):
+def walk_feature_pipeline(filepath):
     """
     Function of data pipeline for subsetting data from rotational movements, retrieving rotational features, 
     removing low-variance longitudinal data and PDKIT estimation of heel strikes based on 2.5 secs window chunks
