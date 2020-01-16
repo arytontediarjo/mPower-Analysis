@@ -36,7 +36,6 @@ def main():
                                                     "syn10308918", 
                                                     "MPOWER_V1", 
                                                     healthCodes = hc_arr_v1)
-
     ## healthcode from version 2 ## 
     hc_arr_v2 = (matched_demographic["healthCode"][matched_demographic["version"] == "mpower_v2"].unique())
     query_data_v2 = query.get_walking_synapse_table(syn, 

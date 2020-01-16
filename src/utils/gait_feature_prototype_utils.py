@@ -314,17 +314,17 @@ def compute_pdkit_feature_per_window(data, orientation):
     i           = 0
     if len(ts) < jPos:
         print(ts.shape[0]/ts["td"][-1])
-        ts_arr.append(generate_pdkit_features_in_dict(ts, "y"))
+        ts_arr = generate_pdkit_features_in_dict(ts)
         return ts_arr
     while jPos < len(ts):
         jStart = jPos - window_size
         subset = ts.iloc[jStart:jPos]
-        ts_arr.append(generate_pdkit_features_in_dict(subset, "y"))
+        ts_arr = generate_pdkit_features_in_dict(subset)
         jPos += step_size
         i = i + 1
     return ts_arr
 
-def generate_pdkit_features_in_dict(data, orientation):
+def generate_pdkit_features_in_dict(data):
     """
     Function to generate pdkit features given orientation and time-series dataframe
     
@@ -341,68 +341,79 @@ def generate_pdkit_features_in_dict(data, orientation):
          a dictionary mapping of pdkit features 
 
     """
-    window_duration = data.td[-1] - data.td[0]
-    sample_rate = data.shape[0]/window_duration
-    print(sample_rate)
-    var = data[orientation].var()
-    gp = pdkit.GaitProcessor(duration = window_duration,
+
+    feature_list = []
+    for orientation in ["x", "y", "z", "AA"]:
+        y_accel = data[orientation]
+        window_duration = y_accel.td[-1] - y_accel.td[0]
+        sample_rate = y_accel.shape[0]/window_duration
+        var = y_accel.var()
+        gp = pdkit.GaitProcessor(duration = window_duration,
                             cutoff_frequency = 5,
                             filter_order = 4,
                             delta = 0.5, 
                             sampling_frequency = 100)
-    
-    try:
-        if (var) < 1e-3:
-            heel_strikes = 0
+        try:
+            if (var) < 1e-3:
+                steps = 0
+            else:
+                strikes, _ = gp.heel_strikes(y_accel)
+                steps      = np.size(strikes) 
+                cadence    = steps/window_duration
+        except:
+            steps = 0  
+            cadence = 0
+        try:
+            peaks_data = y_accel.values
+            maxtab, _ = peakdet(peaks_data, gp.delta)
+            x = np.mean(peaks_data[maxtab[1:,0].astype(int)] - peaks_data[maxtab[:-1,0].astype(int)])
+            frequency_of_peaks = abs(1/x)
+        except:
+            frequency_of_peaks = 0
+        if steps >= 2:   # condition if steps are more than 2, during 2.5 seconds window 
+            step_durations = []
+            for i in range(1, np.size(strikes)):
+                step_durations.append(strikes[i] - strikes[i-1])
+            avg_step_duration = np.mean(step_durations)
+            sd_step_duration = np.std(step_durations)
         else:
-            heel_strikes = len(gp.heel_strikes(data[orientation])[1])
-    except:
-        heel_strikes = 0  
-    try:
-        gait_step_regularity = gp.gait_regularity_symmetry(data[orientation])[0]
-    except:
-        gait_step_regularity = 0
-    try:
-        gait_stride_regularity = gp.gait_regularity_symmetry(data[orientation])[1]
-    except:
-        gait_stride_regularity = 0
-    try:
-        gait_symmetry = gp.gait_regularity_symmetry(data[orientation])[2]
-    except:
-        gait_symmetry = 0
-    try:
-        frequency_of_peaks = gp.frequency_of_peaks(data[orientation])
-    except:
-        frequency_of_peaks = 0
-    try:
-        energy_freeze_index = calculate_freeze_index(data[orientation])[0]
-    except:
-        energy_freeze_index = 0
-    try:
-        energy_sum_loco_freeze = calculate_freeze_index(data[orientation])[1]
-    except:
-        energy_sum_loco_freeze = 0
-    try:
-        speed_of_gait = gp.speed_of_gait(data[orientation], wavelet_level = 6)
-    except:
-        speed_of_gait = 0
+            avg_step_duration = 0
+            sd_step_duration = 0
 
-## on each time-window chunk collect data into numpy array
-    pdkit_feat_dict = {"axis": orientation, 
-                        "steps": heel_strikes, 
-                        "cadence": heel_strikes/(window_duration),
-                        "variance": var,
-                        "gait_step_regularity":gait_step_regularity,
-                        "gait_stride_regularity":gait_stride_regularity,
-                        "gait_symmetry":gait_symmetry,
-                        "frequency_of_peaks":frequency_of_peaks,
-                        "energy_freeze_index":energy_freeze_index,
-                        "energy_sum_loco_freeze":energy_sum_loco_freeze,
-                        "speed_of_gait": speed_of_gait,
-                        "window_duration": window_duration,                    
-                        "window_end": data.td[-1],
-                        "window_start": data.td[0]}
-    return pdkit_feat_dict
+        if steps >= 4:
+            strides1 = strikes[0::2]
+            strides2 = strikes[1::2]
+            stride_durations1 = []
+            for i in range(1, np.size(strides1)):
+                stride_durations1.append(strides1[i] - strides1[i-1])
+            stride_durations2 = []
+            for i in range(1, np.size(strides2)):
+                stride_durations2.append(strides2[i] - strides2[i-1])
+            strides = [strides1, strides2]
+            stride_durations = [stride_durations1, stride_durations2]
+            avg_number_of_strides = np.mean([np.size(strides1), np.size(strides2)])
+            avg_stride_duration = np.mean((np.mean(stride_durations1),
+                        np.mean(stride_durations2)))
+            sd_stride_duration = np.mean((np.std(stride_durations1),
+                        np.std(stride_durations2)))
+        else:
+            avg_number_of_strides = 0
+            avg_stride_duration = 0
+            sd_stride_duration = 0
+    
+        feature_list.append({
+                "walking.axis"                 : orientation,
+                "walking.energy_freeze_index"  : calculate_freeze_index(y_accel)[0],
+                "walking.avg_step_duration"    : avg_step_duration,
+                "walking.sd_step_duration"     : sd_step_duration,
+                "walking.steps"                : steps,
+                "walking.cadence"              : cadence,
+                "walking.frequency_of_peaks"   : frequency_of_peaks,
+                "walking.avg_number_of_strides": avg_number_of_strides,
+                "walking.avg_stride_duration"  : avg_stride_duration,
+                "walking.sd_stride_duration"   : sd_stride_duration,
+        })
+    return feature_list
 
 def calculate_freeze_index(data):
     """
@@ -438,7 +449,7 @@ def calculate_freeze_index(data):
 
 
 
-def pdkit_feature_pipeline(filepath, orientation):
+def walk_feature_pipeline(filepath, orientation):
     """
     Function of data pipeline for subsetting data from rotational movements, retrieving rotational features, 
     removing low-variance longitudinal data and PDKIT estimation of heel strikes based on 2.5 secs window chunks
@@ -494,26 +505,15 @@ def annotate_consecutive_zeros(data, feature):
     data['consec_zero_steps_count'] = np.where(data[feature].eq(0), counts, 0)
     return data
 
-def pdkit_featurize_wrapper(data):
+def walk_featurize_wrapper(data):
     """
     wrapper function for walking multiprocessing jobs
     parameter:
         `data`: takes in pd.DataFrame
     returns a json file featurized walking data
     """
-
-    feature_cols = ['axis', 'cadence', 'energy_freeze_index', 'energy_sum_loco_freeze',
-                    'frequency_of_peaks', 'gait_step_regularity', 'gait_stride_regularity',
-                    'gait_symmetry', 'speed_of_gait', 'steps', 'variance',
-                    'window_duration', 'window_end', 'window_start', 'recordId',
-                    'healthCode', 'appVersion', 'phoneInfo', 'createdOn', 'consec_zero_steps_count']
-
-    data["gait.pdkit_features"] = data["walk_motion.json_pathfile"].apply(pdkit_feature_pipeline, 
-                                                                            orientation = "y")
-    data = data[data["gait.pdkit_features"] != "#ERROR"]
-    data = query.normalize_list_dicts_to_dataframe_rows(data, ["gait.pdkit_features"])
-    data = annotate_consecutive_zeros(data, "steps")
-    return data[feature_cols]
+    data["gait.walking_features"] = data["gait.json_pathfile"].apply(walk_feature_pipeline)
+    return data
 
 def rotation_featurize_wrapper(data):
     """
