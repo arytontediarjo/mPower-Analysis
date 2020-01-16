@@ -369,6 +369,8 @@ def generate_pdkit_features_in_dict(data):
             maxtab, _ = peakdet(peaks_data, gp.delta)
             x = np.mean(peaks_data[maxtab[1:,0].astype(int)] - peaks_data[maxtab[:-1,0].astype(int)])
             frequency_of_peaks = abs(1/x)
+            if np.isnan(frequency_of_peaks):
+                frequency_of_peaks = 0
         except:
             frequency_of_peaks = 0
 
