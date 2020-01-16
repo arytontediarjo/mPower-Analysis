@@ -371,6 +371,11 @@ def generate_pdkit_features_in_dict(data):
             frequency_of_peaks = abs(1/x)
         except:
             frequency_of_peaks = 0
+
+        try:
+            speed_of_gait = gp.speed_of_gait(y_accel, wavelet_type='db3', wavelet_level=6)   
+        except:
+            speed_of_gait = 0
         if steps >= 2:   # condition if steps are more than 2, during 2.5 seconds window 
             step_durations = []
             for i in range(1, np.size(strikes)):
@@ -401,8 +406,10 @@ def generate_pdkit_features_in_dict(data):
             avg_number_of_strides = 0
             avg_stride_duration = 0
             sd_stride_duration = 0
-    
+        step_regularity, stride_regularity, symmetry = gp.gait_regularity_symmetry(y_accel,average_step_duration=avg_step_duration, 
+                                                                                   average_stride_duration=avg_stride_duration)
         feature_list.append({
+                "walking.window_duration"      : window_duration,
                 "walking.axis"                 : orientation,
                 "walking.energy_freeze_index"  : calculate_freeze_index(y_accel)[0],
                 "walking.avg_step_duration"    : avg_step_duration,
@@ -413,6 +420,10 @@ def generate_pdkit_features_in_dict(data):
                 "walking.avg_number_of_strides": avg_number_of_strides,
                 "walking.avg_stride_duration"  : avg_stride_duration,
                 "walking.sd_stride_duration"   : sd_stride_duration,
+                "walking.speed_of_gait"        : speed_of_gait,
+                "walking.step_regularity"      : step_regularity,
+                "walking.stride_regularity"    : stride_regularity,
+                "walking.symmetry"             : symmetry
         })
     return feature_list
 
