@@ -69,7 +69,7 @@ def main():
                   data_return_v1, 
                   data_balance_v1, 
                   data_walking_v2, 
-                  data_balance_v2]).reset_index(drop = True).head(100)
+                  data_balance_v2]).reset_index(drop = True)
 
     print("dataset combined, total rows are %s" %data.shape[0])
 
