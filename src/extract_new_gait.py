@@ -69,14 +69,14 @@ def main():
                   data_return_v1, 
                   data_balance_v1, 
                   data_walking_v2, 
-                  data_balance_v2]).reset_index(drop = True)
+                  data_balance_v2]).reset_index(drop = True).head(100)
 
     print("dataset combined, total rows are %s" %data.shape[0])
 
 
     ## create rotation file through multiprocessing jobs ## 
     rotation_data = query.parallel_func_apply(data, gproc.rotation_featurize_wrapper, 16, 250) 
-    rotation_data = rotation_data[rotation_data["gait.rotational_features"] != "#ERROR"].head(20)
+    rotation_data = rotation_data[rotation_data["gait.rotational_features"] != "#ERROR"]
     rotation_data = query.normalize_list_dicts_to_dataframe_rows(rotation_data, ["gait.rotation_features"])
     metadata_feature = ['recordId', 'healthCode','appVersion', 'phoneInfo', 'createdOn', 'test_type']
     rotation_feature = [feat for feat in rotation_data.columns if "rotation." in feat]
@@ -93,7 +93,7 @@ def main():
     
     ## create pdkit ##
     walk_data = query.parallel_func_apply(data, gproc.walk_featurize_wrapper, 16, 250)
-    walk_data = walk_data[walk_data["gait.walk_features"] != "#ERROR"].head(20)
+    walk_data = walk_data[walk_data["gait.walk_features"] != "#ERROR"]
     walk_data = query.normalize_list_dicts_to_dataframe_rows(walk_data, ["gait.walk_features"])
     metadata_feature = ['recordId', 'healthCode','appVersion', 'phoneInfo', 'createdOn', 'test_type']
     walking_feature = [feat for feat in walk_data.columns if "walking." in feat]
