@@ -101,9 +101,9 @@ def main():
 
     ### save data to synapse ##
     query.save_data_to_synapse(syn = syn, 
-                            data = walk_data[features], 
-                            output_filename = "new_walk_features_matched.csv",
-                            data_parent_id = "syn20816722")        
+                                data = walk_data[features], 
+                                output_filename = "new_walk_features_matched.csv",
+                                data_parent_id = "syn20816722")        
     print("Saved walking data")                                                
     
 

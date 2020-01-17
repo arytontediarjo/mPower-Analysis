@@ -338,7 +338,7 @@ def check_children(syn, data_parent_id, filename):
     return prev_stored_data
 
 
-def generate_demographic_info(data):
+def generate_demographic_info(syn, data):
     DEMO_DATA_V1 = "syn10371840"
     DEMO_DATA_V2 = "syn15673379"
     
