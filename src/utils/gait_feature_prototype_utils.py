@@ -273,21 +273,22 @@ def split_dataframe_to_dict_chunk_by_interval(accel_data, rotation_data):
         return data_chunk
     rotation_data = pd.DataFrame(rotation_data)
     for start, end in rotation_data[["rotation.window_start", "rotation.window_end"]].values:
-        if last_stop > start:
-            break
+        ## overlapping windows
+        # if last_stop > start:
+        #     break
         ## edge case -> rotation starts at zero ##
         if start <= 0:
             last_stop = end
             continue
-        ## edge case -> if rotation is overlapping ##
-        if last_stop == start:
+        ## edge case -> if rotation is overlapping with start, jump to end of rotation ##
+        if last_stop >= start:
             last_stop = end
             continue
         ## ideal case ## 
         data_chunk["chunk%s"%window] = accel_data[(accel_data["td"]<=start) & (accel_data["td"]>=last_stop)]
         last_stop = end
         window += 1
-    ## edge case -> after the last rotation ## 
+    ## edge case -> after the last rotation, take the rest ## 
     if last_stop < accel_data["td"][-1]:
         data_chunk["chunk%s"%str(window)] = accel_data[(accel_data["td"]>=end)]
     return data_chunk
